@@ -1,0 +1,19 @@
+{
+  "name": "sport-imperativo-store",
+  "version": "1.0.0",
+  "description": "E-commerce Sport Imperativo Store",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server/index.js",
+    "dev": "node --watch --env-file-if-exists=.env server/index.js"
+  },
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "compression": "^1.8.2",
+    "express": "^5.2.1"
+  },
+  "engines": {
+    "node": ">=22.5"
+  }
+}
