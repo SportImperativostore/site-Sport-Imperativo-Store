@@ -23,24 +23,24 @@ function parseCookies(req) {
   }
   return o;
 }
-function startSession(res, userId) {
+async function startSession(res, userId) {
   const t = token(32);
-  q.run('INSERT INTO sessions(token_hash,user_id,expires_at) VALUES(?,?,?)', sha(t), userId, Date.now() + SESSION_DAYS * 864e5);
+  await q.run('INSERT INTO sessions(token_hash,user_id,expires_at) VALUES(?,?,?)', sha(t), userId, Date.now() + SESSION_DAYS * 864e5);
   const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
   res.setHeader('Set-Cookie', `sid=${t}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESSION_DAYS * 86400}${secure}`);
 }
-function endSession(req, res) {
+async function endSession(req, res) {
   const t = parseCookies(req).sid;
-  if (t) q.run('DELETE FROM sessions WHERE token_hash=?', sha(t));
+  if (t) await q.run('DELETE FROM sessions WHERE token_hash=?', sha(t));
   res.setHeader('Set-Cookie', 'sid=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0');
 }
-function loadUser(req, _res, next) {
+async function loadUser(req, _res, next) {
   const t = parseCookies(req).sid;
   req.user = null;
   if (t) {
-    const s = q.get('SELECT user_id, expires_at FROM sessions WHERE token_hash=?', sha(t));
+    const s = await q.get('SELECT user_id, expires_at FROM sessions WHERE token_hash=?', sha(t));
     if (s && s.expires_at > Date.now()) {
-      req.user = q.get('SELECT id,name,email,cpf,phone,whatsapp,role FROM users WHERE id=? AND deleted_at IS NULL', s.user_id) || null;
+      req.user = (await q.get('SELECT id,name,email,cpf,phone,whatsapp,role FROM users WHERE id=? AND deleted_at IS NULL', s.user_id)) || null;
     }
   }
   next();

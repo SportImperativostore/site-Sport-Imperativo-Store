@@ -257,7 +257,7 @@ async function users() {
 }
 async function audit() {
   const rows = await api('/admin/audit');
-  shell('audit', `<h1>Logs / Backup<a class="btn" href="/api/admin/backup" download>⬇ Baixar backup do banco</a></h1><div class="tw"><table><thead><tr><th>Data</th><th>Usuário</th><th>Ação</th><th>Detalhe</th><th>IP</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${dt(r.created_at)}</td><td>${r.user_id || ''}</td><td>${e(r.action)}</td><td>${e(r.detail || '')}</td><td>${e(r.ip || '')}</td></tr>`).join('')}</tbody></table></div>`);
+  shell('audit', `<h1>Logs / Backup<a class="btn" href="/api/admin/backup" download>⬇ Baixar backup (JSON)</a></h1><div class="tw"><table><thead><tr><th>Data</th><th>Usuário</th><th>Ação</th><th>Detalhe</th><th>IP</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${dt(r.created_at)}</td><td>${r.user_id || ''}</td><td>${e(r.action)}</td><td>${e(r.detail || '')}</td><td>${e(r.ip || '')}</td></tr>`).join('')}</tbody></table></div>`);
 }
 
 /* ---------- Router + login ---------- */

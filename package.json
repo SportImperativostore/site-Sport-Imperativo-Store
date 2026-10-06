@@ -5,15 +5,19 @@
   "main": "server/index.js",
   "scripts": {
     "start": "node --env-file-if-exists=.env server/index.js",
-    "dev": "node --watch --env-file-if-exists=.env server/index.js"
+    "dev": "node --watch --env-file-if-exists=.env server/index.js",
+    "db:setup": "node --env-file-if-exists=.env scripts/seed.js",
+    "db:seed": "node --env-file-if-exists=.env scripts/seed.js --demo"
   },
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@libsql/client": "^0.18.0",
+    "@vercel/blob": "^2.8.1",
     "compression": "^1.8.2",
     "express": "^5.2.1"
   },
   "engines": {
-    "node": ">=22.5"
+    "node": ">=20"
   }
 }

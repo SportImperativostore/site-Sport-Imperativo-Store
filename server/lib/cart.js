@@ -25,24 +25,25 @@ function quoteStock(destCep, weightG) {
   ];
 }
 
-function checkCoupon(code, lines, ctx) {
-  const c = q.get('SELECT * FROM coupons WHERE code=? AND active=1', String(code || '').trim().toUpperCase());
+async function checkCoupon(code, lines, ctx) {
+  const c = await q.get('SELECT * FROM coupons WHERE code=? AND active=1', String(code || '').trim().toUpperCase());
   if (!c) throw new HttpError(400, 'Cupom inválido.');
   const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
   if ((c.starts_at && c.starts_at > now) || (c.ends_at && c.ends_at < now)) throw new HttpError(400, 'Cupom fora da validade.');
   if (c.max_uses && c.uses >= c.max_uses) throw new HttpError(400, 'Cupom esgotado.');
   if (c.first_purchase) {
     const prior = ctx.userId
-      ? q.get("SELECT 1 x FROM orders WHERE user_id=? AND status NOT IN ('received','payment_pending','cancelled') LIMIT 1", ctx.userId)
+      ? await q.get("SELECT 1 x FROM orders WHERE user_id=? AND status NOT IN ('received','payment_pending','cancelled') LIMIT 1", ctx.userId)
       : null;
     if (!ctx.userId) throw new HttpError(400, 'Faça login para usar o cupom de primeira compra.');
     if (prior) throw new HttpError(400, 'Cupom válido somente na primeira compra.');
   }
-  let eligible = lines.filter((l) => {
-    if (c.product_id) return l.productId === c.product_id;
-    if (c.entity_id) return !!q.get('SELECT 1 x FROM product_entities WHERE product_id=? AND entity_id=?', l.productId, c.entity_id);
-    return true;
-  });
+  let eligible = lines;
+  if (c.product_id) eligible = lines.filter((l) => l.productId === c.product_id);
+  else if (c.entity_id) {
+    const has = new Set((await q.all('SELECT product_id FROM product_entities WHERE entity_id=?', c.entity_id)).map((r) => r.product_id));
+    eligible = lines.filter((l) => has.has(l.productId));
+  }
   const base = eligible.reduce((a, l) => a + l.lineCents, 0);
   if ((c.product_id || c.entity_id) && base === 0) throw new HttpError(400, 'Cupom não se aplica aos itens do carrinho.');
   const subtotal = lines.reduce((a, l) => a + l.lineCents, 0);
@@ -54,18 +55,18 @@ function checkCoupon(code, lines, ctx) {
 }
 
 /** Calcula carrinho completo no servidor (nunca confiar em preços vindos do cliente). */
-function priceCart({ items, cep, method, coupon, userId }) {
+async function priceCart({ items, cep, method, coupon, userId }) {
   if (!Array.isArray(items) || !items.length) throw new HttpError(400, 'Carrinho vazio.');
   if (items.length > 50) throw new HttpError(400, 'Itens demais no carrinho.');
   const lines = [], warnings = [];
   const persCents = parseInt(setting('personalization_cents', '2500'), 10);
   for (const it of items) {
-    const p = q.get('SELECT * FROM products WHERE id=? AND active=1', +it.productId);
+    const p = await q.get('SELECT * FROM products WHERE id=? AND active=1', +it.productId);
     if (!p) { warnings.push('Um produto não está mais disponível e foi removido.'); continue; }
     const qty = Math.max(1, Math.min(20, parseInt(it.qty, 10) || 1));
     const price = pricing(p);
     let size = it.size ? String(it.size).slice(0, 20) : null;
-    const variants = q.all('SELECT size,stock FROM variants WHERE product_id=?', p.id);
+    const variants = await q.all('SELECT size,stock FROM variants WHERE product_id=?', p.id);
     if (variants.length) {
       const v = variants.find((x) => x.size === size);
       if (!v) throw new HttpError(400, `Selecione o tamanho de "${p.name}".`);
@@ -80,7 +81,7 @@ function priceCart({ items, cep, method, coupon, userId }) {
       customCents = p.custom_price_cents ?? persCents;
     }
     const unit = price.final + customCents;
-    const img = q.get("SELECT url FROM product_images WHERE product_id=? AND kind='image' ORDER BY sort,id LIMIT 1", p.id);
+    const img = await q.get("SELECT url FROM product_images WHERE product_id=? AND kind='image' ORDER BY sort,id LIMIT 1", p.id);
     lines.push({
       key: `${p.id}|${size || ''}|${custom ? custom.name + '#' + custom.number : ''}`, productId: p.id, slug: p.slug, name: p.name, image: img ? img.url : `/img/p/${p.id}.svg`,
       size, qty, unitCents: price.final, customCents, custom, lineCents: unit * qty, pixLineCents: Math.round(price.final * (1 - price.pixPct / 100)) * qty + customCents * qty,
@@ -135,7 +136,7 @@ function priceCart({ items, cep, method, coupon, userId }) {
 
   let coup = null, discount = 0, shipping = shippingRaw;
   if (coupon) {
-    coup = checkCoupon(coupon, lines, { userId });
+    coup = await checkCoupon(coupon, lines, { userId });
     discount = coup.discount;
     if (coup.freeShipping) { discount = shippingRaw; shipping = 0; }
   }

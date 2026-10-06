@@ -4,26 +4,48 @@
 
 Plataforma de e-commerce completa (loja + painel administrativo + API), sem build step, com poucas dependências (`express`, `compression`) e banco SQLite embutido (`node:sqlite`).
 
-## Rodar
+## Rodar localmente
 
-Requer Node.js ≥ 22.5 (testado no 24).
+Requer Node.js ≥ 20.
 
 ```bash
 npm install
 npm start          # http://localhost:3000   (admin em /admin/)
 ```
 
-Na **primeira execução** o banco é criado com dados **demonstrativos** (≈250 produtos fictícios, ligas, clubes, banners, cupons) e a senha do administrador é exibida **uma única vez** no console (ou defina `ADMIN_EMAIL` / `ADMIN_PASSWORD`). Copie `.env.example` para `.env` para configurar.
+Sem variáveis de banco, usa o arquivo local `data/store.db`. Na **primeira execução** o banco é criado com dados **demonstrativos** (≈250 produtos fictícios) e a senha do administrador aparece **uma única vez** no console (ou defina `ADMIN_EMAIL` / `ADMIN_PASSWORD`). Cupons de teste: `BEMVINDO10` (1ª compra, exige login) e `FRETEGRATIS` (≥ R$ 199).
 
-Cupons de teste: `BEMVINDO10` (10 % na 1ª compra, exige login) e `FRETEGRATIS` (pedido ≥ R$ 199).
+## Publicar na Vercel
+
+A Vercel é *serverless* (sem disco persistente), por isso o projeto usa **Turso (libSQL/SQLite remoto)** para o banco e **Vercel Blob** para uploads.
+
+1. **Banco (Turso)** — crie conta em turso.tech (ou use a integração Turso no Marketplace da Vercel). Escolha a região mais próxima da região das funções da Vercel (ex.: `gru`/`iad`).
+   ```bash
+   turso db create sport-imperativo
+   turso db show sport-imperativo --url          # → TURSO_DATABASE_URL
+   turso db tokens create sport-imperativo       # → TURSO_AUTH_TOKEN
+   ```
+2. **Inicialize o banco (uma vez, do seu computador)** com as variáveis acima no `.env`:
+   ```bash
+   npm run db:setup     # estrutura base + admin, SEM produtos  (recomendado para loja real)
+   # ou
+   npm run db:seed      # com 245 produtos de demonstração
+   ```
+   Defina antes `ADMIN_EMAIL` e `ADMIN_PASSWORD` no `.env`.
+3. **Vercel** → *Add New Project* → importe o repositório do GitHub (framework "Other"; não precisa de build).
+4. **Storage → Blob → Create** e conecte ao projeto (gera `BLOB_READ_WRITE_TOKEN`).
+5. **Settings → Environment Variables**: `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `BLOB_READ_WRITE_TOKEN`, `PUBLIC_URL` (https://seu-dominio) e `MP_ACCESS_TOKEN` (veja `.env.example`). Faça *Redeploy*.
+6. Cadastre o webhook do Mercado Pago: `https://SEU-DOMINIO/api/webhooks/mercadopago`.
+
+Particularidades da Vercel já tratadas no código: banco assíncrono remoto (sem arquivo SQLite), uploads em Blob, webhook processado antes de responder, páginas com SEO geradas pela função (`server/shell.html`) e cache de CDN (`s-maxage`) nas rotas públicas. **Limites:** upload direto pelo admin até ~4 MB por arquivo (vídeos maiores: use link do YouTube/Instagram ou URL externa); sem credenciais do gateway o checkout fica **bloqueado** em produção (defina `ALLOW_MOCK_PAYMENTS=1` apenas para demonstração).
 
 ## Arquitetura
 
 ```
 server/
   index.js            app Express, headers de segurança, SEO (meta/OG/JSON-LD), sitemap, robots
-  db.js               schema SQLite (relacional) + helpers
-  seed.js             dados iniciais demonstrativos
+  db.js / schema.js   cliente libSQL (Turso ou arquivo local), schema relacional, cache de configurações
+  seed.js             dados iniciais (em lote)  •  scripts/seed.js (npm run db:setup | db:seed)
   lib/catalog.js      preços, disponibilidade, busca, filtros/facetas, menu dinâmico
   lib/cart.js         precificação no servidor, cupons, frete por grupo (pronta entrega × importado)
   lib/orders.js       pedidos, baixa de estoque, ordens ao fornecedor, linha do tempo
@@ -62,10 +84,10 @@ Status: Aguardando fornecedor → Enviado ao fornecedor → Fornecedor confirmou
 
 1. **Pagamento**: defina `MP_ACCESS_TOKEN` (Mercado Pago). Pix é criado via API; cartão usa **Checkout Pro** (o cartão nunca passa pelo seu servidor). Cadastre o webhook `https://SEU-DOMINIO/api/webhooks/mercadopago`. Sem token a loja roda em *modo de teste* com botão "Simular pagamento" — **a integração real não foi testada contra o gateway**; faça um teste em sandbox antes de vender.
 2. **Frete**: o cálculo de pronta entrega usa uma **tabela estimada por região** (`server/lib/cart.js → quoteStock`). Troque por Melhor Envio/Correios/Frenet nesse ponto único antes de operar.
-3. **HTTPS** (proxy reverso: Nginx/Caddy/Cloudflare) e `NODE_ENV=production` (cookie `Secure` + HSTS). Defina `PUBLIC_URL`.
+3. **HTTPS** já vem na Vercel. Defina `PUBLIC_URL` e conecte o domínio próprio.
 4. **Conteúdo**: substitua produtos/fotos demo, preencha WhatsApp, Instagram, CNPJ e fornecedores reais em *Configurações* e *Fornecedores*. As páginas de Privacidade/Termos/Trocas são **modelos** — revise com assessoria jurídica (LGPD/CDC).
-5. **Backup**: *Admin → Logs / Backup* baixa uma cópia consistente do banco; agende também cópia de `data/` e `uploads/`.
-6. Rate-limit e sessões são em memória/SQLite (instância única). Para várias instâncias, use Redis/Postgres e CDN para `/uploads`.
+5. **Backup**: *Admin → Logs / Backup* baixa um export JSON; no Turso use também `turso db shell NOME .dump` e os backups/point-in-time do plano.
+6. O limitador de tentativas é em memória (por instância serverless); para proteção forte use o Vercel Firewall/WAF ou Upstash Redis.
 7. Notas fiscais, cálculo de tributos de importação e integração com ERP não estão incluídos.
 
 ## Segurança implementada

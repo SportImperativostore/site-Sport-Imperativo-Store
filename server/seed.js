@@ -1,33 +1,47 @@
 /* Dados iniciais DEMONSTRATIVOS. Produtos, preços e imagens são fictícios (imagens ilustrativas geradas).
  * Substitua pelo catálogo real pelo painel /admin/. */
 const crypto = require('crypto');
-const { q, tx } = require('./db');
+const { q, client, init, refreshSettings } = require('./db');
 const { hashPassword } = require('./lib/auth');
-const { slugify } = require('./lib/util');
-const cat = require('./lib/catalog');
+const { slugify, norm } = require('./lib/util');
 
-function ensureSeed() {
-  if (q.get('SELECT COUNT(*) c FROM entities').c > 0) return;
-  tx(seed);
+/* O seed monta uma fila de operações (IDs definidos localmente) e a executa em lotes — rápido mesmo com banco remoto.
+ * SEED_DEMO=0 cria apenas a estrutura base (esportes, categorias, ligas, páginas, admin) sem produtos de demonstração. */
+const ops = [];
+const op = (sql, ...args) => { ops.push({ sql, args: args.map((a) => (a === undefined ? null : a)) }); };
+let DEMO = true;
+async function ensureSeed(opts = {}) {
+  await init();
+  if ((await q.get('SELECT COUNT(*) c FROM entities')).c > 0) return false;
+  DEMO = opts.demo ?? process.env.SEED_DEMO !== '0';
+  ops.length = 0;
+  seed();
+  for (let i = 0; i < ops.length; i += 150) await client.batch(ops.slice(i, i + 150), 'write');
+  await refreshSettings();
+  return true;
 }
 const E = {}; // slug -> id
+const NAME = {}; // id -> nome
+const made = [];
+let nextEnt = 0, nextGuide = 0, nextProd = 0;
 function ent(type, name, o = {}) {
   const slug = o.slug || slugify(name);
-  const r = q.run('INSERT INTO entities(type,name,slug,description,color1,color2,country_id,sort,show_in_menu,banner) VALUES(?,?,?,?,?,?,?,?,?,?)', type, name, slug, o.desc || null, o.c1 || null, o.c2 || null, o.country ? E[o.country] : null, o.sort ?? 100, o.menu === false ? 0 : 1, o.banner || null);
-  E[slug] = Number(r.lastInsertRowid);
+  const id = ++nextEnt;
+  op('INSERT INTO entities(id,type,name,slug,description,color1,color2,country_id,sort,show_in_menu,banner) VALUES(?,?,?,?,?,?,?,?,?,?,?)', id, type, name, slug, o.desc || null, o.c1 || null, o.c2 || null, o.country ? E[o.country] : null, o.sort ?? 100, o.menu === false ? 0 : 1, o.banner || null);
+  E[slug] = id; NAME[id] = name;
   return slug;
 }
-const link = (p, c, sort = 100) => q.run('INSERT OR IGNORE INTO entity_links(parent_id,child_id,sort) VALUES(?,?,?)', E[p], E[c], sort);
+const link = (p, c, sort = 100) => op('INSERT OR IGNORE INTO entity_links(parent_id,child_id,sort) VALUES(?,?,?)', E[p], E[c], sort);
 
 function seed() {
-  const S = (k, v) => q.run('INSERT OR REPLACE INTO settings(key,value) VALUES(?,?)', k, String(v));
+  const S = (k, v) => op('INSERT OR REPLACE INTO settings(key,value) VALUES(?,?)', k, String(v));
   S('store_name', 'Sport Imperativo Store'); S('slogan', 'Aqui você veste o esporte.'); S('whatsapp', ''); S('instagram', 'https://www.instagram.com/'); S('tiktok', 'https://www.tiktok.com/'); S('youtube', 'https://www.youtube.com/');
   S('email', 'contato@sportimperativo.com.br'); S('pix_pct', 5); S('max_installments', 12); S('min_installment_cents', 3000); S('personalization_cents', 2500); S('free_shipping_over_cents', 29900);
   S('origin_cep', '11010000'); S('low_stock_threshold', 5); S('instagram_feedback_url', 'https://www.instagram.com/'); S('company_name', 'Sport Imperativo Store'); S('cnpj', '');
   S('import_notice', 'Este produto é enviado do exterior. O prazo de entrega é maior que o de produtos à pronta entrega. Eventuais tributos ou taxas de importação aplicáveis serão tratados conforme a legislação e as condições informadas no momento da compra.');
 
-  ['P', 'M', 'G', 'GG', 'XGG', '2XG', '3XG', 'Infantil 4', 'Infantil 8', 'Infantil 12', '37', '38', '39', '40', '41', '42', '43', '44', 'Único'].forEach((n, i) => q.run('INSERT INTO sizes(name,sort) VALUES(?,?)', n, (i + 1) * 10));
-  const guide = (name, headers, rows, notes) => Number(q.run('INSERT INTO size_guides(name,headers,rows,notes) VALUES(?,?,?,?)', name, JSON.stringify(headers), JSON.stringify(rows), notes).lastInsertRowid);
+  ['P', 'M', 'G', 'GG', 'XGG', '2XG', '3XG', 'Infantil 4', 'Infantil 8', 'Infantil 12', '37', '38', '39', '40', '41', '42', '43', '44', 'Único'].forEach((n, i) => op('INSERT INTO sizes(name,sort) VALUES(?,?)', n, (i + 1) * 10));
+  const guide = (name, headers, rows, notes) => { op('INSERT INTO size_guides(id,name,headers,rows,notes) VALUES(?,?,?,?,?)', ++nextGuide, name, JSON.stringify(headers), JSON.stringify(rows), notes); return nextGuide; };
   const H = ['Tamanho', 'Largura (cm)', 'Comprimento (cm)'];
   const G = {
     torcedor: guide('Torcedor', H, [['P', 52, 70], ['M', 54, 72], ['G', 57, 74], ['GG', 60, 76], ['XGG', 63, 78], ['2XG', 66, 80], ['3XG', 69, 82]], 'Medidas aproximadas do produto. Em dúvida, escolha o tamanho acima.'),
@@ -63,6 +77,7 @@ function seed() {
   leagues.forEach(([n, c], i) => { ent('league', n, { sort: i, country: c }); link('futebol', slugify(n), i); });
   ['Copa do Brasil', 'Libertadores', 'Champions League', 'Europa League', 'Mundial de Clubes', 'Copa do Mundo'].forEach((n, i) => ent('competition', n, { sort: i, menu: false }));
 
+  if (DEMO) {
   // ---- Clubes de futebol ----
   const clubs = [
     ['brasileirao-serie-a', 'brasil', [['Santos', '#ffffff', '#111111', 'plain', 'Peixe'], ['São Paulo', '#ffffff', '#e30613', 'hoops'], ['Corinthians', '#ffffff', '#111111', 'plain'], ['Palmeiras', '#006437', '#ffffff', 'plain'], ['Flamengo', '#d4202c', '#111111', 'hoops'], ['Vasco', '#111111', '#ffffff', 'sash'], ['Botafogo', '#111111', '#ffffff', 'stripes'], ['Fluminense', '#7a0019', '#0b7a3b', 'stripes'], ['Internacional', '#e5050f', '#ffffff', 'plain'], ['Grêmio', '#0d80bf', '#111111', 'stripes'], ['Atlético-MG', '#111111', '#ffffff', 'stripes'], ['Cruzeiro', '#1d4ed8', '#ffffff', 'plain'], ['Bahia', '#1d4ed8', '#e30613', 'half']]],
@@ -99,7 +114,8 @@ function seed() {
   Object.entries(brands).forEach(([b, models], i) => { const bs = ent('brand', b, { sort: i }); link('chuteiras', bs, i); models.forEach((m, j) => { const ms = ent('model', `${b} ${m}`, { slug: slugify(b + '-' + m) }); link(bs, ms, j); }); });
 
   // ---- Fornecedor demonstrativo ----
-  const sup = Number(q.run("INSERT INTO suppliers(name,contact,channel,notes) VALUES('Fornecedor Demonstrativo (Exterior)','Contato','whatsapp','DEMO: configure o WhatsApp/e-mail/webhook reais em Fornecedores.')").lastInsertRowid);
+  const sup = 1;
+  op("INSERT INTO suppliers(id,name,contact,channel,notes) VALUES(1,'Fornecedor Demonstrativo (Exterior)','Contato','whatsapp','DEMO: configure o WhatsApp/e-mail/webhook reais em Fornecedores.')");
 
   // ---- Produtos ----
   let seedN = 7;
@@ -107,15 +123,18 @@ function seed() {
   const sizesAdult = ['P', 'M', 'G', 'GG', 'XGG'];
   let sku = 1000;
   const add = (o) => {
-    const price = o.price, sale = o.sale || null;
-    const id = Number(q.run(`INSERT INTO products(slug,name,description,price_cents,sale_price_cents,fulfillment,stock,shipping_rule,shipping_fixed_cents,origin,lead_min,lead_max,weight_g,supplier_id,supplier_sku,supplier_cost_cents,customizable,size_guide_id,badge,tags,style,color1,color2,shape,sold,sku,rating_avg,rating_count,sale_ends)
-      VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, o.slug, o.name, o.desc, price, sale, o.imp ? 'import' : 'stock', o.imp ? 0 : o.stock, o.imp ? 'free' : 'cep', 0, o.imp ? 'China' : null, o.imp ? 18 : null, o.imp ? 40 : null, o.weight || 400,
-      o.imp ? sup : null, o.imp ? 'SKU-' + sku : null, o.imp ? Math.round(price * 0.45) : null, o.custom ? 1 : 0, o.guide || null, o.badge || null, o.tags || '', o.style, o.c1, o.c2, o.shape || 'jersey', Math.floor(rnd() * 120), 'SI-' + (sku++),
-      0, 0, sale ? new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 19).replace('T', ' ') : null).lastInsertRowid);
-    for (const e of o.ents) if (E[e]) q.run('INSERT OR IGNORE INTO product_entities(product_id,entity_id) VALUES(?,?)', id, E[e]);
-    for (const s of o.sizes || []) q.run('INSERT INTO variants(product_id,size,stock) VALUES(?,?,?)', id, s, o.imp ? 0 : Math.floor(rnd() * 6) + (rnd() > 0.85 ? 0 : 1));
-    if (!o.imp && o.sizes) q.run('UPDATE products SET stock=(SELECT SUM(stock) FROM variants WHERE product_id=?) WHERE id=?', id, id);
-    cat.reindexProduct(id);
+    const price = o.price, sale = o.sale || null, soldOf = Math.floor(rnd() * 120);
+    const id = ++nextProd;
+    op(`INSERT INTO products(id,slug,name,description,price_cents,sale_price_cents,fulfillment,stock,shipping_rule,shipping_fixed_cents,origin,lead_min,lead_max,weight_g,supplier_id,supplier_sku,supplier_cost_cents,customizable,size_guide_id,badge,tags,style,color1,color2,shape,sold,sku,rating_avg,rating_count,sale_ends)
+      VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, id, o.slug, o.name, o.desc, price, sale, o.imp ? 'import' : 'stock', o.imp ? 0 : o.stock, o.imp ? 'free' : 'cep', 0, o.imp ? 'China' : null, o.imp ? 18 : null, o.imp ? 40 : null, o.weight || 400,
+      o.imp ? sup : null, o.imp ? 'SKU-' + sku : null, o.imp ? Math.round(price * 0.45) : null, o.custom ? 1 : 0, o.guide || null, o.badge || null, o.tags || '', o.style, o.c1, o.c2, o.shape || 'jersey', soldOf, 'SI-' + (sku++),
+      0, 0, sale ? new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 19).replace('T', ' ') : null);
+    for (const e of o.ents) if (E[e]) op('INSERT OR IGNORE INTO product_entities(product_id,entity_id) VALUES(?,?)', id, E[e]);
+    let total = 0;
+    for (const s of o.sizes || []) { const st = o.imp ? 0 : Math.floor(rnd() * 6) + (rnd() > 0.85 ? 0 : 1); total += st; op('INSERT INTO variants(product_id,size,stock) VALUES(?,?,?)', id, s, st); }
+    if (!o.imp && o.sizes) op('UPDATE products SET stock=? WHERE id=?', total, id);
+    op('UPDATE products SET search_text=? WHERE id=?', norm([o.name, o.tags, 'SI-' + (sku - 1), ...o.ents.filter((e) => E[e]).map((e) => NAME[E[e]])].join(' ')), id);
+    made.push({ id, sold: soldOf });
     return id;
   };
   const yr = (i) => [1995, 2002, 1999, 2011, 1982, 2005, 1970, 2000][i % 8];
@@ -142,21 +161,23 @@ function seed() {
   const boots = [['Nike', 'Mercurial', 'Campo', 79990, '#ff6b00', '#111111'], ['Nike', 'Phantom', 'Society', 59990, '#111111', '#a3ff12'], ['Nike', 'Tiempo', 'Futsal', 39990, '#ffffff', '#111111'], ['Adidas', 'Predator', 'Campo', 74990, '#d4202c', '#111111'], ['Adidas', 'F50', 'Society', 54990, '#ffd400', '#111111'], ['Adidas', 'Copa', 'Futsal', 34990, '#111111', '#ffffff'], ['Puma', 'Future', 'Campo', 69990, '#0b5cff', '#ffffff'], ['Puma', 'Ultra', 'Society', 49990, '#f9ff00', '#111111'], ['Mizuno', 'Morelia', 'Campo', 64990, '#ffffff', '#0b5cff'], ['Mizuno', 'Alpha', 'Society', 44990, '#111111', '#e30613']];
   boots.forEach(([b, m, mod, price, c1, c2], i) => add({ c1, c2, style: 'plain', shape: 'boot', imp: false, custom: false, sizes: ['38', '39', '40', '41', '42', '43', '44'], slug: slugify(`chuteira-${b}-${m}-${mod}`), name: `Chuteira ${b} ${m} ${mod}`, desc: `Chuteira ${b} ${m} para ${mod.toLowerCase()}.`, price, sale: i % 3 === 0 ? price - 10000 : null, stock: 9, weight: 800, guide: G.chuteira, ents: ['chuteiras', slugify(b), slugify(b + '-' + m), slugify(mod)], tags: `chuteira ${b} ${m} ${mod}`, badge: i === 0 ? 'MAIS VENDIDO' : i === 4 ? 'NOVO' : null }));
 
+  } // fim do bloco DEMO
+
   // ---- Banners ----
-  const B = (t, s, cta, l, o) => q.run('INSERT INTO banners(title,subtitle,cta_text,link,sort) VALUES(?,?,?,?,?)', t, s, cta, l, o);
+  const B = (t, s, cta, l, o) => op('INSERT INTO banners(title,subtitle,cta_text,link,sort) VALUES(?,?,?,?,?)', t, s, cta, l, o);
   B('AQUI VOCÊ VESTE O ESPORTE.', 'Camisas de futebol, NBA, NFL, F1, chuteiras e muito mais.', 'COMPRAR AGORA', '/futebol', 1);
   B('OFERTAS DA TEMPORADA', 'Descontos em camisas selecionadas. Pix com desconto adicional.', 'VER OFERTAS', '/ofertas', 2);
   B('CHUTEIRAS', 'Campo, society e futsal das melhores marcas.', 'VER CHUTEIRAS', '/chuteiras', 3);
 
   // ---- Cupons ----
-  q.run("INSERT INTO coupons(code,type,value,first_purchase,is_public,description) VALUES('BEMVINDO10','percent',10,1,1,'10% de desconto na primeira compra')");
-  q.run("INSERT INTO coupons(code,type,value,min_cents,is_public,description) VALUES('FRETEGRATIS','free_shipping',0,19900,1,'Frete grátis em compras acima de R$ 199')");
+  op("INSERT INTO coupons(code,type,value,first_purchase,is_public,description) VALUES('BEMVINDO10','percent',10,1,1,'10% de desconto na primeira compra')");
+  op("INSERT INTO coupons(code,type,value,min_cents,is_public,description) VALUES('FRETEGRATIS','free_shipping',0,19900,1,'Frete grátis em compras acima de R$ 199')");
 
   // ---- Depoimentos (demonstrativos — substitua pelos reais) ----
-  [['Carlos M.', 'Camisa Santos Retrô', 'Qualidade excelente, chegou antes do prazo!'], ['Juliana P.', 'Camisa Flamengo Feminina', 'Tecido ótimo e caimento perfeito.'], ['Rafael S.', 'Chuteira Nike Mercurial', 'Entrega rápida e produto idêntico ao anunciado.'], ['Bruno L.', 'Camisa Real Madrid Player', 'Atendimento nota 10, recomendo.']].forEach(([n, p, b], i) => q.run("INSERT INTO testimonials(kind,name,product_name,stars,body,sort) VALUES('text',?,?,5,?,?)", n, p, b, i));
+  if (DEMO) [['Carlos M.', 'Camisa Santos Retrô', 'Qualidade excelente, chegou antes do prazo!'], ['Juliana P.', 'Camisa Flamengo Feminina', 'Tecido ótimo e caimento perfeito.'], ['Rafael S.', 'Chuteira Nike Mercurial', 'Entrega rápida e produto idêntico ao anunciado.'], ['Bruno L.', 'Camisa Real Madrid Player', 'Atendimento nota 10, recomendo.']].forEach(([n, p, b], i) => op("INSERT INTO testimonials(kind,name,product_name,stars,body,sort) VALUES('text',?,?,5,?,?)", n, p, b, i));
 
   // ---- Páginas institucionais (modelos — revise com assessoria jurídica) ----
-  const pg = (slug, title, body) => q.run('INSERT INTO pages(slug,title,body) VALUES(?,?,?)', slug, title, body);
+  const pg = (slug, title, body) => op('INSERT INTO pages(slug,title,body) VALUES(?,?,?)', slug, title, body);
   pg('sobre-nos', 'Sobre nós', '<p>A <strong>Sport Imperativo Store</strong> é uma loja brasileira especializada em produtos esportivos. <em>Aqui você veste o esporte.</em></p>');
   pg('contato', 'Contato', '<p>Fale com a gente pelo WhatsApp, Instagram ou e-mail informados no rodapé do site.</p>');
   pg('politica-de-privacidade', 'Política de Privacidade', '<p><strong>Modelo — revise com assessoria jurídica antes de publicar.</strong></p><h3>Dados que coletamos</h3><p>Nome, CPF, e-mail, telefone, endereço e dados do pedido, necessários para processar compras, emitir documentos fiscais e entregar produtos (LGPD, art. 7º, V e II).</p><h3>Compartilhamento</h3><p>Compartilhamos dados estritamente necessários com gateway de pagamento, transportadoras e fornecedores (inclusive no exterior, para produtos importados), para cumprir o pedido.</p><h3>Cartões</h3><p>Não armazenamos dados de cartão: o pagamento é processado pelo gateway.</p><h3>Seus direitos</h3><p>Você pode acessar, exportar, corrigir e excluir seus dados em <a href="/conta/seguranca">Minha conta &gt; Segurança</a> ou pelo e-mail de contato.</p>');
@@ -172,12 +193,11 @@ function seed() {
   // ---- Admin ----
   const email = (process.env.ADMIN_EMAIL || 'admin@sportimperativo.local').toLowerCase();
   const pw = process.env.ADMIN_PASSWORD || crypto.randomBytes(9).toString('base64url');
-  q.run("INSERT INTO users(name,email,password_hash,role) VALUES('Administrador',?,?, 'admin')", email, hashPassword(pw));
+  op("INSERT INTO users(name,email,password_hash,role) VALUES('Administrador',?,?, 'admin')", email, hashPassword(pw));
   console.log('\n=== ACESSO ADMIN (anote — exibido apenas uma vez) ===');
   console.log('  URL:   /admin/\n  Email:', email, '\n  Senha:', process.env.ADMIN_PASSWORD ? '(definida em ADMIN_PASSWORD)' : pw, '\n');
 
   // avaliações demonstrativas
-  const some = q.all('SELECT id FROM products ORDER BY sold DESC LIMIT 12');
-  some.forEach((p, i) => { q.run("INSERT INTO reviews(product_id,author,stars,body,status) VALUES(?,?,?,?,'approved')", p.id, ['Lucas', 'Marina', 'Pedro', 'Ana'][i % 4], 4 + (i % 2), ['Muito bom, recomendo!', 'Tecido de qualidade e acabamento caprichado.', 'Chegou certinho, tamanho conforme a tabela.'][i % 3]); cat.recalcRating(p.id); });
+  if (DEMO) [...made].sort((a, b) => b.sold - a.sold).slice(0, 12).forEach((p, i) => { op("INSERT INTO reviews(product_id,author,stars,body,status) VALUES(?,?,?,?,'approved')", p.id, ['Lucas', 'Marina', 'Pedro', 'Ana'][i % 4], 4 + (i % 2), ['Muito bom, recomendo!', 'Tecido de qualidade e acabamento caprichado.', 'Chegou certinho, tamanho conforme a tabela.'][i % 3]); op('UPDATE products SET rating_count=1, rating_avg=? WHERE id=?', 4 + (i % 2), p.id); });
 }
 module.exports = { ensureSeed };
