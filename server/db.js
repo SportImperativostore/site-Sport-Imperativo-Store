@@ -5,15 +5,23 @@ const { createClient } = require('@libsql/client');
 /* Banco: libSQL/Turso (SQLite remoto, funciona na Vercel) ou arquivo local em desenvolvimento.
  * TURSO_DATABASE_URL + TURSO_AUTH_TOKEN  → remoto.   Sem elas → file:data/store.db (apenas local). */
 const isVercel = !!process.env.VERCEL;
-let url = process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL;
-if (!url) {
-  if (isVercel) throw new Error('Defina TURSO_DATABASE_URL e TURSO_AUTH_TOKEN nas variáveis de ambiente da Vercel.');
-  const dir = path.join(__dirname, '..', 'data');
-  fs.mkdirSync(dir, { recursive: true });
-  url = 'file:' + (process.env.DB_FILE || path.join(dir, 'store.db'));
+const CONFIG_MSG = 'Configuração pendente: defina TURSO_DATABASE_URL e TURSO_AUTH_TOKEN em Vercel → Settings → Environment Variables e faça Redeploy (veja o README).';
+let _client = null, isFile = false;
+// Cliente criado sob demanda: faltar configuração gera um erro claro na requisição, em vez de derrubar a função inteira.
+function getClient() {
+  if (_client) return _client;
+  let url = process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL;
+  if (!url) {
+    if (isVercel) { const e = new Error(CONFIG_MSG); e.config = true; throw e; }
+    const dir = path.join(__dirname, '..', 'data');
+    fs.mkdirSync(dir, { recursive: true });
+    url = 'file:' + (process.env.DB_FILE || path.join(dir, 'store.db'));
+  }
+  isFile = url.startsWith('file:');
+  _client = createClient({ url, authToken: process.env.TURSO_AUTH_TOKEN });
+  return _client;
 }
-const isFile = url.startsWith('file:');
-const client = createClient({ url, authToken: process.env.TURSO_AUTH_TOKEN });
+const client = new Proxy({}, { get: (_t, k) => { const c = getClient(); const v = c[k]; return typeof v === 'function' ? v.bind(c) : v; } });
 
 const SCHEMA = require('./schema');
 
@@ -46,6 +54,7 @@ const allSettings = () => ({ ...cache });
 let ready;
 function init() {
   return (ready ||= (async () => {
+    getClient();
     if (isFile) await client.executeMultiple('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;');
     await client.executeMultiple(SCHEMA);
     if (isFile) { try { await client.execute('ALTER TABLE testimonials ADD COLUMN product_id INTEGER'); } catch { /* já existe */ } }
@@ -60,4 +69,4 @@ async function ensureReady() {
 async function audit(userId, action, detail, ip) {
   try { await q.run('INSERT INTO audit_log(user_id,action,detail,ip) VALUES(?,?,?,?)', userId || null, action, typeof detail === 'string' ? detail : JSON.stringify(detail), ip || null); } catch (e) { console.error('audit', e.message); }
 }
-module.exports = { client, q, tx, setting, allSettings, refreshSettings, ensureReady, init, audit, isFile };
+module.exports = { client, q, tx, setting, allSettings, refreshSettings, ensureReady, init, audit, get isFile() { return isFile; } };

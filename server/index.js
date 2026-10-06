@@ -110,9 +110,10 @@ app.use(async (req, res, next) => {
   res.type('html').send(template().replace('<!--SEO-->', await seo(req)));
 });
 app.use((err, req, res, _next) => {
-  const status = err.status || (err.type === 'entity.too.large' ? 413 : 500);
+  const status = err.config ? 503 : err.status || (err.type === 'entity.too.large' ? 413 : 500);
   if (status >= 500) console.error(err);
-  if (req.path.startsWith('/api')) return res.status(status).json({ error: status === 413 ? 'Arquivo grande demais para envio direto (limite ~4 MB na Vercel). Use URL externa para vídeos grandes.' : status >= 500 ? 'Erro interno. Tente novamente.' : err.message });
+  if (req.path.startsWith('/api')) return res.status(status).json({ error: err.config ? err.message : status === 413 ? 'Arquivo grande demais para envio direto (limite ~4 MB na Vercel). Use URL externa para vídeos grandes.' : status >= 500 ? 'Erro interno. Tente novamente.' : err.message });
+  if (err.config) return res.status(503).type('html').send(`<!doctype html><meta charset="utf-8"><title>Configuração pendente</title><body style="font-family:system-ui;max-width:640px;margin:12vh auto;padding:0 16px"><h1>Configuração pendente</h1><p>${esc(err.message)}</p></body>`);
   res.status(status).send('Erro');
 });
 
