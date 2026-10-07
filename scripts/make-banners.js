@@ -8,6 +8,9 @@ fs.mkdirSync(out, { recursive: true });
 const JERSEY = 'M120 50 L158 40 Q200 76 242 40 L280 50 L350 110 L318 160 L290 140 L292 340 Q200 360 108 340 L110 140 L82 160 L50 110 Z';
 const BOOT = 'M60 250 L60 150 Q60 120 95 118 L150 112 Q190 150 250 160 L330 178 Q352 184 352 206 L352 250 Z M60 250 L352 250 L352 270 Q352 278 340 278 L72 278 Q60 278 60 270 Z';
 
+const JACKET = 'M110 60 L150 40 Q200 76 250 40 L290 60 L360 200 L322 226 L294 150 L298 360 L102 360 L106 150 L78 226 L40 200 Z';
+const SHORTS = 'M110 90 L290 90 L310 330 L226 330 L200 200 L174 330 L90 330 Z';
+
 const rnd = (() => { let s = 11; return () => ((s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff); })();
 
 function grid(w, h, hy, color) {
@@ -41,6 +44,11 @@ const glowPath = (d, tx, ty, sc, c1, c2) => `
   </g>`;
 
 const MOTIFS = {
+  jacket: (cx, cy, s, a, b) => glowPath(JACKET, cx - 200 * s, cy - 210 * s, s, a, b) + `<g stroke="${b}" stroke-width="${2.5 * s}" opacity=".7" fill="none" stroke-linecap="round"><path d="M${cx} ${cy - 160 * s} L${cx} ${cy + 150 * s}"/><path d="M${cx - 38 * s} ${cy - 160 * s} Q${cx} ${cy - 120 * s} ${cx + 38 * s} ${cy - 160 * s}"/><circle cx="${cx}" cy="${cy - 100 * s}" r="${5 * s}"/></g>`,
+  set: (cx, cy, s, a, b) => glowPath(JERSEY, cx - 250 * s, cy - 215 * s, s * 0.78, a, b) + glowPath(SHORTS, cx - 20 * s, cy - 70 * s, s * 0.78, a, b),
+  nfl: (cx, cy, s, a, b) => `<g transform="rotate(-28 ${cx} ${cy})" filter="url(#glow)"><ellipse cx="${cx}" cy="${cy}" rx="${200 * s}" ry="${120 * s}" fill="url(#shape)" fill-opacity=".16" stroke="${a}" stroke-width="3"/>
+      <g stroke="${b}" stroke-width="${2.4 * s}" opacity=".85" stroke-linecap="round"><line x1="${cx - 60 * s}" y1="${cy}" x2="${cx + 60 * s}" y2="${cy}"/>${[-40, -20, 0, 20, 40].map((o) => `<line x1="${cx + o * s * 1.2}" y1="${cy - 20 * s}" x2="${cx + o * s * 1.2}" y2="${cy + 20 * s}"/>`).join('')}</g>
+      <path d="M${cx - 130 * s} ${cy - 95 * s} Q${cx - 150 * s} ${cy} ${cx - 130 * s} ${cy + 95 * s}" fill="none" stroke="${b}" stroke-width="${2 * s}" opacity=".6"/><path d="M${cx + 130 * s} ${cy - 95 * s} Q${cx + 150 * s} ${cy} ${cx + 130 * s} ${cy + 95 * s}" fill="none" stroke="${b}" stroke-width="${2 * s}" opacity=".6"/></g>`,
   jersey: (cx, cy, s, a, b) => glowPath(JERSEY, cx - 200 * s, cy - 210 * s, s, a, b) + `<g transform="translate(${cx} ${cy + 20 * s})" fill="${b}" opacity=".85" font-family="Arial Black,Arial" text-anchor="middle"><text y="${-20 * s}" font-size="${34 * s}" opacity=".5" letter-spacing="${4 * s}">SI</text><text y="${70 * s}" font-size="${130 * s}">10</text></g>`,
   boot: (cx, cy, s, a, b) => glowPath(BOOT, cx - 206 * s, cy - 150 * s, s, a, b) + `<g stroke="${b}" stroke-width="${2 * s}" opacity=".6" fill="none"><path d="M${cx - 80 * s} ${cy - 10 * s} l${70 * s} ${-26 * s} M${cx - 56 * s} ${cy + 22 * s} l${100 * s} ${-36 * s}"/></g>`,
   ball: (cx, cy, s, a, b) => `<g filter="url(#glow)"><circle cx="${cx}" cy="${cy}" r="${190 * s}" fill="url(#shape)" fill-opacity=".16" stroke="${a}" stroke-width="3"/>
@@ -77,6 +85,39 @@ ${MOTIFS[motif](cx, cy, s, accent2, '#ffffff')}
 </svg>`;
   fs.writeFileSync(path.join(out, `${name}${mobile ? '-m' : ''}.svg`), svg);
 }
+
+function tile({ name, motif, accent, accent2, c0 = '#040b1c', c1 = '#071a4d', c2 = '#0b4fe0', scale = 0.8 }) {
+  const w = 640, h = 440, cx = w * 0.62, cy = h * 0.42;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid slice">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c0}"/><stop offset=".55" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient>
+  <radialGradient id="halo" cx=".62" cy=".42" r=".5"><stop offset="0" stop-color="${accent}" stop-opacity=".55"/><stop offset="1" stop-color="${accent}" stop-opacity="0"/></radialGradient>
+  <linearGradient id="shape" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${accent2}"/><stop offset="1" stop-color="${accent}"/></linearGradient>
+  <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".35" stop-color="#fff" stop-opacity="1"/></linearGradient>
+  <mask id="fadeUp"><rect width="${w}" height="${h}" fill="url(#fade)"/></mask>
+  <filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="${w}" height="${h}" fill="url(#bg)"/><rect width="${w}" height="${h}" fill="url(#halo)"/>
+${grid(w, h, h * 0.68, '#6aa3ff')}${streaks(w, h, '#8fb8ff', 8)}${dots(w, h, 28)}
+<g>${hexRing(cx, cy, 170, accent2, 0.3, 1.2)}${hexRing(cx, cy, 235, accent2, 0.15, 1.2)}</g>
+${MOTIFS[motif](cx, cy, scale, accent2, '#ffffff')}
+</svg>`;
+  fs.writeFileSync(path.join(cats, name + '.svg'), svg);
+}
+const cats = path.join(__dirname, '..', 'public', 'img', 'cats');
+fs.mkdirSync(cats, { recursive: true });
+const TILES = [
+  { name: 'futebol', motif: 'jersey', accent: '#1f6bff', accent2: '#7db3ff' },
+  { name: 'nba', motif: 'ball', accent: '#ff8a1f', accent2: '#ffc27a', c1: '#14102a', c2: '#3d1f6e', scale: 0.62 },
+  { name: 'nfl', motif: 'nfl', accent: '#2fd17a', accent2: '#9af0c0', c1: '#04160f', c2: '#0b4a35', scale: 0.7 },
+  { name: 'f1', motif: 'car', accent: '#ff2b2b', accent2: '#ff8a8a', c1: '#12060a', c2: '#4a0a14', scale: 0.7 },
+  { name: 'chuteiras', motif: 'boot', accent: '#19c3ff', accent2: '#8ee7ff', c1: '#041a33', c2: '#06507a', scale: 0.85 },
+  { name: 'agasalhos', motif: 'jacket', accent: '#6a7dff', accent2: '#b3bcff', c1: '#080d26', c2: '#232c78' },
+  { name: 'conjuntos', motif: 'set', accent: '#b04bff', accent2: '#dcaaff', c1: '#12082a', c2: '#46207a' },
+  { name: 'ofertas', motif: 'percent', accent: '#ff3d5a', accent2: '#ff9aa9', c1: '#1a0a2e', c2: '#5a0f3a', scale: 0.7 },
+];
+for (const t of TILES) tile(t);
+console.log('Categorias geradas em', cats);
 
 const LIST = [
   { name: 'hero-futebol', motif: 'jersey', accent: '#1f6bff', accent2: '#7db3ff' },

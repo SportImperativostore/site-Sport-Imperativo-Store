@@ -2,7 +2,7 @@ import { storiesStrip } from './stories.js';
 import { $, e, api, state, productCard, setMeta, skeletonGrid, icon, starsHtml } from '../lib.js';
 
 const EMO = { futebol: '⚽', nba: '🏀', nfl: '🏈', f1: '🏎️', chuteiras: '👟', 'agasalhos-conjuntos': '🧥' };
-const TILES = [['futebol', 'Futebol', 't1', '/futebol', 'Clubes e seleções'], ['nba', 'NBA', 't2', '/nba', 'Camisas e regatas'], ['nfl', 'NFL', 't3', '/nfl', 'Jerseys oficiais-estilo'], ['f1', 'F1', 't4', '/f1', 'Equipes e pilotos'],
+const TILES = [['futebol', 'Futebol', 't1', '/futebol', 'Clubes e seleções'], ['nba', 'NBA', 't2', '/nba', 'Camisas e regatas'], ['nfl', 'NFL', 't3', '/nfl', 'Jerseys dos times'], ['f1', 'F1', 't4', '/f1', 'Equipes e pilotos'],
   ['chuteiras', 'Chuteiras', 't5', '/chuteiras', 'Campo, society e futsal'], ['agasalhos', 'Agasalhos', 't6', '/futebol/agasalhos', 'Para o frio'], ['conjuntos', 'Conjuntos', 't7', '/futebol/conjuntos', 'Treino e passeio'], ['ofertas', 'Ofertas', 't8', '/ofertas', 'Até -30%']];
 
 export default async function home() {
@@ -24,7 +24,7 @@ export default async function home() {
     <div>${icon.shield}<span><b>Compra segura</b>dados protegidos</span></div></div>
   <div class="wrap">
   <section class="block"><div class="sec-h"><h2>Mais <span>vendidos</span></h2><a href="/busca?q=">Ver todos →</a></div><div class="grid">${h.best.map(productCard).join('')}</div></section>
-  <section class="block"><div class="sec-h"><h2>Compre por <span>categoria</span></h2></div><div class="cat-grid">${TILES.map(([k, n, c, href, sub]) => `<a class="cat-tile ${c}" href="${href}"><span class="em" aria-hidden="true">${EMO[k] || (k === 'ofertas' ? '🔥' : k === 'agasalhos' ? '🧥' : '👕')}</span><span>${n}<small>${sub}</small></span></a>`).join('')}</div></section>
+  <section class="block"><div class="sec-h"><h2>Compre por <span>categoria</span></h2></div><div class="cat-grid">${TILES.map(([k, n, c, href, sub]) => `<a class="cat-tile" href="${href}" aria-label="${n}"><img src="/img/cats/${k}.svg" alt="" loading="lazy" width="640" height="440"><span class="lbl">${n}<small>${sub}</small></span></a>`).join('')}</div></section>
   ${fut ? `<section class="block"><div class="sec-h"><h2>⚽ <span>Futebol</span></h2><a href="/futebol">Ver tudo →</a></div>
     <div class="panel"><h3>Categorias</h3><div class="tabs" style="flex-wrap:wrap;overflow:visible">${chips(fe('category'))}</div>
     <h3 style="margin-top:8px">Países</h3><div class="tabs" style="flex-wrap:wrap;overflow:visible">${chips(fe('country'))}</div>
