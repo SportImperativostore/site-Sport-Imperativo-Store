@@ -1,6 +1,7 @@
 import { $, $$, e, brl, api, state, addToCart, toast, modal, closeModal, icon, starsHtml, productCard, setMeta, maskCEP, toggleFav } from '../lib.js';
 import { openCartDrawer, go } from '../app.js';
 import { storiesStrip } from './stories.js';
+import { openGuide } from './guide.js';
 
 const ytEmbed = (u) => { const m = String(u).match(/(?:youtu\.be\/|v=|embed\/)([\w-]{11})/); return m ? `https://www.youtube.com/embed/${m[1]}` : null; };
 
@@ -36,7 +37,7 @@ export default async function product({ params }) {
         <div id="custom-total" class="inst" style="margin-top:6px" hidden></div></div>
       ${imp ? `<div class="info-box import">${icon.globe}<div><b>Produto importado / sob encomenda</b><br>Enviado do exterior (${e(p.shipping.origin)}). Prazo estimado: <b>${p.shipping.leadMin || 18}–${p.shipping.leadMax || 40} dias úteis</b>. ${p.shipping.rule === 'free' ? '<b>Frete grátis/promocional.</b> ' : ''}<br><small>${e(p.shipping.importNotice || '')}</small></div></div>`
         : `<div class="info-box stock">${icon.truck}<div><b>Pronta entrega</b> — enviado do Brasil. Frete calculado pelo CEP.${p.shipping.rule === 'free' ? ' <b>Frete grátis.</b>' : ''}</div></div>`}
-      ${p.variants.length ? `<div class="optlabel"><span>Tamanho <span id="size-sel" style="color:var(--blue)"></span></span>${p.sizeGuide ? '<button data-guide>GUIA DE TAMANHOS</button>' : ''}</div>
+      ${p.variants.length ? `<div class="optlabel"><span>Tamanho <span id="size-sel" style="color:var(--blue)"></span></span><button data-guide>TABELA DE MEDIDAS</button></div>
         <div class="sizes" id="sizes">${p.variants.map((v) => { const off = !imp && v.stock <= 0; return `<button class="size ${off ? 'off' : ''}" ${off ? 'disabled' : ''} data-size="${e(v.size)}" title="${off ? 'Esgotado' : !imp && v.stock <= 3 ? 'Últimas unidades' : ''}">${e(v.size)}</button>`; }).join('')}</div><div class="err" id="size-err" style="color:var(--bad);font-size:13px;margin-top:6px" hidden>Selecione um tamanho.</div>` : ''}
       ${p.customization ? `<div class="optlabel">Personalização</div><div class="custom-box"><label class="check" style="margin:0"><input type="checkbox" id="cust-on"><span><b>PERSONALIZAR CAMISA</b> — custo da personalização: <b>${brl(p.customization.priceCents)}</b></span></label>
         <div class="two" id="cust-fields" hidden><div class="field"><label for="c-name">Nome</label><input id="c-name" maxlength="14" placeholder="Ex.: NEYMAR" autocomplete="off" style="text-transform:uppercase"></div><div class="field"><label for="c-num">Número</label><input id="c-num" inputmode="numeric" maxlength="2" placeholder="10" autocomplete="off"></div></div>
@@ -64,7 +65,7 @@ export default async function product({ params }) {
   main.addEventListener('mousemove', (ev) => { const z = $('.zoom', main); if (!z) return; const r = main.getBoundingClientRect(); z.style.backgroundPosition = `${((ev.clientX - r.left) / r.width) * 100}% ${((ev.clientY - r.top) / r.height) * 100}%`; });
   main.addEventListener('click', () => { const img = $('img', main); if (img) modal(`<h3>${e(p.name)} <button class="x" data-action="modal-close">${icon.x}</button></h3><img src="${e(img.src)}" alt="" style="width:100%;border-radius:10px">`); });
   $('#sizes') && $('#sizes').addEventListener('click', (ev) => { const b = ev.target.closest('.size'); if (!b || b.disabled) return; $$('#sizes .size').forEach((x) => x.classList.toggle('on', x === b)); sel.size = b.dataset.size; $('#size-sel').textContent = '• ' + sel.size; $('#size-err').hidden = true; });
-  $('[data-guide]') && $('[data-guide]').addEventListener('click', () => modal(`<h3>Guia de tamanhos — ${e(p.sizeGuide.name)} <button class="x" data-action="modal-close">${icon.x}</button></h3><table class="t"><thead><tr>${p.sizeGuide.headers.map((h) => `<th>${e(h)}</th>`).join('')}</tr></thead><tbody>${p.sizeGuide.rows.map((r) => `<tr>${r.map((c) => `<td>${e(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>${p.sizeGuide.notes ? `<p class="inst" style="margin-top:10px">${e(p.sizeGuide.notes)}</p>` : ''}`));
+  $('[data-guide]') && $('[data-guide]').addEventListener('click', () => openGuide(p.sizeGuide ? p.sizeGuide.name : 'Torcedor'));
   $$('[data-q]').forEach((b) => b.addEventListener('click', () => { sel.qty = Math.max(1, Math.min(20, sel.qty + +b.dataset.q)); $('#qty').textContent = sel.qty; }));
   const custom = () => { if (!sel.custom) return null; return { name: ($('#c-name').value || '').trim().toUpperCase(), number: ($('#c-num').value || '').replace(/\D/g, '') }; };
   const updateTotal = () => { const t = $('#custom-total'); if (!t) return; t.hidden = !sel.custom; if (sel.custom) t.innerHTML = `Com personalização: <b>${brl(pr.final + p.customization.priceCents)}</b> por unidade`; };

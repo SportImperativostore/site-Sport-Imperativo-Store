@@ -59,6 +59,7 @@ async function main() {
     }));
     fs.writeFileSync(cacheFile, JSON.stringify(map));
     urlOf = (rel) => map[rel] || null;
+    if (has('upload-only')) { console.log('Imagens enviadas ao Blob:', Object.keys(map).length); return; }
   } else {
     const dest = path.join(__dirname, '..', 'public', 'img', 'catalog');
     fs.cpSync(path.join(DIR, 'img'), dest, { recursive: true });

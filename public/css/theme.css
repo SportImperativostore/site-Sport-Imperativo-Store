@@ -201,3 +201,15 @@ h1,h2,h3{font-family:Outfit,Inter,sans-serif;letter-spacing:-.02em}
 .mainimg{background:#fff}
 .line img,.suggest img{object-fit:contain;background:#fff;padding:2px}
 @media(prefers-reduced-motion:reduce){.card .img img{transition:none}}
+
+/* tabela de medidas com abas */
+.gtabs{padding:2px 0 14px;flex-wrap:wrap}
+table.gt{min-width:420px}table.gt th,table.gt td{text-align:center;white-space:nowrap}table.gt th[scope=row]{background:linear-gradient(90deg,var(--blue-l),transparent);color:var(--blue);font-weight:800}
+table.gt thead th{background:var(--bg);color:var(--mut)}
+.modal .tw{overflow-x:auto;border-radius:12px;border:1px solid var(--line)}
+
+/* logos oficiais dos esportes nos cartões de categoria */
+.cat-tile .lg{position:absolute;right:9%;top:46%;transform:translateY(-50%);height:50%;width:auto;max-width:52%;object-fit:contain;z-index:-1;filter:drop-shadow(0 8px 20px rgba(0,0,0,.5));transition:transform .5s var(--ease)}
+.cat-tile:hover .lg{transform:translateY(-52%) scale(1.07)}
+.cat-tile .lg-f1{filter:brightness(0) invert(1) drop-shadow(0 8px 20px rgba(0,0,0,.5))}
+.modal:has(.gtabs){max-width:760px}

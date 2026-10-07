@@ -24,7 +24,7 @@ export default async function home() {
     <div>${icon.shield}<span><b>Compra segura</b>dados protegidos</span></div></div>
   <div class="wrap">
   <section class="block"><div class="sec-h"><h2>Mais <span>vendidos</span></h2><a href="/busca?q=">Ver todos →</a></div><div class="grid">${h.best.map(productCard).join('')}</div></section>
-  <section class="block"><div class="sec-h"><h2>Compre por <span>categoria</span></h2></div><div class="cat-grid">${TILES.map(([k, n, c, href, sub]) => `<a class="cat-tile" href="${href}" aria-label="${n}"><img src="/img/cats/${k}.svg" alt="" loading="lazy" width="640" height="440"><span class="lbl">${n}<small>${sub}</small></span></a>`).join('')}</div></section>
+  <section class="block"><div class="sec-h"><h2>Compre por <span>categoria</span></h2></div><div class="cat-grid">${TILES.map(([k, n, c, href, sub]) => `<a class="cat-tile" href="${href}" aria-label="${n}"><img src="/img/cats/${k}.svg" alt="" loading="lazy" width="640" height="440">${['nba', 'nfl', 'f1'].includes(k) ? `<img class="lg lg-${k}" src="/img/logos/${k}.svg" alt="Logo ${n}" loading="lazy">` : ''}<span class="lbl">${n}<small>${sub}</small></span></a>`).join('')}</div></section>
   ${fut ? `<section class="block"><div class="sec-h"><h2>⚽ <span>Futebol</span></h2><a href="/futebol">Ver tudo →</a></div>
     <div class="panel"><h3>Categorias</h3><div class="tabs" style="flex-wrap:wrap;overflow:visible">${chips(fe('category'))}</div>
     <h3 style="margin-top:8px">Países</h3><div class="tabs" style="flex-wrap:wrap;overflow:visible">${chips(fe('country'))}</div>

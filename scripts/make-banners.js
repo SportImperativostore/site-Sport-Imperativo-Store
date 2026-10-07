@@ -44,6 +44,7 @@ const glowPath = (d, tx, ty, sc, c1, c2) => `
   </g>`;
 
 const MOTIFS = {
+  none: () => '',
   jacket: (cx, cy, s, a, b) => glowPath(JACKET, cx - 200 * s, cy - 210 * s, s, a, b) + `<g stroke="${b}" stroke-width="${2.5 * s}" opacity=".7" fill="none" stroke-linecap="round"><path d="M${cx} ${cy - 160 * s} L${cx} ${cy + 150 * s}"/><path d="M${cx - 38 * s} ${cy - 160 * s} Q${cx} ${cy - 120 * s} ${cx + 38 * s} ${cy - 160 * s}"/><circle cx="${cx}" cy="${cy - 100 * s}" r="${5 * s}"/></g>`,
   set: (cx, cy, s, a, b) => glowPath(JERSEY, cx - 250 * s, cy - 215 * s, s * 0.78, a, b) + glowPath(SHORTS, cx - 20 * s, cy - 70 * s, s * 0.78, a, b),
   nfl: (cx, cy, s, a, b) => `<g transform="rotate(-28 ${cx} ${cy})" filter="url(#glow)"><ellipse cx="${cx}" cy="${cy}" rx="${200 * s}" ry="${120 * s}" fill="url(#shape)" fill-opacity=".16" stroke="${a}" stroke-width="3"/>
@@ -108,9 +109,9 @@ const cats = path.join(__dirname, '..', 'public', 'img', 'cats');
 fs.mkdirSync(cats, { recursive: true });
 const TILES = [
   { name: 'futebol', motif: 'jersey', accent: '#1f6bff', accent2: '#7db3ff' },
-  { name: 'nba', motif: 'ball', accent: '#ff8a1f', accent2: '#ffc27a', c1: '#14102a', c2: '#3d1f6e', scale: 0.62 },
-  { name: 'nfl', motif: 'nfl', accent: '#2fd17a', accent2: '#9af0c0', c1: '#04160f', c2: '#0b4a35', scale: 0.7 },
-  { name: 'f1', motif: 'car', accent: '#ff2b2b', accent2: '#ff8a8a', c1: '#12060a', c2: '#4a0a14', scale: 0.7 },
+  { name: 'nba', motif: 'none', accent: '#ff8a1f', accent2: '#ffc27a', c1: '#14102a', c2: '#3d1f6e', scale: 0.62 },
+  { name: 'nfl', motif: 'none', accent: '#2fd17a', accent2: '#9af0c0', c1: '#04160f', c2: '#0b4a35', scale: 0.7 },
+  { name: 'f1', motif: 'none', accent: '#ff2b2b', accent2: '#ff8a8a', c1: '#12060a', c2: '#4a0a14', scale: 0.7 },
   { name: 'chuteiras', motif: 'boot', accent: '#19c3ff', accent2: '#8ee7ff', c1: '#041a33', c2: '#06507a', scale: 0.85 },
   { name: 'agasalhos', motif: 'jacket', accent: '#6a7dff', accent2: '#b3bcff', c1: '#080d26', c2: '#232c78' },
   { name: 'conjuntos', motif: 'set', accent: '#b04bff', accent2: '#dcaaff', c1: '#12082a', c2: '#46207a' },

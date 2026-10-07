@@ -122,15 +122,23 @@ const NAV_EMOJI = { futebol: '⚽', nba: '🏀', nfl: '🏈', f1: '🏎️', chu
 function buildNav() {
   const items = state.menu.map((s) => ({ ...s, label: s.name.toUpperCase() }));
   $('#nav-list').innerHTML = items.map((s) => `<li data-slug="${e(s.slug)}"><a href="${e(s.path)}">${e(s.label)}</a></li>`).join('') + '<li><a href="/ofertas" class="hot">OFERTAS</a></li>';
-  const nav = $('#mainnav'); let timer;
+  const nav = $('#mainnav'), mega = $('#mega');
+  let openT, closeT, cur = null;
+  const cancel = () => { clearTimeout(openT); clearTimeout(closeT); };
+  const scheduleClose = () => { clearTimeout(closeT); closeT = setTimeout(() => { hideMega(); cur = null; }, 380); }; // tolerância ao sair do menu
+  // Abre/troca o menu só depois de uma pequena intenção de hover; ao entrar no painel, nada é trocado nem fechado.
   $('#nav-list').addEventListener('mouseover', (ev) => {
-    const li = ev.target.closest('li[data-slug]'); clearTimeout(timer);
-    if (!li) return;
-    timer = setTimeout(() => showMega(li.dataset.slug), 90);
+    const li = ev.target.closest('li'); if (!li) return;
+    clearTimeout(closeT); clearTimeout(openT);
+    if (!li.dataset.slug) { scheduleClose(); return; }
+    if (li.dataset.slug === cur && !mega.hidden) return;
+    openT = setTimeout(() => { cur = li.dataset.slug; showMega(cur); }, mega.hidden ? 70 : 180);
   });
-  nav.addEventListener('mouseleave', () => { clearTimeout(timer); hideMega(); });
-  $('#nav-list').addEventListener('mouseover', (ev) => { if (ev.target.closest('li') && !ev.target.closest('li[data-slug]')) hideMega(); });
-  nav.addEventListener('focusin', (ev) => { const li = ev.target.closest('li[data-slug]'); if (li) showMega(li.dataset.slug); });
+  $('#nav-list').addEventListener('mouseleave', () => { clearTimeout(openT); if (!mega.hidden) scheduleClose(); else cancel(); });
+  mega.addEventListener('mouseenter', cancel);          // dentro do painel: mantém aberto
+  mega.addEventListener('mouseleave', scheduleClose);
+  nav.addEventListener('focusin', (ev) => { const li = ev.target.closest('li[data-slug]'); if (li) { cancel(); cur = li.dataset.slug; showMega(cur); } });
+  nav.addEventListener('focusout', (ev) => { if (!nav.contains(ev.relatedTarget)) scheduleClose(); });
 }
 function hideMega() { const m = $('#mega'); if (m) { m.hidden = true; $$('#nav-list a.on').forEach((a) => a.classList.remove('on')); } }
 function showMega(slug) {
@@ -147,11 +155,10 @@ function showMega(slug) {
     </div>
     <div class="side-groups">${side.slice(primary ? 0 : 1, 4).map((g) => `<div class="col"><h5>${e(g.title)}</h5>${g.items.slice(0, 9).map((it) => `<a href="${e(it.path)}">${e(it.name)}</a>`).join('')}</div>`).join('')}<a class="promo" href="${e(s.path)}"><b>TUDO DE ${e(s.name.toUpperCase())}</b><span>Ver todos os produtos →</span></a></div></div>`;
   m.hidden = false;
-  if (primary) m.querySelector('.col').addEventListener('mouseover', (ev) => {
+  if (primary) { let lt; m.querySelector('.col').addEventListener('mouseover', (ev) => {
     const a = ev.target.closest('a[data-i]'); if (!a) return;
-    $$('.col a', m).forEach((x) => x.classList.toggle('on', x === a));
-    $('#mega-detail').innerHTML = fillClubs(primary.items[+a.dataset.i]);
-  });
+    clearTimeout(lt); lt = setTimeout(() => { $('.col a', m).forEach((x) => x.classList.toggle('on', x === a)); $('#mega-detail').innerHTML = fillClubs(primary.items[+a.dataset.i]); }, 60);
+  }); m.querySelector('.col').addEventListener('mouseleave', () => clearTimeout(lt)); }
 }
 function buildMobileMenu() {
   const d = $('#menu-drawer');
