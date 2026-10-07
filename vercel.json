@@ -3,7 +3,8 @@
   "functions": {
     "api/index.js": {
       "maxDuration": 30,
-      "includeFiles": "{public/**,server/shell.html}"
+      "includeFiles": "{public/**,server/shell.html}",
+      "excludeFiles": "public/img/catalog/**"
     }
   },
   "rewrites": [
