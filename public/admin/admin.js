@@ -13,7 +13,7 @@ async function api(path, { method = 'GET', body, raw } = {}) {
   return j;
 }
 const S = { user: null, sizes: [], entities: [], suppliers: [], guides: [] };
-const ENT_TYPES = [['sport', 'Esporte / seção'], ['category', 'Categoria'], ['country', 'País'], ['league', 'Liga'], ['competition', 'Competição'], ['club', 'Clube / time / equipe'], ['national_team', 'Seleção'], ['brand', 'Marca'], ['model', 'Modelo'], ['modality', 'Modalidade'], ['driver', 'Piloto'], ['collection', 'Coleção']];
+const ENT_TYPES = [['sport', 'Esporte / seção'], ['category', 'Categoria'], ['country', 'País'], ['league', 'Liga'], ['competition', 'Competição'], ['club', 'Clube / time / equipe'], ['national_team', 'Seleção'], ['brand', 'Marca'], ['model', 'Modelo'], ['modality', 'Modalidade'], ['driver', 'Piloto'], ['collection', 'Coleção'], ['department', 'Subcategoria (departamento)'], ['group', 'Grupo (ex.: Retrô, Clubes)'], ['version', 'Versão (torcedor, feminina…)'], ['color', 'Cor']];
 const ENT_LABEL = Object.fromEntries(ENT_TYPES);
 
 /* ---------- Layout ---------- */

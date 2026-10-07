@@ -138,29 +138,23 @@ async function facets(f) {
   return { entities: byType, sizes, ship, custom: custom.n };
 }
 
-// Árvore de navegação (mega menu) 100% derivada do banco.
+// Árvore de navegação (mega menu) 100% derivada do banco: esporte → departamento → grupo → liga → clube (até 4 níveis).
 async function buildMenu() {
-  const [sports, kids] = await Promise.all([
-    q.all("SELECT * FROM entities WHERE type='sport' AND active=1 AND show_in_menu=1 ORDER BY sort,name"),
-    q.all(`SELECT e.id,e.type,e.name,e.slug,l.parent_id FROM entity_links l JOIN entities e ON e.id=l.child_id WHERE e.active=1 AND e.show_in_menu=1 ORDER BY l.sort,e.name`),
+  const [ents, links] = await Promise.all([
+    q.all("SELECT id,type,name,slug,sort FROM entities WHERE active=1 AND show_in_menu=1"),
+    q.all('SELECT parent_id,child_id,sort FROM entity_links'),
   ]);
-  const byParent = {};
-  for (const k of kids) (byParent[k.parent_id] ||= []).push(k);
-  const TITLES = { league: 'LIGAS', competition: 'COMPETIÇÕES', category: 'CATEGORIAS', national_team: 'SELEÇÕES', country: 'PAÍSES', club: 'TIMES', brand: 'MARCAS', modality: 'MODALIDADES', collection: 'COLEÇÕES', driver: 'PILOTOS', model: 'MODELOS' };
-  const ORDER = ['league', 'club', 'category', 'modality', 'brand', 'driver', 'national_team', 'country', 'competition', 'collection'];
-  return sports.map((s) => {
-    const own = byParent[s.id] || [];
-    const groups = [];
-    for (const t of ORDER) {
-      const items = own.filter((e) => e.type === t).map((e) => ({
-        name: e.name, slug: e.slug, path: `/${s.slug}/${e.slug}`,
-        children: (byParent[e.id] || []).filter((c) => ['club', 'national_team', 'category', 'brand', 'model', 'driver'].includes(c.type))
-          .map((c) => ({ name: c.name, slug: c.slug, path: `/${s.slug}/${e.slug}/${c.slug}` })),
-      }));
-      if (items.length) groups.push({ type: t, title: TITLES[t], items });
-    }
-    return { name: s.name, slug: s.slug, path: '/' + s.slug, groups };
-  });
+  const byId = new Map(ents.map((e) => [e.id, e]));
+  const kids = new Map();
+  for (const l of links) { const ch = byId.get(l.child_id); if (!ch || !byId.has(l.parent_id)) continue; if (!kids.has(l.parent_id)) kids.set(l.parent_id, []); kids.get(l.parent_id).push({ e: ch, sort: l.sort }); }
+  const STRUCT = new Set(['department', 'group']);
+  const sorted = (id) => (kids.get(id) || []).sort((x, y) => x.sort - y.sort || x.e.name.localeCompare(y.e.name, 'pt')).map((k) => k.e);
+  // Caminho: departamentos/grupos formam o caminho (/futebol/camisas-de-futebol/retro); times, ligas e marcas filtram direto no esporte (/futebol/arsenal).
+  const build = (e, sport, struct, depth) => {
+    const isS = STRUCT.has(e.type), sp = isS ? [...struct, e.slug] : struct;
+    return { name: e.name, slug: e.slug, type: e.type, path: '/' + [sport.slug, ...(isS ? sp : [e.slug])].join('/'), children: depth < 4 ? sorted(e.id).map((k) => build(k, sport, sp, depth + 1)) : [] };
+  };
+  return ents.filter((e) => e.type === 'sport').sort((x, y) => x.sort - y.sort).map((s) => ({ name: s.name, slug: s.slug, path: '/' + s.slug, items: sorted(s.id).map((k) => build(k, s, [], 1)) }));
 }
 
 module.exports = { pricing, cards, fullProduct, reindexProduct, recalcRating, listProducts, facets, buildMenu, tokens, availability, salePrice };

@@ -1,7 +1,7 @@
 import { storiesStrip } from './stories.js';
 import { $, e, api, state, productCard, setMeta, skeletonGrid, icon, starsHtml } from '../lib.js';
 
-const EMO = { futebol: '⚽', nba: '🏀', nfl: '🏈', f1: '🏎️', chuteiras: '👟', 'agasalhos-conjuntos': '🧥' };
+const EMO = { futebol: '⚽', nba: '🏀', nfl: '🏈', chuteiras: '👟' };
 const TILES = [['futebol', 'Futebol', 't1', '/futebol', 'Clubes e seleções'], ['nba', 'NBA', 't2', '/nba', 'Camisas e regatas'], ['nfl', 'NFL', 't3', '/nfl', 'Jerseys dos times'], ['f1', 'F1', 't4', '/f1', 'Equipes e pilotos'],
   ['chuteiras', 'Chuteiras', 't5', '/chuteiras', 'Campo, society e futsal'], ['agasalhos', 'Agasalhos', 't6', '/futebol/agasalhos', 'Para o frio'], ['conjuntos', 'Conjuntos', 't7', '/futebol/conjuntos', 'Treino e passeio'], ['ofertas', 'Ofertas', 't8', '/ofertas', 'Até -30%']];
 
@@ -24,12 +24,9 @@ export default async function home() {
     <div>${icon.shield}<span><b>Compra segura</b>dados protegidos</span></div></div>
   <div class="wrap">
   <section class="block"><div class="sec-h"><h2>Mais <span>vendidos</span></h2><a href="/busca?q=">Ver todos →</a></div><div class="grid">${h.best.map(productCard).join('')}</div></section>
-  <section class="block"><div class="sec-h"><h2>Compre por <span>categoria</span></h2></div><div class="cat-grid">${TILES.map(([k, n, c, href, sub]) => `<a class="cat-tile" href="${href}" aria-label="${n}"><img src="/img/cats/${k}.svg" alt="" loading="lazy" width="640" height="440">${['nba', 'nfl', 'f1'].includes(k) ? `<img class="lg lg-${k}" src="/img/logos/${k}.svg" alt="Logo ${n}" loading="lazy">` : ''}<span class="lbl">${n}<small>${sub}</small></span></a>`).join('')}</div></section>
+  <section class="block"><div class="sec-h"><h2>Compre por <span>categoria</span></h2></div><div class="big4">${h.showcase.map((t) => `<a class="big-tile k-${t.key}" href="${e(t.path)}" aria-label="${e(t.title)}">${t.image ? `<img class="ph" src="${e(t.image)}" alt="" loading="lazy" decoding="async">` : ''}${['nba', 'nfl'].includes(t.key) ? `<img class="lg" src="/img/logos/${t.key}.svg" alt="Logo ${e(t.title)}" loading="lazy">` : ''}<span class="cap"><b>${EMO[t.key] || ''} ${e(t.title.toUpperCase())}</b><small>${e(t.tagline)}</small><i>${t.count ? 'VER PRODUTOS →' : 'EM BREVE'}</i></span></a>`).join('')}</div></section>
   ${fut ? `<section class="block"><div class="sec-h"><h2>⚽ <span>Futebol</span></h2><a href="/futebol">Ver tudo →</a></div>
-    <div class="panel"><h3>Categorias</h3><div class="tabs" style="flex-wrap:wrap;overflow:visible">${chips(fe('category'))}</div>
-    <h3 style="margin-top:8px">Países</h3><div class="tabs" style="flex-wrap:wrap;overflow:visible">${chips(fe('country'))}</div>
-    <h3 style="margin-top:8px">Competições</h3><div class="tabs" style="flex-wrap:wrap;overflow:visible">${chips(fe('league'))}${chips(fe('competition'))}</div>
-    <h3 style="margin-top:8px">Seleções</h3><div class="tabs" style="flex-wrap:wrap;overflow:visible">${chips(fe('national_team'))}</div></div></section>` : ''}
+    <div class="panel"><h3>Camisas de Futebol</h3><div class="tabs" style="flex-wrap:wrap;overflow:visible">${chips((fut.categoryTabs || []).map((t) => ({ name: t.name, slug: t.slug })), '/futebol/')}</div><h3 style="margin-top:8px">Ligas</h3><div class="tabs" style="flex-wrap:wrap;overflow:visible">${chips(fe('league'))}</div><h3 style="margin-top:8px">Seleções</h3><div class="tabs" style="flex-wrap:wrap;overflow:visible"><a class="chip" href="/futebol/camisas-de-futebol/selecoes">Ver todas as seleções</a></div></div></section>` : ''}
   ${h.offers.length ? `<section class="block"><div class="sec-h"><h2>🔥 Ofertas da <span>temporada</span></h2><a href="/ofertas">Ver ofertas →</a></div><div class="grid">${h.offers.map(productCard).join('')}</div></section>` : ''}
   <section class="block"><div class="sec-h"><h2>Lançamentos</h2><a href="/futebol">Ver mais →</a></div><div class="grid">${h.news.slice(0, 4).map(productCard).join('')}</div></section></div>
   <section class="proof"><div class="wrap"><div class="sec-h"><h2>❤️ Quem compra, <span>recomenda.</span></h2><a href="${e(state.config.settings.instagram_feedback_url || state.config.settings.instagram)}" target="_blank" rel="noopener">VER MAIS FEEDBACKS →</a></div>

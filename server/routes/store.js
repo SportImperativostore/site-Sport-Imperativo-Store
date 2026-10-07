@@ -27,8 +27,15 @@ r.get('/home', wrap(async (_req, res) => {
     q.all("SELECT name,slug,logo,banner,description FROM entities WHERE type='sport' AND active=1 ORDER BY sort,name"),
     q.all('SELECT t.*, p.slug product_slug FROM testimonials t LEFT JOIN products p ON p.id=t.product_id WHERE t.active=1 ORDER BY t.sort,t.id LIMIT 24'),
   ]);
+  // Vitrine: 4 categorias principais com a foto de um produto real (o mais vendido com foto)
+  const SHOW = [['camisas-de-futebol', 'Camisas de Futebol', 'Vista a camisa do seu time.', '/futebol/camisas-de-futebol'], ['chuteiras', 'Chuteiras', 'Entre em campo preparado.', '/chuteiras'], ['nba', 'NBA', 'Vista seu time.', '/nba'], ['nfl', 'NFL', 'Vista a paixão pelo futebol americano.', '/nfl']];
+  const showcase = await Promise.all(SHOW.map(async ([slug, title, tagline, path]) => {
+    const r = await q.get("SELECT p.id, (SELECT url FROM product_images i WHERE i.product_id=p.id AND i.kind='image' ORDER BY i.sort,i.id LIMIT 1) image FROM products p WHERE p.active=1 AND p.id IN (SELECT product_id FROM product_entities pe JOIN entities e ON e.id=pe.entity_id WHERE e.slug=?) ORDER BY (SELECT COUNT(*) FROM product_images i WHERE i.product_id=p.id) DESC, p.sold DESC, p.id DESC LIMIT 1", slug);
+    const n = (await q.get('SELECT COUNT(*) n FROM product_entities pe JOIN entities e ON e.id=pe.entity_id JOIN products p ON p.id=pe.product_id WHERE e.slug=? AND p.active=1', slug)).n;
+    return { key: slug === 'camisas-de-futebol' ? 'futebol' : slug, title, tagline, path, image: r && r.image, count: n };
+  }));
   cacheHdr(res, 30);
-  res.json({ banners, best, offers, news, sports, testimonials });
+  res.json({ banners, best, offers, news, sports, testimonials, showcase });
 }));
 
 function parseFilters(qs) {
@@ -62,12 +69,18 @@ r.get('/catalog', wrap(async (req, res) => {
   const f = parseFilters(req.query);
   f.entities = [...new Set([...segs, ...f.entities])];
   const page = Math.max(1, parseInt(req.query.page, 10) || 1);
-  const main = [...ents].reverse().find((e) => e.type !== 'sport' && e.type !== 'category') || ents[ents.length - 1];
+  // entidade principal (banner): time/liga/marca > departamento/grupo > esporte
+  const RANK = { club: 5, national_team: 5, league: 5, brand: 5, model: 5, driver: 5, competition: 4, country: 4, color: 3, modality: 3, group: 2, department: 2, version: 1, category: 1, sport: 0 };
+  const main = [...ents].sort((x, y) => (RANK[y.type] ?? 1) - (RANK[x.type] ?? 1) || ents.indexOf(y) - ents.indexOf(x))[0];
   const sport = ents.find((e) => e.type === 'sport');
   const [list, facets, children, catTabs] = await Promise.all([
     cat.listProducts(f, page, 24), cat.facets(f),
     q.all(`SELECT e.name,e.slug,e.type,e.logo FROM entity_links l JOIN entities e ON e.id=l.child_id WHERE l.parent_id=? AND e.active=1 ORDER BY l.sort,e.name`, main.id),
-    q.all("SELECT name,slug FROM entities WHERE type='category' AND active=1 ORDER BY sort,name"),
+    (async () => { // abas: grupos do departamento atual; sem departamento, os departamentos do esporte
+      const dept = ents.find((e) => e.type === 'department'), parent = dept || sport;
+      if (!parent) return [];
+      return q.all("SELECT e.name,e.slug FROM entity_links l JOIN entities e ON e.id=l.child_id WHERE l.parent_id=? AND e.active=1 AND e.type IN ('group','department') ORDER BY l.sort,e.name", parent.id);
+    })(),
   ]);
   res.json({
     entities: ents.map((e) => ({ id: e.id, type: e.type, name: e.name, slug: e.slug })), title: main.name, main: { name: main.name, type: main.type, logo: main.logo, banner: main.banner, description: main.description, color1: main.color1, color2: main.color2 },

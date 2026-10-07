@@ -118,7 +118,7 @@ function finishAdd(p, size, btn) {
 }
 
 /* ================= Header: menu, mega menu, busca ================= */
-const NAV_EMOJI = { futebol: '⚽', nba: '🏀', nfl: '🏈', f1: '🏎️', chuteiras: '👟' };
+const NAV_EMOJI = { futebol: '⚽', chuteiras: '👟', nba: '🏀', nfl: '🏈' };
 function buildNav() {
   const items = state.menu.map((s) => ({ ...s, label: s.name.toUpperCase() }));
   $('#nav-list').innerHTML = items.map((s) => `<li data-slug="${e(s.slug)}"><a href="${e(s.path)}">${e(s.label)}</a></li>`).join('') + '<li><a href="/ofertas" class="hot">OFERTAS</a></li>';
@@ -126,7 +126,7 @@ function buildNav() {
   let openT, closeT, cur = null;
   const cancel = () => { clearTimeout(openT); clearTimeout(closeT); };
   const scheduleClose = () => { clearTimeout(closeT); closeT = setTimeout(() => { hideMega(); cur = null; }, 380); }; // tolerância ao sair do menu
-  // Abre/troca o menu só depois de uma pequena intenção de hover; ao entrar no painel, nada é trocado nem fechado.
+  // Abre/troca só depois de uma pequena intenção de hover; dentro do painel nada é trocado nem fechado.
   $('#nav-list').addEventListener('mouseover', (ev) => {
     const li = ev.target.closest('li'); if (!li) return;
     clearTimeout(closeT); clearTimeout(openT);
@@ -135,39 +135,49 @@ function buildNav() {
     openT = setTimeout(() => { cur = li.dataset.slug; showMega(cur); }, mega.hidden ? 70 : 180);
   });
   $('#nav-list').addEventListener('mouseleave', () => { clearTimeout(openT); if (!mega.hidden) scheduleClose(); else cancel(); });
-  mega.addEventListener('mouseenter', cancel);          // dentro do painel: mantém aberto
+  mega.addEventListener('mouseenter', cancel);
   mega.addEventListener('mouseleave', scheduleClose);
   nav.addEventListener('focusin', (ev) => { const li = ev.target.closest('li[data-slug]'); if (li) { cancel(); cur = li.dataset.slug; showMega(cur); } });
   nav.addEventListener('focusout', (ev) => { if (!nav.contains(ev.relatedTarget)) scheduleClose(); });
 }
 function hideMega() { const m = $('#mega'); if (m) { m.hidden = true; $$('#nav-list a.on').forEach((a) => a.classList.remove('on')); } }
+/* Painel em colunas: cada nível (departamento → grupo → liga → clube) abre a próxima coluna ao passar o mouse. */
 function showMega(slug) {
   const s = state.menu.find((x) => x.slug === slug), m = $('#mega');
-  if (!s || !s.groups.length) { hideMega(); return; }
+  if (!s || !s.items.length) { hideMega(); return; }
   $$('#nav-list a').forEach((a) => a.classList.toggle('on', a.parentElement.dataset.slug === slug));
-  const first = s.groups[0];
-  const primary = first.items.some((i) => i.children.length) ? first : null; // grupo com filhos (ex.: ligas → clubes)
-  const side = s.groups.filter((g) => g !== primary && !(primary && g.type === 'club'));
-  const fillClubs = (item) => `<h5>${e(item.name.toUpperCase())} — ${primary && primary.type === 'league' ? 'CLUBES' : 'ITENS'}</h5><div class="clubs">${item.children.map((c) => `<a href="${e(c.path)}">${e(c.name)}</a>`).join('')}</div><a class="more" href="${e(item.path)}">Ver tudo de ${e(item.name)} →</a>`;
-  m.innerHTML = `<div class="mega-in">
-    <div class="col">${primary ? `<h5>${e(primary.title)}</h5>${primary.items.map((it, i) => `<a href="${e(it.path)}" data-i="${i}" class="${i === 0 ? 'on' : ''}">${e(it.name)}${it.children.length ? icon.chev : ''}</a>`).join('')}` : `<h5>${e(first.title)}</h5>${first.items.map((it) => `<a href="${e(it.path)}">${e(it.name)}</a>`).join('')}`}</div>
-    <div id="mega-detail">${primary ? fillClubs(primary.items[0]) : side.slice(0, 1).map((g) => `<h5>${e(g.title)}</h5><div class="clubs">${g.items.map((it) => `<a href="${e(it.path)}">${e(it.name)}</a>`).join('')}</div>`).join('')}
-    </div>
-    <div class="side-groups">${side.slice(primary ? 0 : 1, 4).map((g) => `<div class="col"><h5>${e(g.title)}</h5>${g.items.slice(0, 9).map((it) => `<a href="${e(it.path)}">${e(it.name)}</a>`).join('')}</div>`).join('')}<a class="promo" href="${e(s.path)}"><b>TUDO DE ${e(s.name.toUpperCase())}</b><span>Ver todos os produtos →</span></a></div></div>`;
-  m.hidden = false;
-  if (primary) { let lt; m.querySelector('.col').addEventListener('mouseover', (ev) => {
+  const trail = [];                       // índice escolhido em cada coluna
+  const defaults = (nodes, d) => { if (d > 2 || !nodes.length) return; const i = nodes.findIndex((n) => n.children.length); if (i < 0) return; trail[d] = i; defaults(nodes[i].children, d + 1); };
+  defaults(s.items, 0);
+  const render = () => {
+    const cols = []; let nodes = s.items, parent = { name: s.name, path: s.path };
+    for (let d = 0; d <= trail.length; d++) {
+      if (!nodes || !nodes.length) break;
+      cols.push(`<div class="mcol" data-d="${d}"><h5>${e(parent.name.toUpperCase())}</h5>${nodes.map((n, i) => `<a href="${e(n.path)}" data-d="${d}" data-i="${i}" class="${trail[d] === i ? 'on' : ''}">${e(n.name)}${n.children.length ? icon.chev : ''}</a>`).join('')}<a class="more" href="${e(parent.path)}">Ver tudo →</a></div>`);
+      const sel = nodes[trail[d]]; if (!sel || !sel.children.length) break;
+      parent = sel; nodes = sel.children;
+    }
+    m.innerHTML = `<div class="mega-in">${cols.join('')}</div>`;
+  };
+  render(); m.hidden = false;
+  let lt;
+  m.onmouseover = (ev) => {
     const a = ev.target.closest('a[data-i]'); if (!a) return;
-    clearTimeout(lt); lt = setTimeout(() => { $$('.col a', m).forEach((x) => x.classList.toggle('on', x === a)); $('#mega-detail').innerHTML = fillClubs(primary.items[+a.dataset.i]); }, 60);
-  }); m.querySelector('.col').addEventListener('mouseleave', () => clearTimeout(lt)); }
+    const d = +a.dataset.d, i = +a.dataset.i; if (trail[d] === i) return;
+    clearTimeout(lt);
+    lt = setTimeout(() => { trail.length = d; trail[d] = i; render(); }, 70);
+  };
+  m.onmouseleave = () => clearTimeout(lt);
 }
 function buildMobileMenu() {
+  const tree = (nodes) => nodes.map((n) => n.children.length
+    ? `<div class="acc-item"><button data-action="acc-toggle" style="font-size:14.5px;padding:10px 6px;font-weight:600"><span>${e(n.name)}</span><i>+</i></button><div class="sub" hidden><a href="${e(n.path)}" class="lg">Ver tudo — ${e(n.name)}</a>${tree(n.children)}</div></div>`
+    : `<a href="${e(n.path)}">${e(n.name)}</a>`).join('');
   const d = $('#menu-drawer');
   d.innerHTML = `<header>Menu <button class="x" data-action="drawer-close" aria-label="Fechar">${icon.x}</button></header><div class="dbody">
-  ${state.menu.map((s) => `<div class="acc-item"><button data-action="acc-toggle"><span>${NAV_EMOJI[s.slug] || ''} ${e(s.name.toUpperCase())}</span><i>+</i></button><div class="sub" hidden>
-    <a href="${e(s.path)}" class="lg">Ver tudo de ${e(s.name)}</a>
-    ${s.groups.filter((g) => !(g.type === 'club' && s.groups.some((x) => x.type === 'league'))).map((g) => `<div style="margin:8px 0 2px;font-size:11px;letter-spacing:1px;color:var(--mut)">${e(g.title)}</div>${g.items.map((it) => it.children.length ? `<div class="acc-item"><button data-action="acc-toggle" style="font-size:14.5px;padding:9px 6px;font-weight:600"><span>${e(it.name)}</span><i>+</i></button><div class="sub" hidden><a href="${e(it.path)}" class="lg">Todos — ${e(it.name)}</a>${it.children.map((c) => `<a href="${e(c.path)}">${e(c.name)}</a>`).join('')}</div></div>` : `<a href="${e(it.path)}">${e(it.name)}</a>`).join('')}`).join('')}</div></div>`).join('')}
+  ${state.menu.map((s) => `<div class="acc-item"><button data-action="acc-toggle"><span>${NAV_EMOJI[s.slug] || ''} ${e(s.name.toUpperCase())}</span><i>+</i></button><div class="sub" hidden><a href="${e(s.path)}" class="lg">Ver tudo de ${e(s.name)}</a>${tree(s.items)}</div></div>`).join('')}
   <div class="acc-item"><a href="/ofertas" style="color:var(--bad)">🔥 OFERTAS</a></div>
-  <div class="acc-item"><a href="/conta">Minha conta</a></div><div class="acc-item"><a href="/favoritos">Favoritos</a></div></div>`;
+  <div class="acc-item"><a href="/feedbacks">❤️ FEEDBACKS</a></div><div class="acc-item"><a href="/conta">Minha conta</a></div><div class="acc-item"><a href="/favoritos">Favoritos</a></div></div>`;
 }
 function buildFooter() {
   const s = state.config.settings;

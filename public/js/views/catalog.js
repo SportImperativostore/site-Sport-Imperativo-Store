@@ -1,7 +1,7 @@
 import { $, $$, e, api, state, productCard, setMeta, skeletonGrid, pager, debounce } from '../lib.js';
 import { actions } from '../app.js';
 
-const GROUPS = [['category', 'Categoria'], ['club', 'Time'], ['national_team', 'Seleção'], ['league', 'Liga'], ['competition', 'Campeonato'], ['country', 'País'], ['brand', 'Marca'], ['model', 'Modelo'], ['driver', 'Piloto'], ['modality', 'Modalidade']];
+const GROUPS = [['sport', 'Categoria'], ['department', 'Subcategoria'], ['group', 'Tipo'], ['version', 'Versão'], ['club', 'Time'], ['national_team', 'Seleção'], ['league', 'Liga'], ['competition', 'Campeonato'], ['country', 'País'], ['brand', 'Marca'], ['model', 'Modelo'], ['color', 'Cor'], ['modality', 'Modalidade'], ['driver', 'Piloto'], ['category', 'Categoria']];
 const SORTS = [['relevance', 'Mais relevantes'], ['price_asc', 'Menor preço'], ['price_desc', 'Maior preço'], ['newest', 'Lançamentos'], ['rating', 'Melhor avaliados'], ['discount', 'Maiores descontos']];
 
 const lum = (h) => { const n = parseInt((h || '#000000').slice(1), 16); return (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255; };
@@ -49,7 +49,7 @@ export default async function catalog(ctx) {
     for (const [type, title] of GROUPS) {
       const list = (f.entities[type] || []).filter((x) => !pathSegs.includes(x.slug) && !(mode === 'catalog' && type === 'category' && false));
       if (list.length < 1) continue;
-      const open = list.some((x) => sel.includes(x.slug)) || ['category', 'club'].includes(type);
+      const open = list.some((x) => sel.includes(x.slug)) || ['sport', 'department', 'group', 'club', 'brand'].includes(type);
       out.push(`<details class="fgroup" ${open ? 'open' : ''}><summary>${title}</summary><div class="opts">${list.slice(0, 40).map((x) => `<label><input type="checkbox" data-ent="${e(x.slug)}" data-type="${type}" ${sel.includes(x.slug) ? 'checked' : ''}>${e(x.name)}<small>${x.n}</small></label>`).join('')}</div></details>`);
     }
     if (f.sizes.length) out.push(`<details class="fgroup" ${query.get('size') ? 'open' : ''}><summary>Tamanho</summary><div class="sizes" style="margin-top:10px">${f.sizes.map((s) => `<button class="size ${query.get('size') === s.size ? 'on' : ''}" data-size="${e(s.size)}" style="min-width:46px;height:38px">${e(s.size)}</button>`).join('')}</div></details>`);
@@ -103,7 +103,7 @@ export default async function catalog(ctx) {
     $('#results').classList.remove('loading');
     $('#results').innerHTML = (active ? `<div class="tabs" style="padding-top:0">${active}<a href="#" data-clear style="color:var(--bad);border-color:transparent">Limpar filtros</a></div>` : '') +
       (d.items.length ? `<div class="grid" style="grid-template-columns:repeat(3,1fr)" id="grid">${d.items.map(productCard).join('')}</div>${pager(d.total, page, d.per)}`
-        : `<div class="empty"><h3>Nenhum produto encontrado</h3><p>Tente remover filtros ou buscar por outro termo.</p></div>`);
+        : `<div class="empty"><h3>Nenhum produto encontrado</h3><p>${mode === 'catalog' && !Object.keys(d.facets.entities).length ? 'Estamos preparando os produtos desta categoria. Volte em breve!' : 'Tente remover filtros ou buscar por outro termo.'}</p></div>`);
     if (matchMedia('(max-width:560px)').matches) $('#grid') && ($('#grid').style.gridTemplateColumns = 'repeat(2,1fr)');
   }
   function activeChips(d) {
