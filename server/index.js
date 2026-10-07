@@ -88,8 +88,9 @@ async function seo(req) {
     }
   } else if ((m = p.match(/^\/pagina\/([\w-]+)$/))) {
     const pg = await q.get('SELECT title FROM pages WHERE slug=?', m[1]); if (pg) title = `${pg.title} | ${name}`;
-  } else if (p === '/ofertas') { title = `Ofertas | ${name}`; desc = 'Camisas e chuteiras em oferta com desconto, Pix e parcelamento.'; }
-  else if (/^\/[a-z0-9-]+(\/[a-z0-9-]+){0,5}$/.test(p) && !['/carrinho', '/checkout', '/login', '/cadastro', '/busca', '/favoritos'].includes(p) && !p.startsWith('/conta') && !p.startsWith('/pedido')) {
+  } else if (p === '/feedbacks') { title = `Feedbacks de clientes | ${name}`; desc = 'Vídeos, fotos e relatos reais de clientes da Sport Imperativo Store.'; }
+  else if (p === '/ofertas') { title = `Ofertas | ${name}`; desc = 'Camisas e chuteiras em oferta com desconto, Pix e parcelamento.'; }
+  else if (/^\/[a-z0-9-]+(\/[a-z0-9-]+){0,5}$/.test(p) && !['/feedbacks', '/carrinho', '/checkout', '/login', '/cadastro', '/busca', '/favoritos'].includes(p) && !p.startsWith('/conta') && !p.startsWith('/pedido')) {
     const ents = await Promise.all(p.slice(1).split('/').map((s) => q.get('SELECT name,description FROM entities WHERE slug=? AND active=1', s)));
     if (ents.every(Boolean)) {
       const names = ents.map((e) => e.name);

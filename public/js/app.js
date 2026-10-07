@@ -38,6 +38,7 @@ route(/^\/(login|cadastro)$/, () => import('./views/account.js').then((m) => ({ 
 route(/^\/favoritos$/, () => import('./views/account.js').then((m) => ({ default: (c) => m.account({ ...c, params: ['favoritos'] }) })));
 route(/^\/conta(?:\/([\w-]+))?$/, () => import('./views/account.js').then((m) => ({ default: (c) => m.account(c) })));
 route(/^\/pagina\/([\w-]+)$/, () => import('./views/page.js'));
+route(/^\/feedbacks$/, () => import('./views/feedbacks.js'));
 
 document.addEventListener('click', (ev) => {
   const a = ev.target.closest('a[href]');
