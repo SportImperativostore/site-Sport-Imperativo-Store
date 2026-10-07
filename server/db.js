@@ -63,6 +63,7 @@ async function migrate() {
   const want = {
     supplier_orders: { wa_message_id: 'TEXT', wa_status: 'TEXT', sent_to: 'TEXT', attempts: 'INTEGER DEFAULT 0', error: 'TEXT' },
     shipments: { shipped_at: 'TEXT' },
+    order_items: { custom_extra: 'TEXT' },
   };
   for (const [table, cols] of Object.entries(want)) {
     const have = new Set((await q.all(`PRAGMA table_info(${table})`)).map((c) => c.name));

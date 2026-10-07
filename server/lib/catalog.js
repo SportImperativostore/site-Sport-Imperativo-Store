@@ -69,7 +69,7 @@ async function fullProduct(p) {
       rule: p.shipping_rule, fixed: p.shipping_fixed_cents, origin: p.fulfillment === 'import' ? (p.origin || 'Exterior') : 'Brasil',
       leadMin: p.lead_min, leadMax: p.lead_max, importNotice: p.fulfillment === 'import' ? (p.import_notes || setting('import_notice')) : null,
     },
-    customization: p.customizable ? { priceCents: p.custom_price_cents ?? parseInt(setting('personalization_cents', '2500'), 10) } : null,
+    customization: p.customizable ? { priceCents: p.custom_price_cents ?? parseInt(setting('personalization_cents', '2500'), 10), patchCents: parseInt(setting('patch_cents', '3000'), 10), sponsorCents: parseInt(setting('sponsor_cents', '2500'), 10) } : null,
     sizeGuide: guide ? { ...guide, headers: JSON.parse(guide.headers), rows: JSON.parse(guide.rows) } : null,
     meta: { title: p.meta_title, description: p.meta_description }, sku: p.sku,
   };

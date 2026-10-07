@@ -39,13 +39,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const L = await call('/auth/login', 'POST', { email: 'admin@local.test', password: 'teste12345' }); ok(L.s === 200, 'login admin local');
   // fornecedor + produtos
   await call('/admin/suppliers/1', 'PUT', { name: 'Fornecedor (China)', channel: 'whatsapp', whatsapp: '+86 130 0000 0000', active: 1 });
-  const prods = (await call('/products?ship=import')).j.items; const p = prods[0];
+  const prods = (await call('/products?ship=import&custom=1')).j.items; const p = prods[0];
   const pd = (await call('/products/' + p.slug)).j.product;
   // marca o produto como do fornecedor (como o importador faz)
   const full = (await call('/admin/products/' + p.id)).j; full.supplier_id = 1; full.entity_ids = full.entity_ids || [];
   await call('/admin/products/' + p.id, 'PUT', full);
   // 1) compra → pagamento simulado
-  const items = [{ productId: p.id, size: pd.variants[0].size, qty: 1, custom: { name: 'NEYMAR', number: '10' } }];
+  const items = [{ productId: p.id, size: pd.variants[0].size, qty: 1, custom: { name: 'NEYMAR', number: '10', patch: 'Libertadores', sponsor: 'Nubank' } }];
   const co = await call('/checkout', 'POST', { items, importAck: true, customer: { name: 'João Silva', cpf: '52998224725', email: 'joao@example.com', phone: '11987654321' }, address: { cep: '01310100', street: 'Rua Exemplo', number: '100', district: 'Bela Vista', city: 'São Paulo', state: 'SP' }, paymentMethod: 'pix', installments: 1 });
   ok(co.s === 200, 'checkout criado: pedido ' + co.j.orderId);
   const oid = co.j.orderId, tok = co.j.token, ref = 'SIS-' + (10000 + oid);
@@ -56,6 +56,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   ok(m.to === '8613000000000' && m.type === 'template' && m.template && m.template.name === 'novo_pedido_fornecedor', 'enviado como template ao número do fornecedor (+86 130 0000 0000)');
   const params = ((m.template || {}).components || [{}])[0].parameters || [];
   ok(params[0] && params[0].text === '#' + ref && /João Silva/.test(params[1].text) && /NEYMAR/.test(params[2].text) && /Rua Exemplo/.test(params[3].text), 'mensagem contém pedido #' + ref + ', cliente, produto/personalização e endereço');
+  ok(/Patch: Libertadores/.test(params[2].text) && /Patrocinador: Nubank/.test(params[2].text), 'patch e patrocinador seguem na mensagem ao fornecedor');
   ok(!params.some((x) => /\n/.test(x.text)), 'parâmetros do template sem quebras de linha');
   ok(m.auth === 'Bearer TOKEN_DE_TESTE', 'token enviado só no cabeçalho do servidor');
   // 2) idempotência

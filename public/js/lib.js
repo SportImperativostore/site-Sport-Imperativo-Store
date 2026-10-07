@@ -22,7 +22,7 @@ export async function api(path, { method = 'GET', body } = {}) {
 const CK = 'si_cart_v1';
 export function loadCart() { try { state.cart = JSON.parse(localStorage.getItem(CK) || '[]'); } catch { state.cart = []; } renderCartCount(); }
 export function saveCart() { try { localStorage.setItem(CK, JSON.stringify(state.cart)); } catch { /* ignore */ } renderCartCount(); }
-export const cartKey = (i) => `${i.productId}|${i.size || ''}|${i.custom ? i.custom.name + '#' + i.custom.number : ''}`;
+export const cartKey = (i) => `${i.productId}|${i.size || ''}|${i.custom ? [i.custom.name, i.custom.number, i.custom.patch, i.custom.sponsor].map((x) => x || '').join('#') : ''}`;
 export const cartQty = () => state.cart.reduce((a, i) => a + i.qty, 0);
 export function addToCart(item) {
   const k = cartKey(item), ex = state.cart.find((i) => cartKey(i) === k);

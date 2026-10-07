@@ -59,7 +59,7 @@ async function priceCart({ items, cep, method, coupon, userId }) {
   if (!Array.isArray(items) || !items.length) throw new HttpError(400, 'Carrinho vazio.');
   if (items.length > 50) throw new HttpError(400, 'Itens demais no carrinho.');
   const lines = [], warnings = [];
-  const persCents = parseInt(setting('personalization_cents', '2500'), 10);
+  const persCents = parseInt(setting('personalization_cents', '2500'), 10), patchCents = parseInt(setting('patch_cents', '3000'), 10), sponsorCents = parseInt(setting('sponsor_cents', '2500'), 10);
   for (const it of items) {
     const p = await q.get('SELECT * FROM products WHERE id=? AND active=1', +it.productId);
     if (!p) { warnings.push('Um produto não está mais disponível e foi removido.'); continue; }
@@ -73,17 +73,19 @@ async function priceCart({ items, cep, method, coupon, userId }) {
       if (p.fulfillment === 'stock' && v.stock < qty) throw new HttpError(400, `"${p.name}" (${size}): apenas ${v.stock} em estoque.`);
     } else if (p.fulfillment === 'stock' && p.stock < qty) throw new HttpError(400, `"${p.name}": apenas ${p.stock} em estoque.`);
     let custom = null, customCents = 0;
-    if (it.custom && (it.custom.name || it.custom.number)) {
+    const txt = (v) => String(v || '').replace(/[<>"]/g, '').trim().slice(0, 40);
+    const patch = txt(it.custom && it.custom.patch), sponsor = txt(it.custom && it.custom.sponsor);
+    if (it.custom && (it.custom.name || it.custom.number || patch || sponsor)) {
       if (!p.customizable) throw new HttpError(400, `"${p.name}" não aceita personalização.`);
       const name = String(it.custom.name || '').toUpperCase().replace(/[^A-Z0-9 .'\-ÁÀÂÃÉÊÍÓÔÕÚÇ]/gi, '').slice(0, 14);
       const number = String(it.custom.number || '').replace(/\D/g, '').slice(0, 2);
-      custom = { name, number };
-      customCents = p.custom_price_cents ?? persCents;
+      custom = { name, number, patch, sponsor };
+      customCents = (name || number ? (p.custom_price_cents ?? persCents) : 0) + (patch ? patchCents : 0) + (sponsor ? sponsorCents : 0);
     }
     const unit = price.final + customCents;
     const img = await q.get("SELECT url FROM product_images WHERE product_id=? AND kind='image' ORDER BY sort,id LIMIT 1", p.id);
     lines.push({
-      key: `${p.id}|${size || ''}|${custom ? custom.name + '#' + custom.number : ''}`, productId: p.id, slug: p.slug, name: p.name, image: img ? img.url : `/img/p/${p.id}.svg`,
+      key: `${p.id}|${size || ''}|${custom ? [custom.name, custom.number, custom.patch, custom.sponsor].join('#') : ''}`, productId: p.id, slug: p.slug, name: p.name, image: img ? img.url : `/img/p/${p.id}.svg`,
       size, qty, unitCents: price.final, customCents, custom, lineCents: unit * qty, pixLineCents: Math.round(price.final * (1 - price.pixPct / 100)) * qty + customCents * qty,
       fulfillment: p.fulfillment, rule: p.shipping_rule, fixed: p.shipping_fixed_cents || 0, weight: (p.weight_g || 400) * qty,
       leadMin: p.lead_min, leadMax: p.lead_max, origin: p.origin, customizable: !!p.customizable, supplierId: p.supplier_id, supplierSku: p.supplier_sku,

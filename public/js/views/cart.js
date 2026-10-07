@@ -39,7 +39,7 @@ export default async function cart() {
       <div class="panel">${c.lines.map((l) => { const i = state.cart.findIndex((x) => cartKey(x) === l.key);
         return `<div class="line"><a href="/produto/${e(l.slug)}"><img src="${e(l.image)}" alt="" loading="lazy"></a><div><a class="nm" href="/produto/${e(l.slug)}">${e(l.name)}</a>
           <div class="sub">${l.size ? 'Tamanho: <b>' + e(l.size) + '</b>' : ''}</div>
-          ${l.custom ? `<div class="sub">Personalização: <b>${e(l.custom.name)} ${e(l.custom.number)}</b> (+${brl(l.customCents)} cada)</div>` : ''}
+          ${l.custom ? `<div class="sub">${l.custom.name || l.custom.number ? `Personalização: <b>${e(l.custom.name)} ${e(l.custom.number)}</b><br>` : ''}${l.custom.patch ? `Patch: <b>${e(l.custom.patch)}</b><br>` : ''}${l.custom.sponsor ? `Patrocinador: <b>${e(l.custom.sponsor)}</b><br>` : ''}(+${brl(l.customCents)} cada)</div>` : ''}
           <div class="sub">${l.fulfillment === 'import' ? '<span style="color:#a86b00">Importado / sob encomenda — prazo maior</span>' : '<span style="color:var(--ok)">Pronta entrega</span>'}</div>
           <div style="display:flex;gap:14px;align-items:center;margin-top:8px;flex-wrap:wrap"><div class="qty" style="height:36px"><button data-q="${i}" data-d="-1" aria-label="Menos">−</button><span>${l.qty}</span><button data-q="${i}" data-d="1" aria-label="Mais">+</button></div>
           <button class="rm" style="color:var(--blue)" data-edit="${i}">Alterar</button><button class="rm" data-rm="${i}">Remover</button></div></div>
@@ -81,7 +81,7 @@ async function editItem(i, done) {
   $('#ed-sizes') && $('#ed-sizes').addEventListener('click', (ev) => { const b = ev.target.closest('.size'); if (!b || b.disabled) return; $$('#ed-sizes .size').forEach((x) => x.classList.toggle('on', x === b)); size = b.dataset.size; });
   $('#ed-save').addEventListener('click', () => {
     it.size = size;
-    if ($('#ed-name')) { const n = $('#ed-name').value.trim().toUpperCase(), nu = $('#ed-num').value.replace(/\D/g, ''); it.custom = n || nu ? { name: n, number: nu } : null; }
+    if ($('#ed-name')) { const n = $('#ed-name').value.trim().toUpperCase(), nu = $('#ed-num').value.replace(/\D/g, ''); const old = it.custom || {}; it.custom = n || nu || old.patch || old.sponsor ? { name: n, number: nu, patch: old.patch || '', sponsor: old.sponsor || '' } : null; }
     // une itens idênticos
     const k = cartKey(it); const dup = state.cart.findIndex((x, j) => j !== i && cartKey(x) === k);
     if (dup >= 0) { state.cart[dup].qty = Math.min(20, state.cart[dup].qty + it.qty); state.cart.splice(i, 1); }

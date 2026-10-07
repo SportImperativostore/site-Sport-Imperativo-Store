@@ -33,8 +33,8 @@ async function createOrder({ cart, customer, address, userId, paymentMethod, ins
       importAck ? 1 : 0);
     const orderId = Number(r.lastInsertRowid);
     for (const l of cart.lines) {
-      await Q.run(`INSERT INTO order_items(order_id,product_id,name,size,qty,unit_cents,custom_name,custom_number,custom_cents,fulfillment,supplier_id,supplier_sku,image) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-        orderId, l.productId, l.name, l.size, l.qty, l.unitCents, l.custom ? l.custom.name : null, l.custom ? l.custom.number : null, l.customCents, l.fulfillment, l.supplierId, l.supplierSku, l.image);
+      await Q.run(`INSERT INTO order_items(order_id,product_id,name,size,qty,unit_cents,custom_name,custom_number,custom_cents,fulfillment,supplier_id,supplier_sku,image,custom_extra) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+        orderId, l.productId, l.name, l.size, l.qty, l.unitCents, l.custom ? l.custom.name : null, l.custom ? l.custom.number : null, l.customCents, l.fulfillment, l.supplierId, l.supplierSku, l.image, l.custom ? [l.custom.patch && 'Patch: ' + l.custom.patch, l.custom.sponsor && 'Patrocinador: ' + l.custom.sponsor].filter(Boolean).join(' | ') || null : null);
     }
     await Q.run('INSERT INTO order_events(order_id,status,note) VALUES(?,?,?)', orderId, 'received', 'Pedido criado');
     return { id: orderId, accessToken };
@@ -96,7 +96,7 @@ async function createSupplierOrders(orderId) {
 const dispatchSupplierOrder = (id, o) => require('./automation').dispatchSupplierOrder(id, o);
 const markSupplierSent = (id) => require('./automation').markManualSent(id);
 async function orderView(o) {
-  const [itemsRaw, shipments, events, pay] = await Promise.all([q.all('SELECT name,size,qty,unit_cents,custom_name,custom_number,custom_cents,fulfillment,image FROM order_items WHERE order_id=?', o.id), q.all('SELECT grp,carrier,code,url,status,shipped_at FROM shipments WHERE order_id=?', o.id), q.all('SELECT status,created_at FROM order_events WHERE order_id=? ORDER BY id', o.id), q.get('SELECT method,status,pix_code,pix_qr,checkout_url FROM payments WHERE order_id=? ORDER BY id DESC LIMIT 1', o.id)]);
+  const [itemsRaw, shipments, events, pay] = await Promise.all([q.all('SELECT name,size,qty,unit_cents,custom_name,custom_number,custom_cents,custom_extra,fulfillment,image FROM order_items WHERE order_id=?', o.id), q.all('SELECT grp,carrier,code,url,status,shipped_at FROM shipments WHERE order_id=?', o.id), q.all('SELECT status,created_at FROM order_events WHERE order_id=? ORDER BY id', o.id), q.get('SELECT method,status,pix_code,pix_qr,checkout_url FROM payments WHERE order_id=? ORDER BY id DESC LIMIT 1', o.id)]);
   const stepOf = (st) => (st === 'cancelled' || st === 'payment_pending' ? st : TIMELINE[TL_INDEX[st] ?? 0]);
   const ev = events.map((e) => ({ status: stepOf(e.status), label: CUSTOMER_MSG[e.status] || CUSTOMER_LABEL[e.status], created_at: e.created_at })).filter((e, i, a) => !i || a[i - 1].label !== e.label);
   const hasTracking = shipments.some((x) => x.code);

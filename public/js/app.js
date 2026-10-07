@@ -1,4 +1,4 @@
-import { $, $$, e, brl, api, state, loadCart, saveCart, cartPayload, addToCart, toast, modal, closeModal, icon, debounce, setMeta, toggleFav, renderCartCount } from './lib.js';
+import { $, $$, e, brl, api, state, loadCart, saveCart, cartPayload, addToCart, cartKey, toast, modal, closeModal, icon, debounce, setMeta, toggleFav, renderCartCount } from './lib.js';
 
 /* ================= Roteador ================= */
 const routes = [];
@@ -86,7 +86,7 @@ export async function openCartDrawer() {
   d.innerHTML = head + '<div class="dbody"><div class="skeleton" style="height:200px;margin-top:14px"></div></div>';
   try {
     const c = await api('/cart/price', { method: 'POST', body: cartPayload() });
-    d.innerHTML = head + `<div class="dbody">${c.lines.map((l) => { const idx = state.cart.findIndex((i) => `${i.productId}|${i.size || ''}|${i.custom ? i.custom.name + '#' + i.custom.number : ''}` === l.key);
+    d.innerHTML = head + `<div class="dbody">${c.lines.map((l) => { const idx = state.cart.findIndex((i) => cartKey(i) === l.key);
       return `<div class="line"><a href="/produto/${e(l.slug)}"><img src="${e(l.image)}" alt="" loading="lazy"></a><div><a class="nm" href="/produto/${e(l.slug)}">${e(l.name)}</a><div class="sub">${l.size ? 'Tam. ' + e(l.size) : ''}${l.custom ? ` • ${e(l.custom.name)} ${e(l.custom.number)}` : ''}</div>
       <div class="sub">${l.fulfillment === 'import' ? 'Importado / sob encomenda' : 'Pronta entrega'}</div>
       <div class="row" style="display:flex;gap:10px;align-items:center;margin-top:6px"><div class="qty" style="height:34px"><button data-action="cart-qty" data-i="${idx}" data-d="-1" aria-label="Menos">−</button><span>${l.qty}</span><button data-action="cart-qty" data-i="${idx}" data-d="1" aria-label="Mais">+</button></div><button class="rm" data-action="cart-remove" data-i="${idx}">Remover</button></div></div><b>${brl(l.lineCents)}</b></div>`; }).join('')}</div>

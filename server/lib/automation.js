@@ -33,7 +33,7 @@ const storeNumber = () => wa.digits(setting('whatsapp', '5511917765409'));
 const addressLines = (a) => [a.street + ', ' + a.number + (a.complement ? ' - ' + a.complement : ''), a.district, `${a.city} - ${a.state}`, 'CEP: ' + String(a.cep).replace(/^(\d{5})(\d{3})$/, '$1-$2'), 'Brasil'];
 function itemsBlock(items) {
   return items.map((it) => [`Camisa/Produto: ${it.name}`, `Tamanho: ${it.size || '-'}`, `Quantidade: ${it.qty}`,
-    (it.custom_name || it.custom_number) ? `Personalização: Nome ${it.custom_name || '-'} / Número ${it.custom_number || '-'}` : null].filter(Boolean).join('\n')).join('\n\n');
+    (it.custom_name || it.custom_number) ? `Personalização: Nome ${it.custom_name || '-'} / Número ${it.custom_number || '-'}` : null, it.custom_extra || null].filter(Boolean).join('\n')).join('\n\n');
 }
 function supplierMessage(order, items) {
   const c = JSON.parse(order.customer), a = JSON.parse(order.address);
@@ -46,7 +46,7 @@ function templateParams(order, items) {
   const c = JSON.parse(order.customer), a = JSON.parse(order.address);
   const share = setting('supplier_share_phone', '1') !== '0';
   return ['#' + orderRef(order.id), c.name,
-    items.map((it) => `${it.qty}x ${it.name} (Tam. ${it.size || '-'})${(it.custom_name || it.custom_number) ? ` [Nome ${it.custom_name || '-'} Nº ${it.custom_number || '-'}]` : ''}`).join(' ; '),
+    items.map((it) => `${it.qty}x ${it.name} (Tam. ${it.size || '-'})${(it.custom_name || it.custom_number) ? ` [Nome ${it.custom_name || '-'} Nº ${it.custom_number || '-'}]` : ''}${it.custom_extra ? ` [${it.custom_extra}]` : ''}`).join(' ; '),
     addressLines(a).join(', '), share ? fmtPhone(c.whatsapp || c.phone) : 'não informado', brl(order.total_cents)];
 }
 

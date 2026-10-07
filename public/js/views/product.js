@@ -41,7 +41,12 @@ export default async function product({ params }) {
         <div class="sizes" id="sizes">${p.variants.map((v) => { const off = !imp && v.stock <= 0; return `<button class="size ${off ? 'off' : ''}" ${off ? 'disabled' : ''} data-size="${e(v.size)}" title="${off ? 'Esgotado' : !imp && v.stock <= 3 ? 'Últimas unidades' : ''}">${e(v.size)}</button>`; }).join('')}</div><div class="err" id="size-err" style="color:var(--bad);font-size:13px;margin-top:6px" hidden>Selecione um tamanho.</div>` : ''}
       ${p.customization ? `<div class="optlabel">Personalização</div><div class="custom-box"><label class="check" style="margin:0"><input type="checkbox" id="cust-on"><span><b>PERSONALIZAR CAMISA</b> — custo da personalização: <b>${brl(p.customization.priceCents)}</b></span></label>
         <div class="two" id="cust-fields" hidden><div class="field"><label for="c-name">Nome</label><input id="c-name" maxlength="14" placeholder="Ex.: NEYMAR" autocomplete="off" style="text-transform:uppercase"></div><div class="field"><label for="c-num">Número</label><input id="c-num" inputmode="numeric" maxlength="2" placeholder="10" autocomplete="off"></div></div>
-        <small style="color:var(--mut);display:block;margin-top:6px" id="cust-note" hidden>Produtos personalizados não podem ser trocados, exceto por defeito.</small></div>` : ''}
+        <small style="color:var(--mut);display:block;margin-top:6px" id="cust-note" hidden>Produtos personalizados não podem ser trocados, exceto por defeito.</small></div>
+      <div class="optlabel">Opcionais</div><div class="custom-box">
+        <label class="check" style="margin:0"><input type="checkbox" id="patch-on"><span><b>PATCH</b> (aplicação no braço) — <b>+${brl(p.customization.patchCents)}</b></span></label>
+        <div class="field" id="patch-f" hidden style="margin-top:8px"><label for="patch-t">Qual patch?</label><input id="patch-t" maxlength="40" placeholder="Ex.: Libertadores, Champions, Brasileirão" autocomplete="off"></div>
+        <label class="check" style="margin:10px 0 0"><input type="checkbox" id="spons-on"><span><b>PATROCINADOR</b> — <b>+${brl(p.customization.sponsorCents)}</b></span></label>
+        <div class="field" id="spons-f" hidden style="margin-top:8px"><label for="spons-t">Qual patrocinador?</label><input id="spons-t" maxlength="40" placeholder="Ex.: Nome do patrocinador" autocomplete="off"></div></div>` : ''}
       <div class="buy"><div class="qty"><button data-q="-1" aria-label="Menos">−</button><span id="qty">1</span><button data-q="1" aria-label="Mais">+</button></div>
         <button class="btn" id="add" ${p.availability.code === 'out' ? 'disabled' : ''}>${p.availability.code === 'out' ? 'ESGOTADO' : 'ADICIONAR AO CARRINHO'}</button></div>
       <button class="btn dark block" id="buy-now" style="margin-top:10px" ${p.availability.code === 'out' ? 'disabled' : ''}>COMPRAR AGORA</button>
@@ -67,14 +72,26 @@ export default async function product({ params }) {
   $('#sizes') && $('#sizes').addEventListener('click', (ev) => { const b = ev.target.closest('.size'); if (!b || b.disabled) return; $$('#sizes .size').forEach((x) => x.classList.toggle('on', x === b)); sel.size = b.dataset.size; $('#size-sel').textContent = '• ' + sel.size; $('#size-err').hidden = true; });
   $('[data-guide]') && $('[data-guide]').addEventListener('click', () => openGuide(p.sizeGuide ? p.sizeGuide.name : 'Torcedor'));
   $$('[data-q]').forEach((b) => b.addEventListener('click', () => { sel.qty = Math.max(1, Math.min(20, sel.qty + +b.dataset.q)); $('#qty').textContent = sel.qty; }));
-  const custom = () => { if (!sel.custom) return null; return { name: ($('#c-name').value || '').trim().toUpperCase(), number: ($('#c-num').value || '').replace(/\D/g, '') }; };
-  const updateTotal = () => { const t = $('#custom-total'); if (!t) return; t.hidden = !sel.custom; if (sel.custom) t.innerHTML = `Com personalização: <b>${brl(pr.final + p.customization.priceCents)}</b> por unidade`; };
+  const custom = () => {
+    const c = { name: '', number: '', patch: '', sponsor: '' };
+    if (sel.custom) { c.name = ($('#c-name').value || '').trim().toUpperCase(); c.number = ($('#c-num').value || '').replace(/\D/g, ''); }
+    if ($('#patch-on') && $('#patch-on').checked) c.patch = ($('#patch-t').value || '').trim() || 'A definir';
+    if ($('#spons-on') && $('#spons-on').checked) c.sponsor = ($('#spons-t').value || '').trim() || 'A definir';
+    return c.name || c.number || c.patch || c.sponsor ? c : null;
+  };
+  const updateTotal = () => {
+    const t = $('#custom-total'); if (!t || !p.customization) return;
+    const add = (sel.custom ? p.customization.priceCents : 0) + ($('#patch-on') && $('#patch-on').checked ? p.customization.patchCents : 0) + ($('#spons-on') && $('#spons-on').checked ? p.customization.sponsorCents : 0);
+    t.hidden = !add; if (add) t.innerHTML = `Com opcionais: <b>${brl(pr.final + add)}</b> por unidade`;
+  };
+  $('#patch-on') && $('#patch-on').addEventListener('change', (ev) => { $('#patch-f').hidden = !ev.target.checked; updateTotal(); });
+  $('#spons-on') && $('#spons-on').addEventListener('change', (ev) => { $('#spons-f').hidden = !ev.target.checked; updateTotal(); });
   $('#cust-on') && $('#cust-on').addEventListener('change', (ev) => { sel.custom = ev.target.checked; $('#cust-fields').hidden = $('#cust-note').hidden = !sel.custom; updateTotal(); });
   $('#c-num') && $('#c-num').addEventListener('input', (ev) => { ev.target.value = ev.target.value.replace(/\D/g, '').slice(0, 2); });
   function addItem() {
     if (p.variants.length && !sel.size) { $('#size-err').hidden = false; $('#sizes').scrollIntoView({ behavior: 'smooth', block: 'center' }); return false; }
     const c = custom();
-    if (sel.custom && !c.name && !c.number) { toast('Informe nome e/ou número da personalização.', { err: true }); return false; }
+    if (sel.custom && !(c && (c.name || c.number))) { toast('Informe nome e/ou número da personalização.', { err: true }); return false; }
     addToCart({ productId: p.id, size: sel.size, qty: sel.qty, custom: c, m: { name: p.name, image: p.images[0].url, slug: p.slug } });
     return true;
   }
