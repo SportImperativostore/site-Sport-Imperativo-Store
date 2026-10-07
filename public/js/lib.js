@@ -73,7 +73,7 @@ export function priceBlock(p, big = false) {
   return `${pr.onSale ? `<div class="price-old">${brl(pr.original)}</div>` : '<div class="price-old">&nbsp;</div>'}
   <div><span class="price">${brl(pr.final)}</span>${pr.discountPct ? `<span class="pct">-${pr.discountPct}%</span>` : ''}</div>
   <div class="pix">${brl(pr.pix)} <span style="font-weight:600">no Pix</span></div>
-  <div class="inst">ou ${pr.installments.n}x de ${brl(pr.installments.value)} sem juros</div>`;
+  <div class="inst">ou em até ${pr.installments.n}x no cartão</div>`;
 }
 export function productCard(p) {
   const fav = state.favorites.has(p.id);

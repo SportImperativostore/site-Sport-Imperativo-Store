@@ -126,7 +126,7 @@ function seed() {
     const price = o.price, sale = o.sale || null, soldOf = Math.floor(rnd() * 120);
     const id = ++nextProd;
     op(`INSERT INTO products(id,slug,name,description,price_cents,sale_price_cents,fulfillment,stock,shipping_rule,shipping_fixed_cents,origin,lead_min,lead_max,weight_g,supplier_id,supplier_sku,supplier_cost_cents,customizable,size_guide_id,badge,tags,style,color1,color2,shape,sold,sku,rating_avg,rating_count,sale_ends)
-      VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, id, o.slug, o.name, o.desc, price, sale, o.imp ? 'import' : 'stock', o.imp ? 0 : o.stock, o.imp ? 'free' : 'cep', 0, o.imp ? 'China' : null, o.imp ? 18 : null, o.imp ? 40 : null, o.weight || 400,
+      VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, id, o.slug, o.name, o.desc, price, sale, o.imp ? 'import' : 'stock', o.imp ? 0 : o.stock, o.imp ? 'free' : 'cep', 0, o.imp ? 'China' : null, o.imp ? 15 : null, o.imp ? 30 : null, o.weight || 400,
       o.imp ? sup : null, o.imp ? 'SKU-' + sku : null, o.imp ? Math.round(price * 0.45) : null, o.custom ? 1 : 0, o.guide || null, o.badge || null, o.tags || '', o.style, o.c1, o.c2, o.shape || 'jersey', soldOf, 'SI-' + (sku++),
       0, 0, sale ? new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 19).replace('T', ' ') : null);
     for (const e of o.ents) if (E[e]) op('INSERT OR IGNORE INTO product_entities(product_id,entity_id) VALUES(?,?)', id, E[e]);
@@ -188,7 +188,7 @@ function seed() {
   pg('trocas-e-devolucoes', 'Trocas e Devoluções', '<p><strong>Modelo — revise.</strong> Você pode desistir da compra em até 7 dias após o recebimento (CDC, art. 49). Produtos personalizados só podem ser trocados em caso de defeito ou erro nosso. Para trocas por tamanho, o produto deve estar sem uso e com etiquetas.</p>');
   pg('como-comprar', 'Como comprar', '<ol><li>Escolha o esporte, liga e clube.</li><li>Selecione o tamanho e personalize, se quiser.</li><li>Calcule o frete e adicione ao carrinho.</li><li>Finalize com Pix ou cartão.</li><li>Acompanhe em Meus Pedidos.</li></ol>');
   pg('formas-de-pagamento', 'Formas de pagamento', '<p>Pix (com desconto) e cartão de crédito em até 12x, conforme o valor. Os pagamentos são processados por gateway seguro.</p>');
-  pg('prazo-de-entrega', 'Prazo de entrega', '<p><strong>Pronta entrega:</strong> envio do Brasil, prazo calculado pelo CEP.</p><p><strong>Sob encomenda / importado:</strong> enviado do exterior, prazo maior (geralmente de 18 a 40 dias úteis). Eventuais tributos de importação são informados antes do pagamento.</p>');
+  pg('prazo-de-entrega', 'Prazo de entrega', '<p><strong>Pronta entrega:</strong> envio do Brasil, prazo calculado pelo CEP.</p><p><strong>Sob encomenda / importado:</strong> enviado do exterior, prazo maior (de 15 a 30 dias úteis). Eventuais tributos de importação são informados antes do pagamento.</p>');
   pg('rastreamento', 'Rastreamento', '<p>Acompanhe seu pedido em <a href="/conta/pedidos">Meus Pedidos</a>. O código de rastreio aparece assim que o envio é postado.</p>');
   pg('tabela-de-medidas', 'Tabela de medidas', '<p>Veja o botão “Guia de tamanhos” na página de cada produto.</p>');
 

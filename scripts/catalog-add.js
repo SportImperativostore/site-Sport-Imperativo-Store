@@ -89,7 +89,7 @@ function loadData(f) {
     const cslug = CATS[catRaw] || 'torcedor'; const cents = money(price); if (!cents) continue;
     const id = ++nextProd; ok++;
     op(`INSERT INTO products(id,slug,name,description,price_cents,fulfillment,stock,shipping_rule,origin,lead_min,lead_max,weight_g,customizable,custom_price_cents,size_guide_id,tags,sku,shape,active,sold,search_text)
-        VALUES(?,?,?,?,?,'import',0,'free','China',18,45,400,?,?,?,?,?,'jersey',1,0,?)`,
+        VALUES(?,?,?,?,?,'import',0,'free','China',15,30,400,?,?,?,?,?,'jersey',1,0,?)`,
     [id, uniq(name + '-' + pid.slice(0, 6)), name, `${name}. Escolha o tamanho e, se quiser, personalize com nome e número.`, cents, pers ? 1 : 0, pers ? money(pers) : null, guideFor[cslug] || null, `camisa camiseta jersey ${cslug}`, 'SI-' + pid.slice(0, 8).toUpperCase(), norm([name, rawName, TEAMS[ts].name, cslug, 'futebol camisa'].join(' '))]);
     for (const e of [futebol, club.id, catId[cslug], club.league]) if (e) op('INSERT OR IGNORE INTO product_entities(product_id,entity_id) VALUES(?,?)', [id, e]);
     op('INSERT INTO product_images(product_id,url,kind,sort) VALUES(?,?,?,?)', [id, u0, 'image', 0]);

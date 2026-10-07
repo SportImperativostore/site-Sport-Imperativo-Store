@@ -11,7 +11,7 @@ export function summaryHtml(c, { showCoupon = true } = {}) {
     <div><span>Frete</span><span>${c.needCep ? 'a calcular' : c.shipping ? brl(c.shipping) : '<b style="color:var(--ok)">GRÁTIS</b>'}</span></div>
     <div class="tot"><span>Total</span><span>${brl(c.total)}</span></div>
     <div class="pix" style="text-align:right">${brl(c.pixTotal)} no Pix (${c.pixPct}% off)</div>
-    <div class="inst" style="text-align:right">ou até ${c.installments.n}x de ${brl(Math.ceil(c.total / c.installments.n))} sem juros</div></div>`;
+    <div class="inst" style="text-align:right">ou em até ${c.installments.n}x no cartão (juros conforme o meio de pagamento)</div></div>`;
 }
 export function groupsHtml(c, selectable = true) {
   return c.groups.map((g) => `<div class="ship-group ${g.id === 'import' ? 'imp' : ''}"><b><span>${g.id === 'import' ? icon.globe.replace('<svg', '<svg width="16" height="16" style="vertical-align:-3px"') : icon.truck.replace('<svg', '<svg width="16" height="16" style="vertical-align:-3px"')} ${e(g.title)}</span><span>${g.options.length ? (g.priceCents ? brl(g.priceCents) : '<span style="color:var(--ok)">GRÁTIS</span>') : ''}</span></b>

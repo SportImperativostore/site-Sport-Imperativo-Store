@@ -102,4 +102,4 @@ Os dados e as fotos do catálogo atual (MeuKatálogo) foram levantados para `D:\
 2. `node scripts/catalog-import.js --dir=D:/loja/catalogo-import --blob` — envia as imagens ao Blob (CDN) e grava ligas, times, produtos, tamanhos e fotos no banco (Turso). Com `--dry` apenas mostra o resumo; sem `--keep-demo` apaga os produtos/clubes de demonstração.
 3. Para testar localmente sem Blob: `--local` (copia as imagens para `public/img/catalog/`, que não vai ao Git).
 
-Ao importar, os produtos entram como **sob encomenda/importado, frete grátis, prazo 18–45 dias** (padrão da loja) — ajuste por produto no admin se algum for pronta entrega.
+Ao importar, os produtos entram como **sob encomenda/importado, frete grátis, prazo 15–30 dias úteis** (padrão da loja) — ajuste por produto no admin se algum for pronta entrega.

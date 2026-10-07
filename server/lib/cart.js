@@ -127,7 +127,7 @@ async function priceCart({ items, cep, method, coupon, userId }) {
     const cepPaid = importLines.some((l) => l.rule === 'cep');
     let price = fixedCents;
     if (cepPaid) { if (cepD.length !== 8) needCep = true; else price += quoteStock(cepD, importLines.filter((l) => l.rule === 'cep').reduce((a, l) => a + l.weight, 0))[0].price; }
-    const lmin = Math.min(...importLines.map((l) => l.leadMin || 15)), lmax = Math.max(...importLines.map((l) => l.leadMax || 40));
+    const lmin = Math.min(...importLines.map((l) => l.leadMin || 15)), lmax = Math.max(...importLines.map((l) => l.leadMax || 30));
     const opt = { id: 'import', carrier: price === 0 ? 'Frete grátis / promocional (internacional)' : 'Envio internacional', price, daysMin: lmin, daysMax: lmax, unit: 'dias úteis' };
     groups.push({ id: 'import', title: 'Importado / sob encomenda', origin: [...new Set(importLines.map((l) => l.origin || 'Exterior'))].join(', '), items: importLines.map((l) => l.key), options: [opt], selected: opt, priceCents: price,
       note: setting('import_notice') });

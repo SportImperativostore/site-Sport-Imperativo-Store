@@ -78,7 +78,7 @@ async function seo(req) {
     if (row) {
       const fp = await cat.fullProduct(row), pr = fp.pricing;
       title = row.meta_title || `${row.name} | ${name}`;
-      desc = row.meta_description || `${row.name}. ${(row.description || '').slice(0, 120)} Pix R$ ${(pr.pix / 100).toFixed(2)} ou ${pr.installments.n}x de R$ ${(pr.installments.value / 100).toFixed(2)}.`;
+      desc = row.meta_description || `${row.name}. ${(row.description || '').slice(0, 120)} Pix R$ ${(pr.pix / 100).toFixed(2)} ou em até ${pr.installments.n}x no cartão.`;
       image = /^https?:/.test(fp.images[0].url) ? fp.images[0].url : b + fp.images[0].url;
       ld = [{ '@context': 'https://schema.org', '@type': 'Product', name: row.name, image: fp.images.map((i) => (/^https?:/.test(i.url) ? i.url : b + i.url)), description: row.description || row.name, sku: row.sku || String(row.id), brand: { '@type': 'Brand', name: (fp.entities.find((e) => e.type === 'brand') || {}).name || name },
         ...(row.rating_count ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: row.rating_avg, reviewCount: row.rating_count } } : {}),

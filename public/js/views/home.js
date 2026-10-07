@@ -19,7 +19,7 @@ export default async function home() {
     ${banners.length > 1 ? `<div class="dots">${banners.map((_, i) => `<button class="${i ? '' : 'on'}" data-i="${i}" aria-label="Banner ${i + 1}"></button>`).join('')}</div>` : ''}</section>
   <div class="trust">
     <div>${icon.pix}<span><b>Pix com desconto</b>${e(state.config.settings.pix_pct)}% off à vista</span></div>
-    <div>${icon.card}<span><b>Até ${e(state.config.settings.max_installments)}x sem juros</b>no cartão de crédito</span></div>
+    <div>${icon.card}<span><b>Até ${e(state.config.settings.max_installments)}x no cartão</b>juros conforme o meio de pagamento</span></div>
     <div>${icon.truck}<span><b>Enviamos para o mundo todo</b>pronta entrega e importados</span></div>
     <div>${icon.shield}<span><b>Compra segura</b>dados protegidos</span></div></div>
   <div class="wrap">

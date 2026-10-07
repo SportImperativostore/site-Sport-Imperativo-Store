@@ -120,7 +120,7 @@ async function main() {
     const slug = uniq(name + '-' + pid.slice(0, 6));
     const desc = `${name}. Camisa de ${team ? team[1] : 'time'} (${({ torcedor: 'modelo torcedor', player: 'modelo jogador', retro: 'retrô', infantil: 'infantil', feminina: 'feminina', 'manga-longa': 'manga longa', agasalhos: 'corta-vento/agasalho' })[cslug]}). Escolha o tamanho e, se quiser, personalize com nome e número.`;
     op(`INSERT INTO products(id,slug,name,description,price_cents,fulfillment,stock,shipping_rule,origin,lead_min,lead_max,weight_g,customizable,custom_price_cents,size_guide_id,tags,sku,shape,active,sold,search_text,import_notes)
-        VALUES(?,?,?,?,?,'import',0,'free','China',18,45,400,?,?,?,?,?,'jersey',1,0,?,NULL)`,
+        VALUES(?,?,?,?,?,'import',0,'free','China',15,30,400,?,?,?,?,?,'jersey',1,0,?,NULL)`,
     [id, slug, name, desc, cents, pers ? 1 : 0, pers ? money(pers) : null, guideFor[cslug] || null, `camisa camiseta jersey ${cslug}`, 'SI-' + pid.slice(0, 8).toUpperCase(),
       norm([name, team && team[1], cslug, 'futebol camisa'].join(' '))]);
     for (const e of [futebol, cid, catId[cslug], leagueId[teamLeague[ts]]]) if (e) op('INSERT OR IGNORE INTO product_entities(product_id,entity_id) VALUES(?,?)', [id, e]);
