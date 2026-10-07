@@ -164,10 +164,12 @@ function seed() {
   } // fim do bloco DEMO
 
   // ---- Banners ----
-  const B = (t, s, cta, l, o) => op('INSERT INTO banners(title,subtitle,cta_text,link,sort) VALUES(?,?,?,?,?)', t, s, cta, l, o);
-  B('AQUI VOCÊ VESTE O ESPORTE.', 'Camisas de futebol, NBA, NFL, F1, chuteiras e muito mais.', 'COMPRAR AGORA', '/futebol', 1);
-  B('OFERTAS DA TEMPORADA', 'Descontos em camisas selecionadas. Pix com desconto adicional.', 'VER OFERTAS', '/ofertas', 2);
-  B('CHUTEIRAS', 'Campo, society e futsal das melhores marcas.', 'VER CHUTEIRAS', '/chuteiras', 3);
+  const B = (t, s, cta, l, o, img) => op('INSERT INTO banners(title,subtitle,cta_text,link,sort,image_desktop,image_mobile) VALUES(?,?,?,?,?,?,?)', t, s, cta, l, o, `/img/banners/${img}.svg`, `/img/banners/${img}-m.svg`);
+  B('AQUI VOCÊ VESTE O ESPORTE.', 'Camisas de futebol, NBA, NFL, F1, chuteiras e muito mais.', 'COMPRAR AGORA', '/futebol', 1, 'hero-futebol');
+  B('OFERTAS DA TEMPORADA', 'Descontos em camisas selecionadas. Pix com desconto adicional.', 'VER OFERTAS', '/ofertas', 2, 'ofertas');
+  B('PISE FORTE EM CAMPO', 'Chuteiras de campo, society e futsal das melhores marcas.', 'VER CHUTEIRAS', '/chuteiras', 3, 'chuteiras');
+  B('VISTA A NBA', 'Camisas e regatas dos maiores times do basquete.', 'VER NBA', '/nba', 4, 'nba');
+  B('ACELERE COM A F1', 'Camisas das equipes e pilotos da Fórmula 1.', 'VER F1', '/f1', 5, 'f1');
 
   // ---- Cupons ----
   op("INSERT INTO coupons(code,type,value,first_purchase,is_public,description) VALUES('BEMVINDO10','percent',10,1,1,'10% de desconto na primeira compra')");
