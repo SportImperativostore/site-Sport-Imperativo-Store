@@ -12,7 +12,12 @@ function getClient() {
   if (_client) return _client;
   let url = process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL;
   if (!url) {
-    if (isVercel) { const e = new Error(CONFIG_MSG); e.config = true; throw e; }
+    if (isVercel) {
+      // Diagnóstico (só nomes, nunca valores): ajuda a achar variável com nome errado ou em outro ambiente.
+      const seen = Object.keys(process.env).filter((k) => /turso|database|libsql|blob|public_url/i.test(k));
+      const e = new Error(CONFIG_MSG + ` [ambiente: ${process.env.VERCEL_ENV || '?'}; variáveis encontradas: ${seen.length ? seen.join(', ') : 'nenhuma'}]`);
+      e.config = true; throw e;
+    }
     const dir = path.join(__dirname, '..', 'data');
     fs.mkdirSync(dir, { recursive: true });
     url = 'file:' + (process.env.DB_FILE || path.join(dir, 'store.db'));
