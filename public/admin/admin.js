@@ -19,7 +19,7 @@ const ENT_LABEL = Object.fromEntries(ENT_TYPES);
 /* ---------- Layout ---------- */
 const NAV = [['dashboard', 'Dashboard'], ['orders', 'Pedidos'], ['supplier-orders', 'Ordens a fornecedores'], ['products', 'Produtos'], ['entities', 'Categorias, clubes e ligas'], ['suppliers', 'Fornecedores'], ['coupons', 'Cupons'], ['banners', 'Banners'], ['reviews', 'Avaliações'], ['testimonials', 'Prova social'], ['sizes', 'Tamanhos'], ['size_guides', 'Guias de tamanho'], ['pages', 'Páginas e políticas'], ['settings', 'Configurações'], ['users', 'Clientes'], ['audit', 'Logs / Backup']];
 function shell(active, html) {
-  $('#root').innerHTML = `<div class="app"><nav class="side"><a class="logo" href="#/dashboard"><img src="/img/logo.png" alt="Sport Imperativo"></a>${NAV.map(([k, n]) => `<a href="#/${k}" class="${active === k ? 'on' : ''}">${n}</a>`).join('')}<small>CONTA</small><a href="/" target="_blank">Ver loja ↗</a><a href="#" id="out">Sair</a></nav><main>${html}</main></div>`;
+  $('#root').innerHTML = `<div class="app"><nav class="side"><a class="logo" href="#/dashboard"><img src="/img/logo-light.png" alt="Sport Imperativo"></a>${NAV.map(([k, n]) => `<a href="#/${k}" class="${active === k ? 'on' : ''}">${n}</a>`).join('')}<small>CONTA</small><a href="/" target="_blank">Ver loja ↗</a><a href="#" id="out">Sair</a></nav><main>${html}</main></div>`;
   $('#out').onclick = async (ev) => { ev.preventDefault(); await api('/auth/logout', { method: 'POST' }); S.user = null; boot(); };
 }
 async function loadRefs() {
