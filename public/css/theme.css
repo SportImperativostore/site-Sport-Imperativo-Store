@@ -167,3 +167,37 @@ h1,h2,h3{font-family:Outfit,Inter,sans-serif;letter-spacing:-.02em}
 /* mobile */
 @media(max-width:860px){.logo img{height:40px}.card .img{aspect-ratio:1/1.08}.grid{gap:12px}.slide{min-height:400px}.dots{bottom:40px}}
 @media(max-width:560px){.logo img{height:34px}.card{border-radius:16px}.card .price{font-size:18px}.card .tag{font-size:9.5px;padding:4px 9px}}
+
+/* =========================================================
+   IMAGENS DE PRODUTO — moldura uniforme (quadrada), camisa inteira centralizada
+   (object-fit: contain), fundo branco consistente e troca suave para a 2ª foto.
+   ========================================================= */
+.card .img{aspect-ratio:1/1;background:#fff;border-bottom:1px solid rgba(7,18,38,.05);overflow:hidden}
+.card .img .pair{position:absolute;inset:0;display:block}
+.card .img img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;padding:4%;filter:none;transform:translateZ(0);backface-visibility:hidden;transition:opacity .55s var(--ease),transform .9s var(--ease)}
+.card .img img.i2{opacity:0}
+/* o gradiente de profundidade só aparece nas ilustrações geradas */
+.card .img::after{display:none}
+/* com 2ª imagem: troca suave (sem mudar o tamanho do cartão) */
+@media(hover:hover){
+  .card:hover .img.two .i2{opacity:1}
+  .card:hover .img.two .i1{opacity:0}
+  /* só 1 imagem: elevação, sombra e leve zoom — sem distorcer */
+  .card .img.one img{transition:transform .9s var(--ease)}
+  .card:hover .img.one img{transform:scale(1.045) translateY(-2px)}
+}
+/* toque: arraste lateral entre as 2 fotos, sem toques extras; o toque abre o produto */
+@media(hover:none){
+  .card .img .pair{display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;overscroll-behavior-x:contain}
+  .card .img .pair::-webkit-scrollbar{display:none}
+  .card .img .pair img{position:relative;flex:0 0 100%;scroll-snap-align:center;opacity:1!important;transition:none}
+  .card:hover .img img{transform:none}
+}
+.card .img .ind{position:absolute;left:0;right:0;bottom:8px;display:none;justify-content:center;gap:5px;z-index:2;pointer-events:none}
+.card .img .ind i{width:6px;height:6px;border-radius:50%;background:rgba(7,18,38,.2);transition:all .25s}
+.card .img .ind i.on{background:var(--blue);width:16px;border-radius:4px}
+@media(hover:none){.card .img .ind{display:flex}}
+.thumbs button img,.mainimg img{object-fit:contain!important;padding:2%;background:#fff}
+.mainimg{background:#fff}
+.line img,.suggest img{object-fit:contain;background:#fff;padding:2px}
+@media(prefers-reduced-motion:reduce){.card .img img{transition:none}}

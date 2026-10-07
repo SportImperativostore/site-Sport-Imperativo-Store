@@ -46,7 +46,7 @@ async function cards(products) {
     const pick = (t) => (es.find((e) => e.type === t) || {}).name || null;
     const pr = pricing(p);
     return {
-      id: p.id, slug: p.slug, name: p.name, image: (I.get(p.id) || [])[0] ? I.get(p.id)[0].url : `/img/p/${p.id}.svg`, pricing: pr,
+      id: p.id, slug: p.slug, name: p.name, image: (I.get(p.id) || [])[0] ? I.get(p.id)[0].url : `/img/p/${p.id}.svg`, image2: (I.get(p.id) || [])[1] ? I.get(p.id)[1].url : null, pricing: pr,
       badge: p.badge || (pr.onSale ? 'OFERTA' : null), availability: availability(p, p.fulfillment === 'stock' ? V.get(p.id) || [] : []),
       rating: { avg: p.rating_avg, count: p.rating_count }, club: pick('club') || pick('national_team') || pick('brand'),
       category: pick('category') || pick('modality') || (es.find((e) => e.type === 'sport') || {}).name || '',

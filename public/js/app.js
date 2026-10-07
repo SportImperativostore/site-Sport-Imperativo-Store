@@ -243,6 +243,15 @@ function initFx() {
   setInterval(sweep, 700); // rede de segurança
 }
 
+/* pair-ind: marcador da imagem atual ao arrastar o cartão (dispositivos de toque) */
+document.addEventListener('scroll', (ev) => {
+  const t = ev.target;
+  if (!t || !t.classList || !t.classList.contains('pair')) return;
+  const ind = t.parentElement.querySelector('.ind'); if (!ind) return;
+  const k = t.scrollLeft > t.clientWidth / 2 ? 1 : 0;
+  [...ind.children].forEach((d, i) => d.classList.toggle('on', i === k));
+}, true);
+
 /* ================= Boot ================= */
 (async function boot() {
   loadCart();

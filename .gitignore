@@ -7,3 +7,5 @@ uploads/
 .vercel/
 *.tmp.db*
 srv.log
+public/img/catalog/
+blob-urls.json

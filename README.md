@@ -93,3 +93,13 @@ Status: Aguardando fornecedor → Enviado ao fornecedor → Fornecedor confirmou
 ## Segurança implementada
 
 Senhas com scrypt; sessão em cookie HttpOnly/SameSite; proteção CSRF (header + Origin); CSP restritiva, `nosniff`, frame deny; validação de CPF/e-mail/CEP; preços, estoque, frete e cupons sempre recalculados no servidor; webhook confirma o pagamento consultando a API do gateway; controle de acesso do admin; log de auditoria; limite de tentativas em login/checkout; exportação e exclusão de dados do cliente (LGPD); banner de consentimento de cookies.
+
+## Importar o catálogo real (fotos incluídas)
+
+Os dados e as fotos do catálogo atual (MeuKatálogo) foram levantados para `D:\loja\catalogo-import\` (1.741 produtos, 227 times, ~3.700 imagens WebP 720 px). Para publicar:
+
+1. Vercel → **Storage → Blob → Create**, conecte ao projeto e copie o `BLOB_READ_WRITE_TOKEN` para o `.env` local.
+2. `node scripts/catalog-import.js --dir=D:/loja/catalogo-import --blob` — envia as imagens ao Blob (CDN) e grava ligas, times, produtos, tamanhos e fotos no banco (Turso). Com `--dry` apenas mostra o resumo; sem `--keep-demo` apaga os produtos/clubes de demonstração.
+3. Para testar localmente sem Blob: `--local` (copia as imagens para `public/img/catalog/`, que não vai ao Git).
+
+Ao importar, os produtos entram como **sob encomenda/importado, frete grátis, prazo 18–45 dias** (padrão da loja) — ajuste por produto no admin se algum for pronta entrega.
