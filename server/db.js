@@ -14,8 +14,10 @@ function getClient() {
   if (!url) {
     if (isVercel) {
       // Diagnóstico (só nomes, nunca valores): ajuda a achar variável com nome errado ou em outro ambiente.
-      const seen = Object.keys(process.env).filter((k) => /turso|database|libsql|blob|public_url/i.test(k));
-      const e = new Error(CONFIG_MSG + ` [ambiente: ${process.env.VERCEL_ENV || '?'}; variáveis encontradas: ${seen.length ? seen.join(', ') : 'nenhuma'}]`);
+      const all = Object.keys(process.env);
+      const seen = all.filter((k) => /turso|database|libsql|blob|public_url/i.test(k));
+      const custom = all.filter((k) => !/^(AWS_|LAMBDA_|_|VERCEL|NOW_|NODE|PATH|PWD|HOME|LANG|TZ|SHLVL|LD_|TMPDIR|NEXT|npm_|TURBO|OLDPWD|SHELL|USER|HOSTNAME|PNPM|YARN|XDG|LOGNAME|LC_)/i.test(k));
+      const e = new Error(CONFIG_MSG + ` [ambiente: ${process.env.VERCEL_ENV || '?'}; variáveis encontradas: ${seen.length ? seen.join(', ') : 'nenhuma'}; total: ${all.length}; outras: ${custom.join(',') || '-'}]`);
       e.config = true; throw e;
     }
     const dir = path.join(__dirname, '..', 'data');
