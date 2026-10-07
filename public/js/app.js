@@ -215,6 +215,34 @@ function cookieBanner() {
   c.innerHTML = '<p>Usamos cookies essenciais para o funcionamento da loja (carrinho e login) e, com seu consentimento, para melhorar sua experiência. Veja a <a href="/pagina/politica-de-cookies" style="color:var(--blue);text-decoration:underline">Política de Cookies</a> e a <a href="/pagina/politica-de-privacidade" style="color:var(--blue);text-decoration:underline">Privacidade</a>.</p><button class="btn sm ghost" data-action="cookie-essential">Somente essenciais</button><button class="btn sm" data-action="cookie-accept">Aceitar todos</button>';
 }
 
+/* ---- Efeitos: sombra do cabeçalho e revelação ao rolar ---- */
+function initFx() {
+  const hd = $('#header');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const SEL = '.card,.cat-tile,.sec-h,.tcard,.panel,.order,.trust>div,.cat-banner';
+  let pending = false;
+  // Revela os elementos que já entraram na tela (robusto mesmo com rolagem por salto)
+  const sweep = () => {
+    pending = false;
+    hd.classList.toggle('scrolled', scrollY > 8);
+    const lim = innerHeight * 0.94;
+    for (const el of $$('.rv:not(.in)', $('#app'))) if (el.getBoundingClientRect().top < lim) el.classList.add('in');
+  };
+  const queue = () => { if (!pending) { pending = true; requestAnimationFrame(sweep); } };
+  const scan = () => {
+    if (!reduce) $$(SEL, $('#app')).forEach((el) => {
+      if (el.classList.contains('rv')) return;
+      const sib = el.parentElement ? [...el.parentElement.children].indexOf(el) : 0;
+      el.classList.add('rv'); el.style.transitionDelay = Math.min(sib, 8) * 60 + 'ms';
+    });
+    queue();
+  };
+  addEventListener('scroll', queue, { passive: true }); addEventListener('resize', queue);
+  new MutationObserver(scan).observe($('#app'), { childList: true, subtree: true });
+  scan(); sweep();
+  setInterval(sweep, 700); // rede de segurança
+}
+
 /* ================= Boot ================= */
 (async function boot() {
   loadCart();
@@ -222,6 +250,6 @@ function cookieBanner() {
     const [cfg, menu, me] = await Promise.all([api('/config'), api('/menu'), api('/auth/me')]);
     state.config = cfg; state.sizes = cfg.sizes; state.menu = menu; state.user = me.user; state.favorites = new Set(me.favorites);
   } catch (err) { $('#app').innerHTML = `<div class="wrap empty"><h3>Loja temporariamente indisponível</h3><p>${e(err.message)}</p></div>`; return; }
-  buildNav(); buildMobileMenu(); buildFooter(); renderAccountLink(); initSearch(); cookieBanner(); renderCartCount();
+  buildNav(); buildMobileMenu(); buildFooter(); renderAccountLink(); initSearch(); cookieBanner(); renderCartCount(); initFx();
   render();
 })();

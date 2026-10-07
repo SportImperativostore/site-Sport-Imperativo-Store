@@ -14,7 +14,7 @@ export default async function home() {
   const chips = (list, base = '/futebol/') => list.map((x) => `<a class="chip" href="${base}${e(x.slug)}">${e(x.name.replace(/^Seleção /, ''))}</a>`).join('');
   $('#app').innerHTML = `
   <section class="hero" aria-label="Destaques"><div class="slides" id="slides">${banners.map((b, i) => `
-    <div class="slide ${b.image_desktop ? 'img' : ''}">${b.image_desktop ? `<picture><source media="(max-width:860px)" srcset="${e(b.image_mobile || b.image_desktop)}"><img src="${e(b.image_desktop)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" ${i ? 'loading="lazy"' : ''}></picture><span style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(6,19,46,.8),rgba(6,19,46,.15))"></span>` : '<div class="stripes"></div>'}
+    <div class="slide ${b.image_desktop ? 'img' : ''}${i === 0 ? ' on' : ''}">${b.image_desktop ? `<picture><source media="(max-width:860px)" srcset="${e(b.image_mobile || b.image_desktop)}"><img src="${e(b.image_desktop)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" ${i ? 'loading="lazy"' : ''}></picture><span style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(6,19,46,.8),rgba(6,19,46,.15))"></span>` : '<div class="stripes"></div>'}
       <div class="wrap"><h1>${e(b.title)}</h1><p>${e(b.subtitle || '')}</p>${b.cta_text ? `<a class="btn white" href="${e(b.link || '/')}" style="height:52px;padding:0 32px;font-size:15px">${e(b.cta_text)}</a>` : ''}</div></div>`).join('')}</div>
     ${banners.length > 1 ? `<div class="dots">${banners.map((_, i) => `<button class="${i ? '' : 'on'}" data-i="${i}" aria-label="Banner ${i + 1}"></button>`).join('')}</div>` : ''}</section>
   <div class="trust">
@@ -38,7 +38,7 @@ export default async function home() {
   // Carrossel simples
   const slides = $('#slides'), dots = [...document.querySelectorAll('.dots button')];
   if (dots.length) {
-    let i = 0, timer; const go = (n) => { i = (n + dots.length) % dots.length; slides.style.transform = `translateX(-${i * 100}%)`; dots.forEach((d, k) => d.classList.toggle('on', k === i)); };
+    let i = 0, timer; const go = (n) => { i = (n + dots.length) % dots.length; slides.style.transform = `translateX(-${i * 100}%)`; [...slides.children].forEach((s, k) => s.classList.toggle('on', k === i)); dots.forEach((d, k) => d.classList.toggle('on', k === i)); };
     const start = () => { clearInterval(timer); if (!matchMedia('(prefers-reduced-motion: reduce)').matches) timer = setInterval(() => { if (!document.hidden && $('#slides') === slides) go(i + 1); else if ($('#slides') !== slides) clearInterval(timer); }, 6000); };
     dots.forEach((d) => d.addEventListener('click', () => { go(+d.dataset.i); start(); }));
     let sx = 0; slides.addEventListener('touchstart', (ev) => { sx = ev.touches[0].clientX; }, { passive: true });

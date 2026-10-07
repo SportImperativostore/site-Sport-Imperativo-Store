@@ -79,7 +79,7 @@ export function productCard(p) {
   const fav = state.favorites.has(p.id);
   const badge = p.badge ? `<span class="badge b-${p.badge.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, '-')}">${e(p.badge)}</span>` : '';
   return `<article class="card">
-    <a href="/produto/${e(p.slug)}" class="img" aria-label="${e(p.name)}">${badge}<img src="${e(p.image)}" alt="${e(p.name)}" loading="lazy" width="400" height="416"></a>
+    <a href="/produto/${e(p.slug)}" class="img" aria-label="${e(p.name)}">${badge}${p.category ? `<span class="tag">${e(p.category)}</span>` : ''}<img src="${e(p.image)}" alt="${e(p.name)}" loading="lazy" width="400" height="416"></a>
     <button class="fav ${fav ? 'on' : ''}" data-action="fav" data-id="${p.id}" aria-label="Favoritar" aria-pressed="${fav}">${icon.heart}</button>
     <div class="body">
       <div class="meta">${e(p.category)}${p.club ? ' • ' + e(p.club) : ''}</div>
