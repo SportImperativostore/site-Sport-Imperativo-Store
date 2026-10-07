@@ -21,7 +21,7 @@ app.use((req, res, next) => {
   if (PROD) res.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   next();
 });
-app.use(express.json({ limit: '200kb' }));
+app.use(express.json({ limit: '200kb', verify: (req, _res, buf) => { req.rawBody = buf; } })); // rawBody: validação da assinatura do webhook
 // Garante schema + configurações carregadas (uma vez por instância; cache de 15 s)
 app.use(async (_req, _res, next) => { await ensureReady(); next(); });
 app.use(A.loadUser);
@@ -29,6 +29,7 @@ app.use(A.csrfGuard);
 
 app.get('/img/p/:id.svg', require('./routes/store').imgHandler);
 app.use('/api/admin', (req, res, next) => { res.set('Cache-Control', 'no-store'); next(); }, require('./routes/admin'));
+app.use('/api', require('./routes/whatsapp').webhook);
 app.use('/api', require('./routes/store'));
 app.use('/api', require('./routes/account'));
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Rota não encontrada.' }));

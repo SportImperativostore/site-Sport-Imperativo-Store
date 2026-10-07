@@ -7,9 +7,14 @@ const STATUS = {
   in_transit: 'Em trânsito', delivered: 'Entregue', cancelled: 'Cancelado',
 };
 // Linha do tempo exibida ao cliente
-const TIMELINE = ['received', 'paid', 'sent_supplier', 'preparing', 'shipped', 'in_transit', 'delivered'];
-const TL_LABEL = { received: 'Pedido recebido', paid: 'Pagamento aprovado', sent_supplier: 'Enviado ao fornecedor', preparing: 'Em preparação', shipped: 'Enviado', in_transit: 'Em trânsito', delivered: 'Entregue' };
-const TL_INDEX = { received: 0, payment_pending: 0, paid: 1, awaiting_supplier: 1, sent_supplier: 2, supplier_confirmed: 2, preparing: 3, shipped: 4, in_transit: 5, delivered: 6 };
+const TIMELINE = ['received', 'paid', 'preparing', 'shipped', 'in_transit', 'delivered'];
+const TL_LABEL = { received: 'Pedido recebido', paid: 'Pagamento aprovado', preparing: 'Em preparação', shipped: 'Enviado', in_transit: 'Em trânsito', delivered: 'Entregue' };
+const TL_INDEX = { received: 0, payment_pending: 0, paid: 1, awaiting_supplier: 1, sent_supplier: 1, supplier_confirmed: 1, preparing: 2, shipped: 3, in_transit: 4, delivered: 5 };
+// Rótulo de status visto pelo cliente (sem termos internos como 'fornecedor')
+const CUSTOMER_LABEL = { payment_pending: 'Aguardando pagamento', received: 'Pedido recebido', paid: 'Pagamento aprovado', awaiting_supplier: 'Em processamento', sent_supplier: 'Em processamento', supplier_confirmed: 'Em processamento', preparing: 'Em preparação', shipped: 'Enviado', in_transit: 'Em trânsito', delivered: 'Entregue', cancelled: 'Cancelado' };
+// Mensagens mostradas ao cliente em cada etapa (nunca mencionam fornecedor)
+const CUSTOMER_MSG = { payment_pending: 'Aguardando a confirmação do pagamento.', received: 'Seu pedido foi recebido.', paid: 'Seu pedido foi recebido.', awaiting_supplier: 'Seu pedido está sendo preparado.', sent_supplier: 'Seu pedido está sendo preparado.',
+  supplier_confirmed: 'Seu pedido está sendo preparado.', preparing: 'Seu pedido está sendo preparado.', shipped: 'Seu pedido foi enviado.', in_transit: 'Seu pedido está em trânsito.', delivered: 'Seu pedido foi entregue.', cancelled: 'Pedido cancelado.' };
 
 async function setStatus(orderId, status, note, Q = q) {
   await Q.run("UPDATE orders SET status=?, updated_at=datetime('now') WHERE id=?", status, orderId);
@@ -64,69 +69,43 @@ async function markPaid(orderId, paymentId) {
   return true;
 }
 
-function buildSupplierMessage(order, items) {
-  const a = JSON.parse(order.address), c = JSON.parse(order.customer);
-  const lines = ['*NOVO PEDIDO — SPORT IMPERATIVO STORE*', `Pedido: #${order.id}`, ''];
-  items.forEach((it, i) => {
-    lines.push(`Produto${items.length > 1 ? ' ' + (i + 1) : ''}:`, it.name + (it.supplier_sku ? ` (SKU ${it.supplier_sku})` : ''), 'Tamanho:', it.size || '-', 'Personalização:',
-      it.custom_name || it.custom_number ? `Nome: ${it.custom_name || '-'}\nNúmero: ${it.custom_number || '-'}` : 'Sem personalização', 'Quantidade:', String(it.qty), '');
-  });
-  lines.push('Cliente:', c.name, 'Destino:', `${a.city}/${a.state}`, 'CEP:', a.cep, 'Observações:', order.notes || '-');
-  return lines.join('\n');
-}
+function buildSupplierMessage(order, items) { return require('./automation').supplierMessage(order, items); }
 
-/** Cria uma ordem de compra por fornecedor e dispara pelo canal configurado. */
+/** Cria uma ordem de compra por fornecedor e dispara pelo canal configurado (idempotente). */
 async function createSupplierOrders(orderId) {
+  const A = require('./automation');
   const order = await q.get('SELECT * FROM orders WHERE id=?', orderId);
-  // Itens com fornecedor associado (importados e também pronta entrega com fornecedor dropship)
   const all = await q.all('SELECT * FROM order_items WHERE order_id=? AND supplier_id IS NOT NULL', orderId);
   const bySup = {};
   for (const it of all) (bySup[it.supplier_id] ||= []).push(it);
-  if (!Object.keys(bySup).length) return;
   for (const [sid, its] of Object.entries(bySup)) {
     const s = await q.get('SELECT * FROM suppliers WHERE id=?', +sid);
     if (!s) continue;
-    const message = buildSupplierMessage(order, its);
-    const wa = onlyDigits(s.whatsapp);
-    const link = s.channel === 'whatsapp' && wa ? `https://wa.me/${wa.length <= 11 ? '55' + wa : wa}?text=${encodeURIComponent(message)}` : null;
-    const so = await q.run('INSERT INTO supplier_orders(order_id,supplier_id,status,channel,message,link,log) VALUES(?,?,?,?,?,?,?)', orderId, s.id, 'awaiting', s.channel, message, link, '[]');
-    const soId = Number(so.lastInsertRowid);
-    await setStatus(orderId, 'awaiting_supplier', `Ordem de compra criada para ${s.name}`);
-    await dispatchSupplierOrder(soId);
+    const message = A.supplierMessage(order, its);
+    const wn = onlyDigits(s.whatsapp);
+    const link = s.channel === 'whatsapp' && wn ? `https://wa.me/${wn.length <= 11 ? '55' + wn : wn}?text=${encodeURIComponent(message)}` : null;
+    const ins = await q.run('INSERT OR IGNORE INTO supplier_orders(order_id,supplier_id,status,channel,message,link,log) VALUES(?,?,?,?,?,?,?)', orderId, s.id, 'awaiting', s.channel, message, link, '[]');
+    if (!ins.changes) continue;                                                           // já existia: não cria nem envia de novo
+    const so = await q.get('SELECT id FROM supplier_orders WHERE order_id=? AND supplier_id=?', orderId, s.id);
+    await setStatus(orderId, 'awaiting_supplier', 'Ordem de compra criada');
+    await A.logComm(orderId, so.id, 'out', 'created', 'Ordem criada para envio ao fornecedor', null, 'awaiting');
+    await A.dispatchSupplierOrder(so.id);
   }
+  try { await A.notifyCustomer(orderId, 'received'); } catch (e) { console.error('email', e.message); }
 }
-async function dispatchSupplierOrder(soId) {
-  const so = await q.get('SELECT * FROM supplier_orders WHERE id=?', soId);
-  const s = await q.get('SELECT * FROM suppliers WHERE id=?', so.supplier_id);
-  const log = JSON.parse(so.log || '[]');
-  let sent = false;
-  try {
-    if (so.channel === 'webhook' && s.webhook_url) {
-      const r = await fetch(s.webhook_url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ order_id: so.order_id, supplier_order_id: so.id, message: so.message }), signal: AbortSignal.timeout(10000) });
-      log.push({ at: new Date().toISOString(), note: `Webhook HTTP ${r.status}` });
-      sent = r.ok;
-    } else {
-      // WhatsApp (link wa.me pré-preenchido) e e-mail ficam como envio assistido no painel até haver integração de API/SMTP.
-      log.push({ at: new Date().toISOString(), note: `Aguardando envio manual via ${so.channel} (use o botão no painel).` });
-    }
-  } catch (e) { log.push({ at: new Date().toISOString(), note: 'Falha: ' + e.message }); }
-  await q.run('UPDATE supplier_orders SET log=?, status=?, sent_at=CASE WHEN ? THEN datetime(\'now\') ELSE sent_at END WHERE id=?', JSON.stringify(log), sent ? 'sent' : so.status, sent ? 1 : 0, soId);
-  if (sent) await setStatus(so.order_id, 'sent_supplier', 'Pedido enviado ao fornecedor (' + s.name + ')');
-}
-async function markSupplierSent(soId) {
-  const so = await q.get('SELECT * FROM supplier_orders WHERE id=?', soId);
-  const log = JSON.parse(so.log || '[]'); log.push({ at: new Date().toISOString(), note: 'Marcado como enviado pelo administrador' });
-  await q.run("UPDATE supplier_orders SET status='sent', sent_at=datetime('now'), log=? WHERE id=?", JSON.stringify(log), soId);
-  await setStatus(so.order_id, 'sent_supplier', 'Pedido enviado ao fornecedor');
-}
-
+const dispatchSupplierOrder = (id, o) => require('./automation').dispatchSupplierOrder(id, o);
+const markSupplierSent = (id) => require('./automation').markManualSent(id);
 async function orderView(o) {
-  const [items, shipments, events, pay] = await Promise.all([q.all('SELECT * FROM order_items WHERE order_id=?', o.id), q.all('SELECT grp,carrier,code,url,status FROM shipments WHERE order_id=?', o.id), q.all('SELECT status,note,created_at FROM order_events WHERE order_id=? ORDER BY id', o.id), q.get('SELECT method,status,pix_code,pix_qr,checkout_url FROM payments WHERE order_id=? ORDER BY id DESC LIMIT 1', o.id)]);
+  const [itemsRaw, shipments, events, pay] = await Promise.all([q.all('SELECT name,size,qty,unit_cents,custom_name,custom_number,custom_cents,fulfillment,image FROM order_items WHERE order_id=?', o.id), q.all('SELECT grp,carrier,code,url,status,shipped_at FROM shipments WHERE order_id=?', o.id), q.all('SELECT status,created_at FROM order_events WHERE order_id=? ORDER BY id', o.id), q.get('SELECT method,status,pix_code,pix_qr,checkout_url FROM payments WHERE order_id=? ORDER BY id DESC LIMIT 1', o.id)]);
+  const stepOf = (st) => (st === 'cancelled' || st === 'payment_pending' ? st : TIMELINE[TL_INDEX[st] ?? 0]);
+  const ev = events.map((e) => ({ status: stepOf(e.status), label: CUSTOMER_MSG[e.status] || CUSTOMER_LABEL[e.status], created_at: e.created_at })).filter((e, i, a) => !i || a[i - 1].label !== e.label);
+  const hasTracking = shipments.some((x) => x.code);
   return {
-    id: o.id, status: o.status, statusLabel: STATUS[o.status], created_at: o.created_at, subtotal: o.subtotal_cents, discount: o.discount_cents, shipping: o.shipping_cents, total: o.total_cents,
+    id: o.id, ref: 'SIS-' + (10000 + o.id), status: stepOf(o.status), statusLabel: CUSTOMER_LABEL[o.status], customerMessage: CUSTOMER_MSG[o.status] + (hasTracking && ['in_transit', 'shipped'].includes(o.status) ? ' Seu código de rastreio está disponível.' : ''),
+    created_at: o.created_at, subtotal: o.subtotal_cents, discount: o.discount_cents, shipping: o.shipping_cents, total: o.total_cents,
     coupon: o.coupon_code, paymentMethod: o.payment_method, installments: o.installments, shipping_info: JSON.parse(o.shipping_info || '[]'), address: JSON.parse(o.address),
-    items, shipments, events, payment: pay,
-    timeline: o.status === 'cancelled' ? null : TIMELINE.map((s, i) => ({ status: s, label: TL_LABEL[s], done: i <= (TL_INDEX[o.status] ?? 0), current: i === (TL_INDEX[o.status] ?? 0) })),
+    items: itemsRaw, shipments, events: ev, payment: pay,
+    timeline: o.status === 'cancelled' ? null : TIMELINE.map((st, i) => ({ status: st, label: TL_LABEL[st], done: i <= (TL_INDEX[o.status] ?? 0), current: i === (TL_INDEX[o.status] ?? 0) })),
   };
 }
 module.exports = { STATUS, setStatus, createOrder, markPaid, orderView, createSupplierOrders, dispatchSupplierOrder, markSupplierSent, buildSupplierMessage };

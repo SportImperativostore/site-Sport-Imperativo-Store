@@ -103,3 +103,18 @@ Os dados e as fotos do catálogo atual (MeuKatálogo) foram levantados para `D:\
 3. Para testar localmente sem Blob: `--local` (copia as imagens para `public/img/catalog/`, que não vai ao Git).
 
 Ao importar, os produtos entram como **sob encomenda/importado, frete grátis, prazo 15–30 dias úteis** (padrão da loja) — ajuste por produto no admin se algum for pronta entrega.
+
+## Pós-venda automático (WhatsApp Business + e-mail)
+
+Fluxo: **cliente paga → pedido #SIS-1xxxx → mensagem ao fornecedor pelo WhatsApp Business DA LOJA (+55 11 91776-5409) → fornecedor responde → status e rastreio registrados → cliente recebe e-mail**. O cliente nunca vê o número do fornecedor (que fica só no backend/admin) e o fornecedor só conversa com a loja. Código: `server/lib/automation.js` (Order Automation), `server/lib/whatsapp.js` (Cloud API), `server/routes/whatsapp.js` (webhook + admin).
+
+**O que já está pronto no sistema:** envio idempotente (nunca duplica), mensagem no formato combinado (somente dados necessários; sem custo/margem/cartão), webhook com assinatura (`X-Hub-Signature-256`), respostas do fornecedor ("Pedido recebido." → confirmou; código de rastreio → em trânsito), caixa **"RASTREIO PRECISA DE IDENTIFICAÇÃO"**, log "Conversa com fornecedor" por pedido, e-mail "Seu pedido foi enviado" com botão, painel **Admin → WhatsApp / Pós-venda**, e **fallback manual** (botões "Enviar pedido pelo WhatsApp" e "Copiar mensagem") enquanto a API não estiver configurada. Testado de ponta a ponta com uma API simulada (`node scripts/test-whatsapp-flow.js <banco>`).
+
+**O que você precisa fazer para ligar a API oficial (a Meta exige):**
+1. Em business.facebook.com crie/escolha seu **Meta Business** e verifique a empresa. Em developers.facebook.com crie um **app** do tipo *Business* e adicione o produto **WhatsApp**.
+2. Cadastre o número **+55 11 91776-5409** na **WhatsApp Business Platform** (WhatsApp Manager). ⚠ Um número que já está no aplicativo WhatsApp Business no celular precisa ser **migrado** para a API (ou usar o modo "coexistência", se disponível para você) — não funciona nos dois ao mesmo tempo sem isso.
+3. Gere um **token permanente** (Usuário do Sistema com permissão `whatsapp_business_messaging`). Anote: **Phone Number ID**, **WhatsApp Business Account ID**, **App Secret**.
+4. No **WhatsApp Manager → Modelos de mensagem** crie o template **`novo_pedido_fornecedor`** (idioma `pt_BR`, categoria **Utilidade**) com o texto exato mostrado em *Admin → WhatsApp → Template* e aguarde a aprovação. (A Meta só permite que a loja inicie conversa com o fornecedor via template aprovado; dentro de 24 h depois que o fornecedor responde, o sistema usa texto livre.)
+5. No app da Meta → WhatsApp → **Configuração → Webhook**: URL `https://SEU-SITE/api/webhooks/whatsapp`, token de verificação = o valor de `WHATSAPP_WEBHOOK_VERIFY_TOKEN`; assine o campo **messages**.
+6. Na Vercel cadastre as variáveis (veja `.env.example`) e faça **Redeploy**. O painel mostrará "● WhatsApp conectado".
+7. (E-mail) Crie conta no Resend, verifique seu domínio e cadastre `RESEND_API_KEY` e `MAIL_FROM`.

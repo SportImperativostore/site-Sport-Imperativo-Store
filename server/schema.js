@@ -82,4 +82,17 @@ CREATE TABLE IF NOT EXISTS supplier_orders(
   status TEXT NOT NULL DEFAULT 'awaiting', channel TEXT, message TEXT, link TEXT, sent_at TEXT, confirmed_at TEXT, log TEXT, created_at TEXT DEFAULT (datetime('now')));
 CREATE TABLE IF NOT EXISTS order_events(id INTEGER PRIMARY KEY, order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE, status TEXT, note TEXT, created_at TEXT DEFAULT (datetime('now')));
 CREATE TABLE IF NOT EXISTS audit_log(id INTEGER PRIMARY KEY, user_id INTEGER, action TEXT, detail TEXT, ip TEXT, created_at TEXT DEFAULT (datetime('now')));
+
+-- Pós-venda automático (WhatsApp Business Platform + e-mail)
+CREATE TABLE IF NOT EXISTS comm_log(
+  id INTEGER PRIMARY KEY, order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE, supplier_order_id INTEGER,
+  direction TEXT, kind TEXT, body TEXT, wa_message_id TEXT, status TEXT, created_at TEXT DEFAULT (datetime('now')));
+CREATE INDEX IF NOT EXISTS ix_comm_order ON comm_log(order_id);
+CREATE INDEX IF NOT EXISTS ix_comm_wamid ON comm_log(wa_message_id);
+CREATE TABLE IF NOT EXISTS supplier_inbox(
+  id INTEGER PRIMARY KEY, wa_from TEXT, wa_message_id TEXT UNIQUE, body TEXT, reply_to TEXT, kind TEXT, tracking_code TEXT,
+  matched_order_id INTEGER, resolved INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')));
+CREATE TABLE IF NOT EXISTS email_outbox(
+  id INTEGER PRIMARY KEY, order_id INTEGER, to_email TEXT, subject TEXT, html TEXT, status TEXT DEFAULT 'queued', error TEXT,
+  created_at TEXT DEFAULT (datetime('now')), sent_at TEXT);
 `;

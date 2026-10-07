@@ -95,7 +95,7 @@ r.get('/pages', async (_req, res) => res.json(await q.all('SELECT slug,title,bod
 r.put('/pages/:slug', async (req, res) => { await q.run("INSERT INTO pages(slug,title,body,updated_at) VALUES(?,?,?,datetime('now')) ON CONFLICT(slug) DO UPDATE SET title=excluded.title, body=excluded.body, updated_at=datetime('now')", req.params.slug, String(req.body.title || ''), String(req.body.body || '')); res.json({ ok: true }); });
 
 /* ----- configurações ----- */
-const SETTING_KEYS = ['store_name', 'slogan', 'whatsapp', 'instagram', 'tiktok', 'youtube', 'email', 'company_name', 'cnpj', 'pix_pct', 'max_installments', 'min_installment_cents', 'personalization_cents', 'import_notice', 'free_shipping_over_cents', 'origin_cep', 'instagram_feedback_url', 'low_stock_threshold'];
+const SETTING_KEYS = ['store_name', 'slogan', 'whatsapp', 'instagram', 'tiktok', 'youtube', 'email', 'company_name', 'cnpj', 'pix_pct', 'max_installments', 'min_installment_cents', 'personalization_cents', 'import_notice', 'free_shipping_over_cents', 'origin_cep', 'instagram_feedback_url', 'low_stock_threshold', 'supplier_share_phone'];
 r.get('/settings', async (_req, res) => res.json(allSettings()));
 r.put('/settings', async (req, res) => { for (const k of SETTING_KEYS) if (k in (req.body || {})) await q.run('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value', k, String(req.body[k])); await refreshSettings(); await audit(req.user.id, 'settings', '', req.ip); res.json({ ok: true }); });
 
@@ -174,17 +174,19 @@ r.get('/orders', async (req, res) => {
   const st = req.query.status, s = String(req.query.q || '').trim();
   const where = [], args = [];
   if (st) { where.push('status=?'); args.push(st); }
-  if (s) { where.push('(CAST(id AS TEXT)=? OR customer LIKE ?)'); args.push(s.replace('#', ''), `%${s}%`); }
+  if (s) { const m = s.match(/SIS[-\s#]*(\d+)/i); where.push('(CAST(id AS TEXT)=? OR id=? OR customer LIKE ?)'); args.push(s.replace('#', ''), m ? Number(m[1]) - 10000 : -1, `%${s}%`); }
   const rows = await q.all(`SELECT * FROM orders ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY id DESC LIMIT 300`, ...args);
   const counts = Object.fromEntries((await q.all('SELECT order_id,SUM(qty) n FROM order_items WHERE order_id IN (SELECT value FROM json_each(?)) GROUP BY order_id', JSON.stringify(rows.map((o) => o.id)))).map((x) => [x.order_id, x.n]));
-  res.json(rows.map((o) => ({ id: o.id, status: o.status, statusLabel: orders.STATUS[o.status], total: o.total_cents, created_at: o.created_at, customer: JSON.parse(o.customer).name, method: o.payment_method, items: counts[o.id] || 0 })));
+  res.json(rows.map((o) => ({ id: o.id, ref: 'SIS-' + (10000 + o.id), status: o.status, statusLabel: orders.STATUS[o.status], total: o.total_cents, created_at: o.created_at, customer: JSON.parse(o.customer).name, method: o.payment_method, items: counts[o.id] || 0 })));
 });
 r.get('/orders/:id', async (req, res) => {
   const o = await q.get('SELECT * FROM orders WHERE id=?', +req.params.id);
   if (!o) throw new HttpError(404, 'Pedido não encontrado.');
   const items = await q.all('SELECT i.*, s.name supplier_name FROM order_items i LEFT JOIN suppliers s ON s.id=i.supplier_id WHERE i.order_id=?', o.id);
   const sos = await q.all('SELECT so.*, s.name supplier_name, s.channel FROM supplier_orders so LEFT JOIN suppliers s ON s.id=so.supplier_id WHERE so.order_id=?', o.id);
-  res.json({ ...(await orders.orderView(o)), customer: JSON.parse(o.customer), items, notes: o.notes, supplierOrders: sos.map((x) => ({ ...x, log: JSON.parse(x.log || '[]') })), shipments: await q.all('SELECT * FROM shipments WHERE order_id=?', o.id), payments: await q.all('SELECT id,provider,method,status,amount_cents,paid_at,external_id FROM payments WHERE order_id=?', o.id), statuses: orders.STATUS });
+  const comm = await q.all('SELECT id,direction,kind,body,wa_message_id,status,created_at FROM comm_log WHERE order_id=? ORDER BY id', o.id);
+  const events = await q.all('SELECT status,note,created_at FROM order_events WHERE order_id=? ORDER BY id', o.id);
+  res.json({ ...(await orders.orderView(o)), status: o.status, statusLabel: orders.STATUS[o.status], events, comm, customer: JSON.parse(o.customer), items, notes: o.notes, supplierOrders: sos.map((x) => ({ ...x, log: JSON.parse(x.log || '[]') })), shipments: await q.all('SELECT * FROM shipments WHERE order_id=?', o.id), payments: await q.all('SELECT id,provider,method,status,amount_cents,paid_at,external_id FROM payments WHERE order_id=?', o.id), statuses: orders.STATUS });
 });
 r.put('/orders/:id/status', async (req, res) => {
   const st = req.body.status;
@@ -202,7 +204,7 @@ r.put('/shipments/:id', async (req, res) => {
   if (b.code && ['paid', 'awaiting_supplier', 'sent_supplier', 'supplier_confirmed', 'preparing'].includes(o.status)) await orders.setStatus(sh.order_id, 'shipped', 'Código de rastreio informado');
   res.json({ ok: true });
 });
-r.post('/supplier-orders/:id/send', wrap(async (req, res) => { await orders.dispatchSupplierOrder(+req.params.id); res.json({ ok: true }); }));
+r.post('/supplier-orders/:id/send', wrap(async (req, res) => { const out = await orders.dispatchSupplierOrder(+req.params.id, { force: !!(req.body || {}).force }); await audit(req.user.id, 'supplier_send', `${req.params.id}:${JSON.stringify(out).slice(0, 80)}`, req.ip); res.json(out); }));
 r.post('/supplier-orders/:id/mark-sent', async (req, res) => { await orders.markSupplierSent(+req.params.id); res.json({ ok: true }); });
 r.post('/supplier-orders/:id/confirm', async (req, res) => {
   const so = await q.get('SELECT * FROM supplier_orders WHERE id=?', +req.params.id);
@@ -265,4 +267,5 @@ r.get('/backup', wrap(async (req, res) => {
   await audit(req.user.id, 'backup', '', req.ip);
   res.attachment(`sport-imperativo-backup-${new Date().toISOString().slice(0, 10)}.json`).json(dump);
 }));
+r.use(require('./whatsapp').admin);
 module.exports = r;

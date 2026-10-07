@@ -58,6 +58,19 @@ async function refreshSettings() {
 const setting = (key, def = '') => (cache[key] ?? def);
 const allSettings = () => ({ ...cache });
 
+/* Colunas adicionadas depois do schema inicial (ALTER só se faltar). */
+async function migrate() {
+  const want = {
+    supplier_orders: { wa_message_id: 'TEXT', wa_status: 'TEXT', sent_to: 'TEXT', attempts: 'INTEGER DEFAULT 0', error: 'TEXT' },
+    shipments: { shipped_at: 'TEXT' },
+  };
+  for (const [table, cols] of Object.entries(want)) {
+    const have = new Set((await q.all(`PRAGMA table_info(${table})`)).map((c) => c.name));
+    for (const [c, def] of Object.entries(cols)) if (!have.has(c)) await client.execute(`ALTER TABLE ${table} ADD COLUMN ${c} ${def}`);
+  }
+  await client.execute('CREATE UNIQUE INDEX IF NOT EXISTS ux_so_order_supplier ON supplier_orders(order_id, supplier_id)').catch(() => {});
+}
+
 let ready;
 function init() {
   return (ready ||= (async () => {
@@ -65,6 +78,7 @@ function init() {
     if (isFile) await client.executeMultiple('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;');
     await client.executeMultiple(SCHEMA);
     if (isFile) { try { await client.execute('ALTER TABLE testimonials ADD COLUMN product_id INTEGER'); } catch { /* já existe */ } }
+    await migrate();
     await refreshSettings();
   })());
 }
