@@ -213,3 +213,8 @@ table.gt thead th{background:var(--bg);color:var(--mut)}
 .cat-tile:hover .lg{transform:translateY(-52%) scale(1.07)}
 .cat-tile .lg-f1{filter:brightness(0) invert(1) drop-shadow(0 8px 20px rgba(0,0,0,.5))}
 .modal:has(.gtabs){max-width:760px}
+
+/* ajustes dos cartões de categoria: logo à direita e seta no canto */
+.cat-tile img.lg{inset:auto;left:auto;right:9%;top:46%;bottom:auto;width:auto;height:50%;max-width:52%;object-fit:contain;transform:translateY(-50%)}
+.cat-tile:hover img.lg{transform:translateY(-52%) scale(1.07)}
+.cat-tile .lbl{position:static}
