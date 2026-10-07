@@ -157,7 +157,7 @@ function showMega(slug) {
   m.hidden = false;
   if (primary) { let lt; m.querySelector('.col').addEventListener('mouseover', (ev) => {
     const a = ev.target.closest('a[data-i]'); if (!a) return;
-    clearTimeout(lt); lt = setTimeout(() => { $('.col a', m).forEach((x) => x.classList.toggle('on', x === a)); $('#mega-detail').innerHTML = fillClubs(primary.items[+a.dataset.i]); }, 60);
+    clearTimeout(lt); lt = setTimeout(() => { $$('.col a', m).forEach((x) => x.classList.toggle('on', x === a)); $('#mega-detail').innerHTML = fillClubs(primary.items[+a.dataset.i]); }, 60);
   }); m.querySelector('.col').addEventListener('mouseleave', () => clearTimeout(lt)); }
 }
 function buildMobileMenu() {
