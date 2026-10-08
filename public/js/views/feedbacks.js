@@ -6,7 +6,7 @@ const igEmbed = (url) => { const m = String(url || '').match(/instagram\.com\/(?
 function card(t) {
   const ig = t.kind === 'instagram' ? igEmbed(t.link) : null;
   let media = '';
-  if (t.kind === 'video' && t.media_url) media = `<video src="${e(t.media_url)}#t=0.5" controls preload="metadata" playsinline></video>`;
+  if (t.kind === 'video' && t.media_url) media = `<video src="${e(t.media_url)}" data-auto muted loop playsinline controls preload="metadata"></video>`;
   else if (t.kind === 'photo' && t.media_url) media = `<img src="${e(t.media_url)}" alt="Foto de ${e(t.name)}" loading="lazy">`;
   else if (ig) media = `<iframe src="${ig}" title="Instagram" loading="lazy" allowfullscreen scrolling="no"></iframe>`;
   return `<article class="fb-card">${media ? `<div class="fb-media${ig ? ' ig' : ''}">${media}</div>` : ''}
@@ -25,4 +25,10 @@ export default async function feedbacks() {
     <p style="max-width:640px;color:#51607a">Veja o que quem já comprou na Sport Imperativo Store está falando: vídeos, fotos e relatos reais.</p>
     ${list.length ? `${storiesStrip('fbpage', list)}<div class="fb-grid">${list.map(card).join('')}</div>` : '<p class="empty">Em breve, novos feedbacks de clientes.</p>'}
     ${ig ? `<p style="text-align:center;margin:24px 0"><a class="btn" href="${e(ig)}" target="_blank" rel="noopener">VER MAIS NO INSTAGRAM</a></p>` : ''}</div>`;
+  // Vídeos MP4: tocam sozinhos (sem som, em repetição) quando aparecem na tela e pausam ao sair.
+  const vids = [...document.querySelectorAll('video[data-auto]')];
+  if (vids.length && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver((es) => es.forEach((en) => { if (en.isIntersecting) en.target.play().catch(() => {}); else en.target.pause(); }), { threshold: 0.5 });
+    vids.forEach((v) => io.observe(v));
+  }
 }
