@@ -87,7 +87,7 @@ export default async function catalog(ctx) {
         : `<h1 class="page-h" style="margin-top:6px">${e(title)}</h1>`;
       $('#app').innerHTML = `<div class="wrap"><nav class="crumbs" aria-label="Breadcrumb"><a href="/">Início</a>${crumbs.map((c, i) => `<i>›</i>${c.path && i < crumbs.length - 1 ? `<a href="${e(c.path)}">${e(c.name)}</a>` : `<span>${e(c.name)}</span>`}`).join('')}</nav>
         ${banner}<div id="tabs"></div>
-        ${mode === 'catalog' && d.children && d.children.length ? `<div class="tabs" style="margin-top:-6px">${d.children.map((c) => `<a href="/${pathSegs.join('/')}/${e(c.slug)}">${e(c.name)}</a>`).join('')}</div>` : ''}
+        ${mode === 'catalog' && d.children && d.children.length && !(d.categoryTabs && d.categoryTabs.length && d.children.every((c) => d.categoryTabs.some((t) => t.slug === c.slug))) ? `<div class="tabs" style="margin-top:-6px">${d.children.map((c) => `<a href="/${pathSegs.join('/')}/${e(c.slug)}">${e(c.name)}</a>`).join('')}</div>` : ''}
         <div class="layout"><aside class="filters" id="filters"></aside><div><div class="toolbar"><div><button class="btn sm ghost only-m" id="open-filters">Filtros</button> <span id="count" style="color:var(--mut)"></span></div>
           <label style="display:flex;gap:8px;align-items:center;font-size:14px">Ordenar<select id="sort">${SORTS.map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select></label></div><div id="results"></div></div></div></div>`;
       $('#sort').value = query.get('sort') || 'relevance';
