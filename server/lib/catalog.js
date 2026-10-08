@@ -121,7 +121,10 @@ async function listProducts(f, page = 1, per = 24) {
   if (f.q && !f.qc) f = { ...f, qc: await search.parse(f.q) };
   const { where, args } = buildFilters(f);
   const first = f.qc && f.qc[0] && f.qc[0].alts[0][0];
-  const order = first && (f.sort || 'relevance') === 'relevance' ? 'CASE WHEN instr(p.search_text, ?) = 0 THEN 9999 ELSE instr(p.search_text, ?) END, p.sold DESC, p.id DESC' : (SORTS[f.sort] || SORTS.relevance);
+  const qn = norm(f.q || '');
+  const wantsOther = /calcao|short|conjunto|kit|jaqueta|corta|agasalho|moletom|chuteira|infantil|casaco|polo|camiseta|regata|bone|bola/.test(qn), wantsRetro = /retro|antiga|historic|classic|vintage/.test(qn);
+  const pref = (wantsOther ? '' : "CASE WHEN p.name LIKE 'Camisa%' THEN 0 ELSE 1 END, ") + (wantsRetro ? '' : "CASE WHEN p.name LIKE '%Retro%' THEN 1 ELSE 0 END, ");
+  const order = first && (f.sort || 'relevance') === 'relevance' ? pref + 'CASE WHEN instr(p.search_text, ?) = 0 THEN 9999 ELSE instr(p.search_text, ?) END, p.sold DESC, p.id DESC' : (SORTS[f.sort] || SORTS.relevance);
   const oargs = order.includes('?') ? [first, first] : [];
   const [tot, rows] = await Promise.all([
     q.get(`SELECT COUNT(*) c FROM products p WHERE ${where}`, ...args),
