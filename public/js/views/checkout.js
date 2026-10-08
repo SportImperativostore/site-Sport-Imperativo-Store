@@ -8,6 +8,8 @@ const STEPS = ['Dados', 'Endereço', 'Entrega', 'Pagamento'];
 export default async function checkout() {
   setMeta('Finalizar compra | Sport Imperativo Store');
   if (!state.cart.length) return go('/carrinho', true);
+  // Identificador de segurança do dispositivo (Mercado Pago) — melhora a aprovação do pagamento.
+  if (!document.getElementById('mp-security')) { const sc = document.createElement('script'); sc.id = 'mp-security'; sc.src = 'https://www.mercadopago.com/v2/security.js'; sc.setAttribute('view', 'checkout'); sc.async = true; document.head.appendChild(sc); }
   let draft = {};
   try { draft = JSON.parse(sessionStorage.getItem(DRAFT) || '{}'); } catch { /* ignore */ }
   const u = state.user || {};
@@ -69,7 +71,7 @@ export default async function checkout() {
       if (step < 4) { step++; return paint(); }
       const btn = ev.currentTarget; btn.disabled = true; btn.textContent = 'PROCESSANDO...';
       try {
-        const r = await api('/checkout', { method: 'POST', body: { items: cartPayload().items, coupon: cctx.coupon, method: cctx.method, importAck: d.ack,
+        const r = await api('/checkout', { method: 'POST', body: { items: cartPayload().items, coupon: cctx.coupon, method: cctx.method, importAck: d.ack, deviceId: window.MP_DEVICE_SESSION_ID || '',
           customer: { name: d.name, cpf: d.cpf, email: d.email, phone: d.phone, whatsapp: d.whatsapp || d.phone },
           address: { cep: d.cep, street: d.street, number: d.number, complement: d.complement, district: d.district, city: d.city, state: d.state }, paymentMethod: d.paymentMethod, installments: d.installments } });
         state.cart = []; saveCart(); delete cctx.coupon; saveCtx(); try { sessionStorage.removeItem(DRAFT); } catch { /* ignore */ }

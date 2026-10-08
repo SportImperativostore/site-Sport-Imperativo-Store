@@ -134,7 +134,7 @@ r.post('/checkout', rateLimit('checkout', 30, 10 * 60 * 1000), wrap(async (req, 
   if (req.user && !req.user.cpf) await q.run('UPDATE users SET cpf=? WHERE id=?', customer.cpf, req.user.id);
   const baseUrl = process.env.PUBLIC_URL || `${req.protocol}://${req.get('host')}`;
   const row = await q.get('SELECT * FROM orders WHERE id=?', order.id);
-  try { await pay.createPayment(row, baseUrl); } catch (e) { console.error('payment', e.message); await orders.setStatus(order.id, 'cancelled', 'Falha ao criar pagamento'); throw new HttpError(e.userMessage ? 422 : 502, e.userMessage || 'Não foi possível iniciar o pagamento. Tente novamente.'); }
+  try { await pay.createPayment(row, baseUrl, String(b.deviceId || '').slice(0, 120)); } catch (e) { console.error('payment', e.message); await orders.setStatus(order.id, 'cancelled', 'Falha ao criar pagamento'); throw new HttpError(e.userMessage ? 422 : 502, e.userMessage || 'Não foi possível iniciar o pagamento. Tente novamente.'); }
   res.json({ orderId: order.id, token: order.accessToken });
 }));
 

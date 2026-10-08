@@ -10,7 +10,7 @@ const mock = http.createServer((req, res) => {
   let b = ''; req.on('data', (d) => (b += d));
   req.on('end', () => {
     res.setHeader('Content-Type', 'application/json');
-    state.calls.push({ m: req.method, u: req.url, auth: req.headers.authorization });
+    state.calls.push({ m: req.method, u: req.url, auth: req.headers.authorization, sid: req.headers['x-meli-session-id'] });
     if (req.method === 'POST' && req.url === '/v1/payments') {
       const j = JSON.parse(b); const id = 9000 + Object.keys(state.payments).length;
       state.payments[id] = { id, status: state.rejectNext ? 'rejected' : 'pending', external_reference: j.external_reference, transaction_amount: j.transaction_amount, status_detail: state.rejectNext ? 'rejected_high_risk' : 'pending_waiting_transfer' };
@@ -51,11 +51,12 @@ const address = { cep: '01310100', street: 'Rua Exemplo', number: '100', distric
   const items = [{ productId: p.id, size: pd.variants[0].size, qty: 1, custom: { patch: 'Libertadores' } }];
 
   // 1) Pix
-  const pix = await call('/checkout', 'POST', { items, importAck: true, customer, address, paymentMethod: 'pix', installments: 1 });
+  const pix = await call('/checkout', 'POST', { items, importAck: true, deviceId: 'DEVICE-TESTE-123', customer, address, paymentMethod: 'pix', installments: 1 });
   ok(pix.s === 200 && pix.j.orderId, 'checkout Pix criado: pedido ' + pix.j.orderId);
   const o1 = (await call('/orders/' + pix.j.orderId + '?t=' + pix.j.token)).j;
   ok(JSON.stringify(o1).includes('MOCKPIX'), 'código Pix copia-e-cola veio do gateway');
   ok(state.calls.some((c) => c.u === '/v1/payments' && c.auth === 'Bearer TOKEN_MP_DE_TESTE'), 'token usado só no servidor (cabeçalho Authorization)');
+  ok(state.calls.some((c) => c.u === '/v1/payments' && c.sid === 'DEVICE-TESTE-123'), 'Device ID enviado ao gateway no cabeçalho X-meli-session-id');
   ok(o1.status === 'payment_pending', 'pedido aguardando pagamento antes da aprovação');
   // 2) webhook de pagamento aprovado
   const pid = Object.keys(state.payments)[0]; state.payments[pid].status = 'approved'; state.payments[pid].status_detail = 'accredited';

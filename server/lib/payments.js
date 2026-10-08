@@ -13,7 +13,7 @@ const provider = () => {
 const MP = process.env.MP_API_URL || 'https://api.mercadopago.com';
 const mpHeaders = (extra = {}) => ({ Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`, 'Content-Type': 'application/json', ...extra });
 
-async function createPayment(order, baseUrl) {
+async function createPayment(order, baseUrl, deviceId) {
   if (provider() === 'none') throw new Error('Gateway de pagamento não configurado (defina MP_ACCESS_TOKEN).');
   const customer = JSON.parse(order.customer);
   const method = order.payment_method;
@@ -29,7 +29,7 @@ async function createPayment(order, baseUrl) {
     const its = await q.all('SELECT product_id,name,qty,unit_cents,custom_cents FROM order_items WHERE order_id=?', order.id);
     const phone = String(customer.phone || '').replace(/\D/g, '');
     const res = await fetch(`${MP}/v1/payments`, {
-      method: 'POST', headers: mpHeaders({ 'X-Idempotency-Key': `order-${order.id}-pix` }),
+      method: 'POST', headers: mpHeaders({ 'X-Idempotency-Key': `order-${order.id}-pix`, ...(deviceId ? { 'X-meli-session-id': deviceId } : {}) }),
       body: JSON.stringify({
         transaction_amount: amount / 100, description: `Pedido #${order.id} - Sport Imperativo Store`, payment_method_id: 'pix',
         external_reference: String(order.id), notification_url: `${baseUrl}/api/webhooks/mercadopago`, statement_descriptor: 'SPORTIMPERATIVO',
