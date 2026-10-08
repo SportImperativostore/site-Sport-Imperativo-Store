@@ -10,7 +10,7 @@ const provider = () => {
   const prod = process.env.NODE_ENV === 'production' || process.env.VERCEL;
   return prod && process.env.ALLOW_MOCK_PAYMENTS !== '1' ? 'none' : 'mock';
 };
-const MP = 'https://api.mercadopago.com';
+const MP = process.env.MP_API_URL || 'https://api.mercadopago.com';
 const mpHeaders = (extra = {}) => ({ Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`, 'Content-Type': 'application/json', ...extra });
 
 async function createPayment(order, baseUrl) {
