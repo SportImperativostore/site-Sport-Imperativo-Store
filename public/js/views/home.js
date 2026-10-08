@@ -1,4 +1,4 @@
-import { storiesStrip } from './stories.js';
+import { storiesStrip, highlightsBar } from './stories.js';
 import { $, e, api, state, productCard, setMeta, skeletonGrid, icon, starsHtml } from '../lib.js';
 
 const EMO = { futebol: '⚽', nba: '🏀', nfl: '🏈', chuteiras: '👟' };
@@ -12,7 +12,9 @@ export default async function home() {
   const banners = h.banners.length ? h.banners : [{ title: 'AQUI VOCÊ VESTE O ESPORTE.', subtitle: 'Camisas de futebol, NBA, NFL, F1, chuteiras e muito mais.', cta_text: 'COMPRAR AGORA', link: '/futebol' }];
   const fe = (t) => (fut && fut.facets.entities[t]) || [];
   const chips = (list, base = '/futebol/') => list.map((x) => `<a class="chip" href="${base}${e(x.slug)}">${e(x.name.replace(/^Seleção /, ''))}</a>`).join('');
+  const st = state.config.settings;
   $('#app').innerHTML = `
+  ${highlightsBar([...h.showcase.map((t) => t.image), ...h.best.map((p) => p.image), ...h.news.map((p) => p.image)].filter(Boolean), st.instagram_feedback_url || st.instagram, h.testimonials)}
   <section class="hero" aria-label="Destaques"><div class="slides" id="slides">${banners.map((b, i) => `
     <div class="slide ${b.image_desktop ? 'img' : ''}${i === 0 ? ' on' : ''}">${b.image_desktop ? `<picture><source media="(max-width:860px)" srcset="${e(b.image_mobile || b.image_desktop)}"><img src="${e(b.image_desktop)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" ${i ? 'loading="lazy"' : ''}></picture><span style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(6,19,46,.8),rgba(6,19,46,.15))"></span>` : '<div class="stripes"></div>'}
       <div class="wrap"><h1>${e(b.title)}</h1><p>${e(b.subtitle || '')}</p>${b.cta_text ? `<a class="btn white" href="${e(b.link || '/')}" style="height:52px;padding:0 32px;font-size:15px">${e(b.cta_text)}</a>` : ''}</div></div>`).join('')}</div>

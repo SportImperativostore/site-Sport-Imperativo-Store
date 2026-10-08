@@ -70,6 +70,7 @@ async function migrate() {
     for (const [c, def] of Object.entries(cols)) if (!have.has(c)) await client.execute(`ALTER TABLE ${table} ADD COLUMN ${c} ${def}`);
   }
   await client.execute('CREATE UNIQUE INDEX IF NOT EXISTS ux_so_order_supplier ON supplier_orders(order_id, supplier_id)').catch(() => {});
+  for (const ddl of ['CREATE INDEX IF NOT EXISTS ix_pi_product ON product_images(product_id, sort, id)', 'CREATE INDEX IF NOT EXISTS ix_prod_active_sold ON products(active, sold, id)', 'CREATE INDEX IF NOT EXISTS ix_var_product ON variants(product_id)', 'CREATE INDEX IF NOT EXISTS ix_pe_product ON product_entities(product_id)', 'CREATE INDEX IF NOT EXISTS ix_ent_slug ON entities(slug)', 'CREATE INDEX IF NOT EXISTS ix_el_child ON entity_links(child_id)']) await client.execute(ddl).catch(() => {});
 }
 
 let ready;

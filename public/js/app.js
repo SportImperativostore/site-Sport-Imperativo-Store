@@ -183,15 +183,16 @@ function buildMobileMenu() {
 function buildFooter() {
   const s = state.config.settings;
   const wa = (s.whatsapp || '').replace(/\D/g, '');
+  const waLink = s.whatsapp_link || (wa ? `https://wa.me/55${wa.replace(/^55/, '')}` : '');
   $('#footer').innerHTML = `<div class="wrap"><div class="f-grid">
     <div class="brand"><b>SPORT IMPERATIVO</b><p>${e(s.slogan || 'Aqui você veste o esporte.')}</p>
       <div style="font-size:13px">Pix com desconto • Cartão em até ${e(s.max_installments)}x (juros do meio de pagamento)</div></div>
-    <div><h4>ATENDIMENTO</h4>${wa ? `<a href="https://wa.me/55${wa.replace(/^55/, '')}" target="_blank" rel="noopener">WhatsApp</a>` : ''}<a href="${e(s.instagram)}" target="_blank" rel="noopener">Instagram</a><a href="mailto:${e(s.email)}">${e(s.email)}</a></div>
+    <div><h4>ATENDIMENTO</h4>${waLink ? `<a class="wa-cta" href="${e(waLink)}" target="_blank" rel="noopener">Fale conosco pelo WhatsApp</a>` : ''}<a href="${e(s.instagram)}" target="_blank" rel="noopener">Instagram</a><a href="mailto:${e(s.email)}">${e(s.email)}</a></div>
     <div><h4>INSTITUCIONAL</h4><a href="/pagina/sobre-nos">Sobre nós</a><a href="/pagina/contato">Contato</a><a href="/pagina/politica-de-privacidade">Política de privacidade</a><a href="/pagina/termos-de-uso">Termos de uso</a><a href="/pagina/politica-de-cookies">Política de cookies</a><a href="/pagina/trocas-e-devolucoes">Trocas e devoluções</a></div>
     <div><h4>AJUDA</h4><a href="/pagina/como-comprar">Como comprar</a><a href="/pagina/formas-de-pagamento">Formas de pagamento</a><a href="/pagina/prazo-de-entrega">Prazo de entrega</a><a href="/pagina/rastreamento">Rastreamento</a><a href="/pagina/tabela-de-medidas">Tabela de medidas</a></div>
-    <div><h4>REDES SOCIAIS</h4><a href="${e(s.instagram)}" target="_blank" rel="noopener">Instagram</a><a href="${e(s.tiktok)}" target="_blank" rel="noopener">TikTok</a><a href="${e(s.youtube)}" target="_blank" rel="noopener">YouTube</a></div></div>
+    <div><h4>REDES SOCIAIS</h4><a href="${e(s.instagram)}" target="_blank" rel="noopener">Instagram</a>${waLink ? `<a href="${e(waLink)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${s.youtube ? `<a href="${e(s.youtube)}" target="_blank" rel="noopener">Nosso YouTube</a>` : ''}</div></div>
     <div class="f-bottom"><span>© ${new Date().getFullYear()} ${e(s.company_name || 'Sport Imperativo Store')}${s.cnpj ? ' • CNPJ ' + e(s.cnpj) : ''}. Todos os direitos reservados.</span><span>Compra segura • Seus dados protegidos (LGPD)</span></div></div>`;
-  const w = $('#wa-float'); if (wa) { w.href = `https://wa.me/55${wa.replace(/^55/, '')}`; w.hidden = false; }
+  const w = $('#wa-float'); if (waLink) { w.href = waLink; w.hidden = false; }
 }
 export function renderAccountLink() { const a = $('#acc-link .lbl'); if (a) a.textContent = state.user ? state.user.name.split(' ')[0] : 'Entrar'; }
 

@@ -255,3 +255,15 @@ table.gt thead th{background:var(--bg);color:var(--mut)}
 .fb-body{padding:12px 14px;display:flex;flex-direction:column;gap:6px}
 .fb-body p{margin:0;color:#3b475c;font-size:14px}
 .fb-body small a{color:#0b5cff}
+
+/* Destaques (stories) no topo e botão do WhatsApp no rodapé */
+.hl-wrap{padding-top:14px;padding-bottom:2px}
+.hl-wrap .stories{margin:0}
+.story-dot .ring.ig{background:linear-gradient(135deg,#0b5cff,#6aa3ff);color:#fff;display:flex;align-items:center;justify-content:center;font-size:26px}
+a.story-dot{text-decoration:none;color:inherit}
+.f-grid .wa-cta{display:inline-block;background:#25d366;color:#fff!important;font-weight:800;border-radius:10px;padding:9px 14px;margin-bottom:8px}
+.f-grid .wa-cta:hover{background:#1fb855}
+
+/* carrossel no celular: texto em cima, fotos dos produtos embaixo */
+@media(max-width:860px){.slide.img{min-height:560px;align-items:flex-start}.slide.img .wrap{padding-top:34px}.slide.img picture img{object-position:center bottom}.slide.img::before{background:linear-gradient(180deg,rgba(6,19,46,.78),rgba(6,19,46,.05) 60%)}}
+@media(max-width:860px){.slide.img>span[style]{background:linear-gradient(180deg,rgba(6,19,46,.8),rgba(6,19,46,.0) 62%)!important}}

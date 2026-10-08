@@ -6,7 +6,7 @@ const art = require('../lib/art');
 const { wrap, HttpError, norm, onlyDigits } = require('../lib/util');
 
 const r = express.Router();
-const PUBLIC_SETTINGS = ['store_name', 'slogan', 'whatsapp', 'instagram', 'tiktok', 'youtube', 'email', 'pix_pct', 'max_installments', 'import_notice', 'free_shipping_over_cents', 'personalization_cents', 'instagram_feedback_url', 'company_name', 'cnpj'];
+const PUBLIC_SETTINGS = ['store_name', 'slogan', 'whatsapp', 'instagram', 'whatsapp_link', 'youtube', 'email', 'pix_pct', 'max_installments', 'import_notice', 'free_shipping_over_cents', 'personalization_cents', 'instagram_feedback_url', 'company_name', 'cnpj'];
 const cacheHdr = (res, s = 60) => res.set('Cache-Control', `public, s-maxage=${s}, stale-while-revalidate=${s * 5}, max-age=${Math.min(s, 30)}`);
 
 r.get('/config', wrap(async (_req, res) => {
@@ -17,13 +17,21 @@ r.get('/config', wrap(async (_req, res) => {
 }));
 r.get('/menu', wrap(async (_req, res) => { cacheHdr(res); res.json(await cat.buildMenu()); }));
 
+/** Um produto de cada seção (na ordem dada) + completa com os melhores — vitrine variada em vez de só a categoria mais nova. */
+async function mix(slugs, order, total = 8) {
+  const out = [], seen = new Set();
+  const add = (rows) => { for (const r of rows) if (!seen.has(r.id) && out.length < total) { seen.add(r.id); out.push(r); } };
+  for (const s of slugs) add(await q.all(`SELECT p.* FROM products p WHERE p.active=1 AND EXISTS (SELECT 1 FROM product_entities pe JOIN entities e ON e.id=pe.entity_id WHERE pe.product_id=p.id AND e.slug=?) AND EXISTS (SELECT 1 FROM product_images i WHERE i.product_id=p.id) ORDER BY ${order} LIMIT 1`, s));
+  if (out.length < total) add(await q.all(`SELECT p.* FROM products p WHERE p.active=1 ORDER BY ${order} LIMIT ${total * 2}`));
+  return out;
+}
 r.get('/home', wrap(async (_req, res) => {
   const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
   const [banners, best, offers, news, sports, testimonials] = await Promise.all([
     q.all(`SELECT id,title,subtitle,cta_text,link,image_desktop,image_mobile FROM banners WHERE active=1 AND (starts_at IS NULL OR starts_at='' OR starts_at<=?) AND (ends_at IS NULL OR ends_at='' OR ends_at>=?) ORDER BY sort,id`, now, now),
-    q.all('SELECT * FROM products WHERE active=1 ORDER BY sold DESC, rating_count DESC, id DESC LIMIT 8').then(cat.cards),
+    mix(['clubes', 'jerseys-nba', 'chuteiras', 'selecoes', 'retro', 'jerseys-nfl', 'infantil-futebol', 'f1'], 'p.sold DESC, p.rating_count DESC, p.id DESC').then(cat.cards),
     cat.listProducts({ sale: true, sort: 'discount' }, 1, 8).then((x) => x.items),
-    q.all('SELECT * FROM products WHERE active=1 ORDER BY id DESC LIMIT 8').then(cat.cards),
+    mix(['clubes', 'chuteiras', 'jerseys-nba', 'selecoes', 'f1', 'retro', 'agasalhos', 'calcoes'], 'p.id DESC').then(cat.cards),
     q.all("SELECT name,slug,logo,banner,description FROM entities WHERE type='sport' AND active=1 ORDER BY sort,name"),
     q.all('SELECT t.*, p.slug product_slug FROM testimonials t LEFT JOIN products p ON p.id=t.product_id WHERE t.active=1 ORDER BY t.sort,t.id LIMIT 24'),
   ]);
@@ -96,7 +104,7 @@ r.get('/products/:slug', wrap(async (req, res) => {
     cat.fullProduct(p),
     q.all("SELECT id,author,stars,body,photos,video_url,featured,created_at FROM reviews WHERE product_id=? AND status='approved' ORDER BY featured DESC,id DESC LIMIT 50", p.id),
     q.all('SELECT e.slug,e.type FROM product_entities pe JOIN entities e ON e.id=pe.entity_id WHERE pe.product_id=?', p.id),
-    q.all(`SELECT p2.* FROM products p2 WHERE p2.active=1 AND p2.id!=? AND p2.id IN (SELECT product_id FROM product_entities WHERE entity_id IN (SELECT entity_id FROM product_entities WHERE product_id=?)) GROUP BY p2.id ORDER BY (SELECT COUNT(*) FROM product_entities a JOIN product_entities b ON a.entity_id=b.entity_id WHERE a.product_id=p2.id AND b.product_id=?) DESC, p2.sold DESC LIMIT 8`, p.id, p.id, p.id),
+    cat.related(p, 8),
     q.all("SELECT stars,COUNT(*) n FROM reviews WHERE product_id=? AND status='approved' GROUP BY stars", p.id),
     q.all('SELECT t.*, p.slug product_slug FROM testimonials t LEFT JOIN products p ON p.id=t.product_id WHERE t.active=1 AND t.product_id=? ORDER BY t.sort,t.id', p.id),
   ]);

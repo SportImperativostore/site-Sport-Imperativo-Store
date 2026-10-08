@@ -95,7 +95,7 @@ r.get('/pages', async (_req, res) => res.json(await q.all('SELECT slug,title,bod
 r.put('/pages/:slug', async (req, res) => { await q.run("INSERT INTO pages(slug,title,body,updated_at) VALUES(?,?,?,datetime('now')) ON CONFLICT(slug) DO UPDATE SET title=excluded.title, body=excluded.body, updated_at=datetime('now')", req.params.slug, String(req.body.title || ''), String(req.body.body || '')); res.json({ ok: true }); });
 
 /* ----- configurações ----- */
-const SETTING_KEYS = ['store_name', 'slogan', 'whatsapp', 'instagram', 'tiktok', 'youtube', 'email', 'company_name', 'cnpj', 'pix_pct', 'max_installments', 'min_installment_cents', 'personalization_cents', 'import_notice', 'free_shipping_over_cents', 'origin_cep', 'instagram_feedback_url', 'low_stock_threshold', 'supplier_share_phone'];
+const SETTING_KEYS = ['store_name', 'slogan', 'whatsapp', 'instagram', 'whatsapp_link', 'youtube', 'email', 'company_name', 'cnpj', 'pix_pct', 'max_installments', 'min_installment_cents', 'personalization_cents', 'import_notice', 'free_shipping_over_cents', 'origin_cep', 'instagram_feedback_url', 'low_stock_threshold', 'supplier_share_phone'];
 r.get('/settings', async (_req, res) => res.json(allSettings()));
 r.put('/settings', async (req, res) => { for (const k of SETTING_KEYS) if (k in (req.body || {})) await q.run('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value', k, String(req.body[k])); await refreshSettings(); await audit(req.user.id, 'settings', '', req.ip); res.json({ ok: true }); });
 

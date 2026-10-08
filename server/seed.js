@@ -35,7 +35,7 @@ const link = (p, c, sort = 100) => op('INSERT OR IGNORE INTO entity_links(parent
 
 function seed() {
   const S = (k, v) => op('INSERT OR REPLACE INTO settings(key,value) VALUES(?,?)', k, String(v));
-  S('store_name', 'Sport Imperativo Store'); S('slogan', 'Aqui você veste o esporte.'); S('whatsapp', ''); S('instagram', 'https://www.instagram.com/'); S('tiktok', 'https://www.tiktok.com/'); S('youtube', 'https://www.youtube.com/');
+  S('store_name', 'Sport Imperativo Store'); S('slogan', 'Aqui você veste o esporte.'); S('whatsapp', ''); S('instagram', 'https://www.instagram.com/'); S('whatsapp_link', 'https://wa.me/message/JH33EJEBWUIHG1'); S('youtube', 'https://www.youtube.com/');
   S('email', 'contato@sportimperativo.com.br'); S('pix_pct', 5); S('max_installments', 12); S('min_installment_cents', 3000); S('personalization_cents', 2500); S('free_shipping_over_cents', 29900);
   S('origin_cep', '11010000'); S('low_stock_threshold', 5); S('instagram_feedback_url', 'https://www.instagram.com/'); S('company_name', 'Sport Imperativo Store'); S('cnpj', '');
   S('import_notice', 'Este produto é enviado do exterior. O prazo de entrega é maior que o de produtos à pronta entrega. Eventuais tributos ou taxas de importação aplicáveis serão tratados conforme a legislação e as condições informadas no momento da compra.');

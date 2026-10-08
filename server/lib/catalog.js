@@ -1,4 +1,5 @@
 const { q, setting } = require('../db');
+const search = require('./search');
 const { norm } = require('./util');
 
 const nowSql = () => new Date().toISOString().slice(0, 19).replace('T', ' ');
@@ -100,7 +101,8 @@ function tokens(s) { return norm(s).split(/[^a-z0-9]+/).filter(Boolean).map((t) 
 function buildFilters(f) {
   const where = ['p.active=1'], args = [];
   for (const s of f.entities || []) { where.push('EXISTS(SELECT 1 FROM product_entities pe JOIN entities e ON e.id=pe.entity_id WHERE pe.product_id=p.id AND e.slug=?)'); args.push(s); }
-  if (f.q) for (const t of tokens(f.q)) { where.push('p.search_text LIKE ?'); args.push('%' + t + '%'); }
+  if (f.qc) { const s = search.toSql(f.qc); where.push(...s.where); args.push(...s.args); }
+  else if (f.q) for (const t of tokens(f.q)) { where.push('p.search_text LIKE ?'); args.push('%' + t + '%'); }
   if (f.min) { where.push('COALESCE(CASE WHEN p.sale_price_cents IS NOT NULL THEN p.sale_price_cents END,p.price_cents)>=?'); args.push(Math.round(f.min * 100)); }
   if (f.max) { where.push('COALESCE(CASE WHEN p.sale_price_cents IS NOT NULL THEN p.sale_price_cents END,p.price_cents)<=?'); args.push(Math.round(f.max * 100)); }
   if (f.ship === 'stock' || f.ship === 'import') { where.push('p.fulfillment=?'); args.push(f.ship); }
@@ -116,14 +118,19 @@ const SORTS = {
   newest: 'p.id DESC', rating: 'p.rating_avg DESC, p.rating_count DESC', discount: '(1.0*COALESCE(p.sale_price_cents,p.price_cents)/p.price_cents) ASC',
 };
 async function listProducts(f, page = 1, per = 24) {
+  if (f.q && !f.qc) f = { ...f, qc: await search.parse(f.q) };
   const { where, args } = buildFilters(f);
+  const first = f.qc && f.qc[0] && f.qc[0].alts[0][0];
+  const order = first && (f.sort || 'relevance') === 'relevance' ? 'CASE WHEN instr(p.search_text, ?) = 0 THEN 9999 ELSE instr(p.search_text, ?) END, p.sold DESC, p.id DESC' : (SORTS[f.sort] || SORTS.relevance);
+  const oargs = order.includes('?') ? [first, first] : [];
   const [tot, rows] = await Promise.all([
     q.get(`SELECT COUNT(*) c FROM products p WHERE ${where}`, ...args),
-    q.all(`SELECT p.* FROM products p WHERE ${where} ORDER BY ${SORTS[f.sort] || SORTS.relevance} LIMIT ? OFFSET ?`, ...args, per, (page - 1) * per),
+    q.all(`SELECT p.* FROM products p WHERE ${where} ORDER BY ${order} LIMIT ? OFFSET ?`, ...args, ...oargs, per, (page - 1) * per),
   ]);
   return { total: tot.c, page, per, items: await cards(rows) };
 }
 async function facets(f) {
+  if (f.q && !f.qc) f = { ...f, qc: await search.parse(f.q) };
   const { where, args } = buildFilters(f);
   const ids = JSON.stringify((await q.all(`SELECT p.id FROM products p WHERE ${where}`, ...args)).map((r) => r.id));
   const [ents, sizes, ship, custom] = await Promise.all([
@@ -158,3 +165,28 @@ async function buildMenu() {
 }
 
 module.exports = { pricing, cards, fullProduct, reindexProduct, recalcRating, listProducts, facets, buildMenu, tokens, availability, salePrice };
+
+/** Produtos relacionados: ponderados por time/marca/modelo/jogador, mais outras camisas do mesmo craque, sem repetir nomes. */
+async function related(p, limit = 8) {
+  const W = "CASE e.type WHEN 'club' THEN 6 WHEN 'national_team' THEN 6 WHEN 'driver' THEN 6 WHEN 'brand' THEN 4 WHEN 'model' THEN 4 WHEN 'department' THEN 3 WHEN 'group' THEN 3 WHEN 'league' THEN 2 WHEN 'color' THEN 1 WHEN 'sport' THEN 1 ELSE 1 END";
+  const retro = await q.get("SELECT id FROM entities WHERE slug='retro'");
+  const pRetro = retro ? ((await q.get('SELECT 1 x FROM product_entities WHERE product_id=? AND entity_id=?', p.id, retro.id)) ? 1 : 0) : 0;
+  const penal = retro ? `- CASE WHEN (EXISTS(SELECT 1 FROM product_entities x WHERE x.product_id=p2.id AND x.entity_id=${retro.id})) != ${pRetro} THEN 5 ELSE 0 END` : '';
+  const byEntity = await q.all(`SELECT p2.*, SUM(${W}) ${penal} sc FROM products p2
+    JOIN product_entities b ON b.product_id=p2.id JOIN entities e ON e.id=b.entity_id
+    WHERE p2.active=1 AND p2.id!=? AND b.entity_id IN (SELECT entity_id FROM product_entities WHERE product_id=?)
+    GROUP BY p2.id ORDER BY sc DESC, p2.sold DESC, p2.id DESC LIMIT 40`, p.id, p.id);
+  const terms = search.starTerms(p.search_text).slice(0, 6);
+  let star = [];
+  if (terms.length) {
+    const args = [], w = terms.map((t) => '(' + t.split(' ').map((x) => { args.push('%' + x + '%'); return 'p2.search_text LIKE ?'; }).join(' AND ') + ')').join(' OR ');
+    star = await q.all(`SELECT p2.* FROM products p2 WHERE p2.active=1 AND p2.id!=? AND (${w}) ORDER BY p2.sold DESC, p2.id DESC LIMIT 12`, p.id, ...args);
+  }
+  const seen = new Set(), out = [];
+  const take = (rows, max) => { let n = 0; for (const r of rows) { if (out.length >= limit || n >= max) break; const k = norm(r.name); if (seen.has(r.id) || seen.has(k)) continue; seen.add(r.id); seen.add(k); out.push(r); n++; } };
+  take(byEntity, Math.ceil(limit / 2));
+  take(star, 3);
+  take(byEntity, limit);
+  return out;
+}
+module.exports.related = related;
