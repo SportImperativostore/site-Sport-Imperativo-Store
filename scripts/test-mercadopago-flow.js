@@ -13,7 +13,7 @@ const mock = http.createServer((req, res) => {
     state.calls.push({ m: req.method, u: req.url, auth: req.headers.authorization });
     if (req.method === 'POST' && req.url === '/v1/payments') {
       const j = JSON.parse(b); const id = 9000 + Object.keys(state.payments).length;
-      state.payments[id] = { id, status: 'pending', external_reference: j.external_reference, transaction_amount: j.transaction_amount, status_detail: 'pending_waiting_transfer' };
+      state.payments[id] = { id, status: state.rejectNext ? 'rejected' : 'pending', external_reference: j.external_reference, transaction_amount: j.transaction_amount, status_detail: state.rejectNext ? 'rejected_high_risk' : 'pending_waiting_transfer' };
       return res.end(JSON.stringify({ id, point_of_interaction: { transaction_data: { qr_code: '00020126MOCKPIX' + id, qr_code_base64: 'QVNE' } } }));
     }
     if (req.method === 'POST' && req.url === '/checkout/preferences') {
@@ -73,6 +73,11 @@ const address = { cep: '01310100', street: 'Rua Exemplo', number: '100', distric
   const pid2 = Object.keys(state.payments)[1]; state.payments[pid2].status = 'approved'; state.payments[pid2].transaction_amount = 1;
   await call('/webhooks/mercadopago?data.id=' + pid2, 'POST', { data: { id: pid2 } }); await sleep(400);
   ok((await call('/admin/orders/' + pix2.j.orderId)).j.status === 'payment_pending', 'pagamento com valor menor que o pedido não é aprovado');
+  // 5b) Pix recusado pelo antifraude logo após criar → o cliente recebe mensagem clara (sem QR morto)
+  state.rejectNext = true;
+  const rej = await call('/checkout', 'POST', { items, importAck: true, customer, address, paymentMethod: 'pix', installments: 1 });
+  state.rejectNext = false;
+  ok(rej.s === 422 && /recusado/i.test(JSON.stringify(rej.j)), 'Pix recusado pelo gateway → mensagem clara ao cliente: ' + JSON.stringify(rej.j));
   // 6) cartão → Checkout Pro
   const card = await call('/checkout', 'POST', { items, importAck: true, customer, address, paymentMethod: 'card', installments: 6 });
   ok(card.s === 200, 'checkout cartão criado');

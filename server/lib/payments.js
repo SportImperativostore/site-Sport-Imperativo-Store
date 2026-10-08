@@ -33,7 +33,8 @@ async function createPayment(order, baseUrl) {
       body: JSON.stringify({
         transaction_amount: amount / 100, description: `Pedido #${order.id} - Sport Imperativo Store`, payment_method_id: 'pix',
         external_reference: String(order.id), notification_url: `${baseUrl}/api/webhooks/mercadopago`, statement_descriptor: 'SPORTIMPERATIVO',
-        payer: { email: customer.email, first_name: customer.name.split(' ')[0], last_name: customer.name.split(' ').slice(1).join(' ') || '-', identification: { type: 'CPF', number: customer.cpf } },
+        payer: { email: customer.email, first_name: customer.name.split(' ')[0], last_name: customer.name.split(' ').slice(1).join(' ') || '-', identification: { type: 'CPF', number: customer.cpf },
+          address: addr.cep ? { zip_code: String(addr.cep).replace(/\D/g, ''), street_name: addr.street, street_number: String(addr.number || ''), neighborhood: addr.district, city: addr.city, federal_unit: addr.state } : undefined },
         additional_info: {
           items: its.map((i) => ({ id: String(i.product_id), title: String(i.name).slice(0, 120), description: String(i.name).slice(0, 120), category_id: 'fashion', quantity: i.qty, unit_price: Number(((i.unit_cents + (i.custom_cents || 0)) / 100).toFixed(2)) })),
           payer: { first_name: customer.name.split(' ')[0], last_name: customer.name.split(' ').slice(1).join(' ') || '-', phone: phone.length >= 10 ? { area_code: phone.slice(0, 2), number: phone.slice(2) } : undefined, address: addr.cep ? { zip_code: String(addr.cep).replace(/\D/g, ''), street_name: addr.street, street_number: String(addr.number || '') } : undefined },
@@ -44,6 +45,17 @@ async function createPayment(order, baseUrl) {
     const j = await res.json();
     if (!res.ok) throw new Error('Gateway: ' + (j.message || res.status));
     const td = (j.point_of_interaction || {}).transaction_data || {};
+    // O antifraude pode recusar logo após criar o código: confere antes de mostrar um Pix que já nasceu cancelado.
+    let st = j.status, detail = j.status_detail;
+    if (!st || st === 'pending') {
+      await new Promise((r) => setTimeout(r, 1500));
+      try { const c = await (await fetch(`${MP}/v1/payments/${j.id}`, { headers: mpHeaders() })).json(); if (c && c.status) { st = c.status; detail = c.status_detail; } } catch { /* mantém o estado inicial */ }
+    }
+    if (['rejected', 'cancelled'].includes(st)) {
+      console.error('pix recusado pelo gateway', j.id, st, detail);
+      await q.run('INSERT INTO payments(order_id,provider,method,status,external_id,amount_cents,raw) VALUES(?,?,?,?,?,?,?)', order.id, 'mercadopago', 'pix', 'rejected', String(j.id), amount, JSON.stringify({ status: st, detail }));
+      const err = new Error('Pix recusado: ' + detail); err.userMessage = 'O Pix foi recusado por segurança pelo meio de pagamento. Tente pagar com cartão ou tente novamente em alguns minutos.'; throw err;
+    }
     const r = await q.run('INSERT INTO payments(order_id,provider,method,status,external_id,amount_cents,pix_code,pix_qr,raw) VALUES(?,?,?,?,?,?,?,?,?)', order.id, 'mercadopago', 'pix', 'pending', String(j.id), amount, td.qr_code, td.qr_code_base64, JSON.stringify({ status: j.status }));
     return await q.get('SELECT * FROM payments WHERE id=?', Number(r.lastInsertRowid));
   }
