@@ -1,5 +1,5 @@
 const express = require('express');
-const { q, allSettings } = require('../db');
+const { q, allSettings, setting } = require('../db');
 const cat = require('../lib/catalog');
 const { priceCart } = require('../lib/cart');
 const art = require('../lib/art');
@@ -25,6 +25,16 @@ async function mix(slugs, order, total = 8) {
   if (out.length < total) add(await q.all(`SELECT p.* FROM products p WHERE p.active=1 ORDER BY ${order} LIMIT ${total * 2}`));
   return out;
 }
+/** Cada banner tem várias versões (mesma arte, outros produtos): sorteia uma a cada visita. As versões ficam em settings.banner_variants = {"cr7":6,...}. */
+function rotateBanners(list) {
+  let v = {}; try { v = JSON.parse(setting('banner_variants', '{}')); } catch { /* sem rotação */ }
+  return list.map((b) => {
+    const m = String(b.image_desktop || '').match(/^\/img\/banners\/([a-z0-9-]+)\.webp$/); const n = m && Number(v[m[1]]);
+    if (!n || n < 2) return b;
+    const k = 1 + Math.floor(Math.random() * n);
+    return { ...b, image_desktop: `/img/banners/${m[1]}-v${k}.webp`, image_mobile: `/img/banners/${m[1]}-v${k}-m.webp` };
+  });
+}
 r.get('/home', wrap(async (_req, res) => {
   const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
   const [banners, best, offers, news, sports, testimonials] = await Promise.all([
@@ -43,7 +53,7 @@ r.get('/home', wrap(async (_req, res) => {
     return { key: slug === 'camisas-de-futebol' ? 'futebol' : slug, title, tagline, path, image: r && r.image, count: n };
   }));
   cacheHdr(res, 30);
-  res.json({ banners, best, offers, news, sports, testimonials, showcase });
+  res.json({ banners: rotateBanners(banners), best, offers, news, sports, testimonials, showcase });
 }));
 
 function parseFilters(qs) {

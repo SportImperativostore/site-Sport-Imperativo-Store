@@ -17,7 +17,7 @@ const ENT_TYPES = [['sport', 'Esporte / seção'], ['category', 'Categoria'], ['
 const ENT_LABEL = Object.fromEntries(ENT_TYPES);
 
 /* ---------- Layout ---------- */
-const NAV = [['dashboard', 'Dashboard'], ['orders', 'Pedidos'], ['supplier-orders', 'Ordens a fornecedores'], ['whatsapp', 'WhatsApp / Pós-venda'], ['products', 'Produtos'], ['entities', 'Categorias, clubes e ligas'], ['suppliers', 'Fornecedores'], ['coupons', 'Cupons'], ['banners', 'Banners'], ['reviews', 'Avaliações'], ['testimonials', 'Prova social'], ['sizes', 'Tamanhos'], ['size_guides', 'Guias de tamanho'], ['pages', 'Páginas e políticas'], ['settings', 'Configurações'], ['users', 'Clientes'], ['audit', 'Logs / Backup']];
+const NAV = [['dashboard', 'Dashboard'], ['orders', 'Pedidos'], ['supplier-orders', 'Ordens a fornecedores'], ['whatsapp', 'WhatsApp / Pós-venda'], ['products', 'Produtos'], ['prices', 'Tabela de preços'], ['entities', 'Categorias, clubes e ligas'], ['suppliers', 'Fornecedores'], ['coupons', 'Cupons'], ['banners', 'Banners'], ['reviews', 'Avaliações'], ['testimonials', 'Prova social'], ['sizes', 'Tamanhos'], ['size_guides', 'Guias de tamanho'], ['pages', 'Páginas e políticas'], ['settings', 'Configurações'], ['users', 'Clientes'], ['audit', 'Logs / Backup']];
 function shell(active, html) {
   $('#root').innerHTML = `<div class="app"><nav class="side"><a class="logo" href="#/dashboard"><img src="/img/logo.png" alt="Sport Imperativo"></a>${NAV.map(([k, n]) => `<a href="#/${k}" class="${active === k ? 'on' : ''}">${n}</a>`).join('')}<small>CONTA</small><a href="/" target="_blank">Ver loja ↗</a><a href="#" id="out">Sair</a></nav><main>${html}</main></div>`;
   $('#out').onclick = async (ev) => { ev.preventDefault(); await api('/auth/logout', { method: 'POST' }); S.user = null; boot(); };
@@ -259,6 +259,19 @@ async function audit() {
 }
 
 
+async function pricesPage() {
+  const d = await api('/admin/price-table');
+  shell('prices', `<h1>Tabela de preços</h1><p class="muted">Altere o preço de um tipo e clique em <b>Aplicar</b>: todos os produtos ativos daquele tipo recebem o novo valor. Os tipos são identificados pelo nome do produto. Para um produto específico, edite em <a href="#/products">Produtos</a>.</p>
+  <div class="tw"><table><thead><tr><th>Tipo</th><th>Produtos</th><th>Preço atual</th><th>Novo preço (R$)</th><th></th></tr></thead><tbody>${d.rules.map((r) => `<tr><td><b>${e(r.label)}</b></td><td>${r.count}</td><td>${r.count ? (r.price != null ? brl(r.price) : '—') + (r.mixed ? ' <small>(há preços diferentes)</small>' : '') : '—'}</td>
+    <td><input data-k="${r.key}" type="number" step="0.01" min="1" style="width:120px" value="${r.price != null ? (r.price / 100).toFixed(2) : ''}" ${r.count ? '' : 'disabled'}></td><td><button class="btn sm" data-apply="${r.key}" ${r.count ? '' : 'disabled'}>Aplicar</button></td></tr>`).join('')}</tbody></table></div>
+  ${d.semTipo ? `<p class="muted">${d.semTipo} produto(s) não se encaixam em nenhum tipo (edite em Produtos).</p>` : ''}`);
+  document.querySelectorAll('[data-apply]').forEach((b) => b.onclick = async () => {
+    const k = b.dataset.apply, v = parseFloat(document.querySelector(`[data-k="${k}"]`).value);
+    if (!(v >= 1)) return toast('Informe um preço válido.', true);
+    if (!confirm('Aplicar R$ ' + v.toFixed(2).replace('.', ',') + ' a todos os produtos deste tipo?')) return;
+    try { const r = await api('/admin/price-table/apply', { method: 'POST', body: { key: k, price_cents: Math.round(v * 100) } }); toast(r.updated + ' produtos atualizados.'); pricesPage(); } catch (err) { toast(err.message, true); }
+  });
+}
 async function whatsappPage() {
   const [st, inbox, mails] = await Promise.all([api('/admin/whatsapp/status'), api('/admin/whatsapp/inbox'), api('/admin/emails')]);
   const dot = st.state === 'connected' ? '<span style="color:var(--ok)">●</span> WhatsApp conectado' : st.state === 'error' ? '<span style="color:var(--bad)">●</span> Credenciais inválidas / erro na API' : '<span style="color:var(--warn)">●</span> API oficial ainda não configurada (modo manual ativo)';
@@ -292,6 +305,7 @@ async function router() {
     else if (path === 'orders') arg ? await orderPage(arg) : await ordersList(qs);
     else if (path === 'supplier-orders') await supplierOrders();
     else if (path === 'whatsapp') await whatsappPage();
+    else if (path === 'prices') await pricesPage();
     else if (path === 'products') arg ? await productForm(arg) : await productsList(qs);
     else if (path === 'entities') arg ? await entityForm(arg, qs) : await entitiesList(qs);
     else if (path === 'size_guides') arg ? await guideForm(arg) : await guidesList();

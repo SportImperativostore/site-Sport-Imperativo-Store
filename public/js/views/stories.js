@@ -48,12 +48,7 @@ function show(id, i) {
 actions.story = (el) => show(el.dataset.list, +el.dataset.i);
 
 /** Faixa de destaques no topo da home (estilo Stories). Abre os destaques oficiais do Instagram da loja. */
-export function highlightsBar(imgs, igUrl, testimonials) {
-  const real = (testimonials || []).filter((t) => t.media_url || t.link);
-  if (real.length) return `<div class="wrap hl-wrap">${storiesStrip('top', real)}</div>`;
-  if (!igUrl) return '';
-  const T = ['Feedbacks', 'Unboxings', 'Entregas', 'Depoimentos', 'Vídeos', 'Fotos reais'];
-  const dots = T.map((t, i) => `<a class="story-dot" role="listitem" href="${e(igUrl)}" target="_blank" rel="noopener" aria-label="${e(t)} no Instagram">
-    <span class="ring">${imgs[i] ? `<img src="${e(imgs[i])}" alt="" loading="lazy">` : `<b>${initial(t)}</b>`}</span><small>${e(t)}</small></a>`).join('');
-  return `<div class="wrap hl-wrap"><div class="stories" role="list">${dots}<a class="story-dot" role="listitem" href="${e(igUrl)}" target="_blank" rel="noopener" aria-label="Ver no Instagram"><span class="ring ig"><b>↗</b></span><small>Instagram</small></a></div></div>`;
+export function highlightsBar() {
+  // Uma única bolinha: Feedback → página com os feedbacks dos clientes.
+  return '<div class="wrap hl-wrap"><div class="stories" role="list"><a class="story-dot" role="listitem" href="/feedbacks" aria-label="Ver feedbacks dos clientes"><span class="ring"><img src="/img/feedback-cover.svg" alt="" width="72" height="72"></span><small>Feedback</small></a></div></div>';
 }

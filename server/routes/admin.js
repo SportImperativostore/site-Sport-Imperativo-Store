@@ -267,5 +267,23 @@ r.get('/backup', wrap(async (req, res) => {
   await audit(req.user.id, 'backup', '', req.ip);
   res.attachment(`sport-imperativo-backup-${new Date().toISOString().slice(0, 10)}.json`).json(dump);
 }));
+/* ----- Tabela de preços por tipo de produto ----- */
+const { RULES, ruleOf } = require('../lib/pricerules');
+r.get('/price-table', wrap(async (_req, res) => {
+  const prods = await q.all('SELECT id,name,price_cents FROM products WHERE active=1');
+  const by = Object.fromEntries(RULES.map((x) => [x.key, { key: x.key, label: x.label, count: 0, prices: {} }]));
+  let none = 0;
+  for (const p of prods) { const k = ruleOf(p.name); if (!k) { none++; continue; } by[k].count++; by[k].prices[p.price_cents] = (by[k].prices[p.price_cents] || 0) + 1; }
+  res.json({ rules: RULES.map((x) => { const b = by[x.key]; const top = Object.entries(b.prices).sort((a, c) => c[1] - a[1]); return { key: x.key, label: x.label, count: b.count, price: top.length ? Number(top[0][0]) : null, mixed: top.length > 1 }; }), semTipo: none });
+}));
+r.post('/price-table/apply', wrap(async (req, res) => {
+  const key = String(req.body.key || ''); const cents = Math.round(Number(req.body.price_cents));
+  if (!RULES.some((x) => x.key === key)) throw new HttpError(400, 'Tipo inválido.');
+  if (!Number.isFinite(cents) || cents < 100 || cents > 5000000) throw new HttpError(400, 'Preço inválido (de R$ 1,00 a R$ 50.000,00).');
+  const ids = (await q.all('SELECT id,name FROM products WHERE active=1')).filter((p) => ruleOf(p.name) === key).map((p) => p.id);
+  for (let i = 0; i < ids.length; i += 400) { const part = ids.slice(i, i + 400); await q.run(`UPDATE products SET price_cents=? WHERE id IN (${part.map(() => '?').join(',')})`, cents, ...part); }
+  await audit(req.user.id, 'price_table', { key, cents, n: ids.length }, req.ip);
+  res.json({ ok: true, updated: ids.length });
+}));
 r.use(require('./whatsapp').admin);
 module.exports = r;
