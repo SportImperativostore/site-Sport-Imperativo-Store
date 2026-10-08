@@ -24,12 +24,21 @@ async function createPayment(order, baseUrl) {
     return q.get('SELECT * FROM payments WHERE id=?', Number(r.lastInsertRowid));
   }
   if (method === 'pix') {
+    // Dados completos do comprador e dos itens ajudam a análise antifraude do Mercado Pago a aprovar o Pix.
+    const addr = (() => { try { return JSON.parse(order.address) || {}; } catch { return {}; } })();
+    const its = await q.all('SELECT product_id,name,qty,unit_cents,custom_cents FROM order_items WHERE order_id=?', order.id);
+    const phone = String(customer.phone || '').replace(/\D/g, '');
     const res = await fetch(`${MP}/v1/payments`, {
       method: 'POST', headers: mpHeaders({ 'X-Idempotency-Key': `order-${order.id}-pix` }),
       body: JSON.stringify({
         transaction_amount: amount / 100, description: `Pedido #${order.id} - Sport Imperativo Store`, payment_method_id: 'pix',
-        external_reference: String(order.id), notification_url: `${baseUrl}/api/webhooks/mercadopago`,
+        external_reference: String(order.id), notification_url: `${baseUrl}/api/webhooks/mercadopago`, statement_descriptor: 'SPORTIMPERATIVO',
         payer: { email: customer.email, first_name: customer.name.split(' ')[0], last_name: customer.name.split(' ').slice(1).join(' ') || '-', identification: { type: 'CPF', number: customer.cpf } },
+        additional_info: {
+          items: its.map((i) => ({ id: String(i.product_id), title: String(i.name).slice(0, 120), description: String(i.name).slice(0, 120), category_id: 'fashion', quantity: i.qty, unit_price: Number(((i.unit_cents + (i.custom_cents || 0)) / 100).toFixed(2)) })),
+          payer: { first_name: customer.name.split(' ')[0], last_name: customer.name.split(' ').slice(1).join(' ') || '-', phone: phone.length >= 10 ? { area_code: phone.slice(0, 2), number: phone.slice(2) } : undefined, address: addr.cep ? { zip_code: String(addr.cep).replace(/\D/g, ''), street_name: addr.street, street_number: String(addr.number || '') } : undefined },
+          shipments: addr.cep ? { receiver_address: { zip_code: String(addr.cep).replace(/\D/g, ''), state_name: addr.state, city_name: addr.city, street_name: addr.street, street_number: String(addr.number || '') } } : undefined,
+        },
       }),
     });
     const j = await res.json();
