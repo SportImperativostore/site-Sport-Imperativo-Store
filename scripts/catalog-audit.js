@@ -35,6 +35,12 @@ const DUP_NAMES = ['Camisa Sao Paulo 2026 Third Feminina', 'Corta-Vento Sporting
   const noCat = await q.all(`SELECT p.id,p.name FROM products p WHERE p.active=1 AND NOT EXISTS (SELECT 1 FROM product_entities pe WHERE pe.product_id=p.id AND pe.entity_id NOT IN (${sports.join(',') || 0}))`);
   report.produtosSemCategoria = noCat.length;
 
+  /* 4b) todo produto precisa de fornecedor (senão o pedido pago não gera ordem de compra): usa o único fornecedor ativo */
+  const sups = await q.all('SELECT id FROM suppliers WHERE active=1 ORDER BY id');
+  const semFornecedor = (await q.get('SELECT COUNT(*) n FROM products WHERE supplier_id IS NULL')).n;
+  if (sups.length === 1 && semFornecedor) op('UPDATE products SET supplier_id=? WHERE supplier_id IS NULL', sups[0].id);
+  report.produtosSemFornecedorCorrigidos = sups.length === 1 ? semFornecedor : 0;
+
   /* 5) menu: esconde entidades sem produtos (times, ligas, cores, modelos, marcas...) e seções vazias */
   const cnt = Object.fromEntries((await q.all('SELECT entity_id,COUNT(*) n FROM product_entities pe JOIN products p ON p.id=pe.product_id AND p.active=1 GROUP BY entity_id')).map((r) => [r.entity_id, r.n]));
   const ents = await q.all("SELECT id,type,slug,show_in_menu FROM entities WHERE active=1");
