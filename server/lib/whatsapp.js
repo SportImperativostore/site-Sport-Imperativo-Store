@@ -55,8 +55,8 @@ const TEMPLATE_DEFINITION = () => ({
   name: cfg().template, language: cfg().lang, category: 'UTILITY',
   components: [{
     type: 'BODY',
-    text: 'NOVO PEDIDO — SPORT IMPERATIVO STORE\nPedido: {{1}}\nCliente: {{2}}\n\nPRODUTOS: {{3}}\n\nENDEREÇO DE ENTREGA: {{4}}\nTelefone do cliente: {{5}}\n\nVALOR DO PEDIDO: {{6}}\n\nPor favor, confirme o recebimento do pedido.\nSport Imperativo Store.',
-    example: { body_text: [['#SIS-10482', 'João Silva', '1x Camisa Brasil 2026 (M)', 'Rua Exemplo, 100 - São Paulo/SP - CEP 00000-000 - Brasil', '+55 11 90000-0000', 'R$ 219,90']] },
+    text: 'NOVO PEDIDO — SPORT IMPERATIVO STORE\nPedido: {{1}}\nCliente: {{2}}\n\nPRODUTOS: {{3}}\n\nENDEREÇO DE ENTREGA: {{4}}\nCPF do destinatário (obrigatório na importação): {{5}}\nTelefone do cliente: {{6}}\n\nVALOR DO PEDIDO: {{7}}\n\nPor favor, confirme o recebimento do pedido.\nSport Imperativo Store.',
+    example: { body_text: [['#SIS-10482', 'João Silva', '1x Camisa Brasil 2026 (M)', 'Rua Exemplo, 100 - São Paulo/SP - CEP 00000-000 - Brasil', '000.000.000-00', '+55 11 90000-0000', 'R$ 219,90']] },
   }],
 });
 module.exports = { cfg, digits, isConfigured, envStatus, sendText, sendTemplate, verifySignature, TEMPLATE_DEFINITION };

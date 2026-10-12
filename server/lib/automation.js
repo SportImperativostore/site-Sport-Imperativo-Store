@@ -35,11 +35,13 @@ function itemsBlock(items) {
   return items.map((it) => [`Camisa/Produto: ${it.name}`, `Tamanho: ${it.size || '-'}`, `Quantidade: ${it.qty}`,
     (it.custom_name || it.custom_number) ? `Personalização: Nome ${it.custom_name || '-'} / Número ${it.custom_number || '-'}` : null, it.custom_extra || null].filter(Boolean).join('\n')).join('\n\n');
 }
+/** CPF do destinatário: obrigatório na importação (Correios/Receita exigem na declaração de remessa). */
+const fmtCpf = (v) => { const d = onlyDigits(v); return d.length === 11 ? d.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4') : (d || 'NÃO INFORMADO'); };
 function supplierMessage(order, items) {
   const c = JSON.parse(order.customer), a = JSON.parse(order.address);
   const share = setting('supplier_share_phone', '1') !== '0';
   return ['NOVO PEDIDO — SPORT IMPERATIVO STORE', `Pedido: #${orderRef(order.id)}`, `Cliente: ${c.name}`, '', 'PRODUTO:', itemsBlock(items), '',
-    'ENDEREÇO DE ENTREGA:', c.name, ...addressLines(a), ...(share ? ['', 'Telefone do cliente:', fmtPhone(c.whatsapp || c.phone)] : []), '',
+    'ENDEREÇO DE ENTREGA:', c.name, ...addressLines(a), '', 'CPF do destinatário (obrigatório na declaração de importação):', fmtCpf(c.cpf), ...(share ? ['', 'Telefone do cliente:', fmtPhone(c.whatsapp || c.phone)] : []), '',
     'VALOR DO PEDIDO:', brl(order.total_cents), '', 'Por favor, confirme o recebimento do pedido.', 'Sport Imperativo Store.'].join('\n');
 }
 function templateParams(order, items) {
@@ -47,7 +49,7 @@ function templateParams(order, items) {
   const share = setting('supplier_share_phone', '1') !== '0';
   return ['#' + orderRef(order.id), c.name,
     items.map((it) => `${it.qty}x ${it.name} (Tam. ${it.size || '-'})${(it.custom_name || it.custom_number) ? ` [Nome ${it.custom_name || '-'} Nº ${it.custom_number || '-'}]` : ''}${it.custom_extra ? ` [${it.custom_extra}]` : ''}`).join(' ; '),
-    addressLines(a).join(', '), share ? fmtPhone(c.whatsapp || c.phone) : 'não informado', brl(order.total_cents)];
+    addressLines(a).join(', '), fmtCpf(c.cpf), share ? fmtPhone(c.whatsapp || c.phone) : 'não informado', brl(order.total_cents)];
 }
 
 /* ---------- log da conversa ---------- */
