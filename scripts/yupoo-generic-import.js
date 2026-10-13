@@ -7,12 +7,16 @@ const fs = require('fs');
 const path = require('path');
 const file = process.argv[2];
 const DRY = process.argv.includes('--dry');
-const ROOT = path.join(__dirname, '..', 'public', 'img', 'catalog', 'p');
+const DEFAULT_ROOT = path.join(__dirname, '..', 'public', 'img', 'catalog', 'p');
 
 (async () => {
   if (!file) throw new Error('informe o arquivo JSON');
   const data = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'yupoo', file), 'utf8'));
   await init();
+  // data.cdn = { dir: 'cdn/img/p', url: 'https://cdn.jsdelivr.net/gh/.../cdn/img/p' }: fotos fora do deploy (limite de arquivos da Vercel), servidas pelo jsDelivr
+  const CDN = data.cdn || null;
+  const ROOT = CDN ? path.join(__dirname, '..', CDN.dir) : DEFAULT_ROOT;
+  const imgUrl = (id, f) => (CDN ? `${CDN.url}/yp-${id}/${f}` : `/img/catalog/p/yp-${id}/${f}`);
   const have = new Set((await q.all("SELECT sku FROM products WHERE sku LIKE 'YP-%'")).map((p) => p.sku));
   let nextEnt = (await q.get('SELECT COALESCE(MAX(id),0) m FROM entities')).m, nextProd = (await q.get('SELECT COALESCE(MAX(id),0) m FROM products')).m;
   const ops = []; const op = (sql, ...args) => ops.push({ sql, args: args.map((a) => (a === undefined ? null : a)) });
@@ -43,7 +47,7 @@ const ROOT = path.join(__dirname, '..', 'public', 'img', 'catalog', 'p');
     r.customizable ? 1 : 0, r.customizable ? (r.custom_price || 6000) : null, guides[r.guide] || null, r.tags || '', 'YP-' + r.id, r.shape || 'jersey', norm(`${name} ${r.tags || ''}`));
     const eids = []; for (const s of r.ents || []) { const e = await ent(s); if (e) eids.push(e); }
     for (const e of new Set(eids)) op('INSERT OR IGNORE INTO product_entities(product_id,entity_id) VALUES(?,?)', id, e);
-    files.forEach((f, i) => op('INSERT INTO product_images(product_id,url,kind,sort) VALUES(?,?,?,?)', id, `/img/catalog/p/yp-${r.id}/${f}`, 'image', i));
+    files.forEach((f, i) => op('INSERT INTO product_images(product_id,url,kind,sort) VALUES(?,?,?,?)', id, imgUrl(r.id, f), 'image', i));
     for (const s of r.sizes || []) { if (!sizeSet.has(s)) { sizeSet.add(s); op('INSERT OR IGNORE INTO sizes(name,sort) VALUES(?,?)', s, 600); } op('INSERT OR IGNORE INTO variants(product_id,size,stock) VALUES(?,?,0)', id, s); }
     added++;
   }
