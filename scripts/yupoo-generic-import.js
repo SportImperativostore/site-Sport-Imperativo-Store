@@ -45,6 +45,7 @@ const DEFAULT_ROOT = path.join(__dirname, '..', 'public', 'img', 'catalog', 'p')
         VALUES(?,?,?,?,?,?,0,'free','China',15,30,?,?,?,?,?,?,?,1,0,?)`,
     id, uniq(name + '-' + String(r.id).slice(-5)), name, r.desc || `${name}. Importado, qualidade premium. Escolha o tamanho e consulte a tabela de medidas.`, r.price, r.fulfillment || 'import', r.weight || 400,
     r.customizable ? 1 : 0, r.customizable ? (r.custom_price || 6000) : null, guides[r.guide] || null, r.tags || '', 'YP-' + r.id, r.shape || 'jersey', norm(`${name} ${r.tags || ''}`));
+    op('UPDATE products SET supplier_sku=? WHERE id=?', String(r.id), id);     // referência do álbum do fornecedor (vai na mensagem do pedido)
     const eids = []; for (const s of r.ents || []) { const e = await ent(s); if (e) eids.push(e); }
     for (const e of new Set(eids)) op('INSERT OR IGNORE INTO product_entities(product_id,entity_id) VALUES(?,?)', id, e);
     files.forEach((f, i) => op('INSERT INTO product_images(product_id,url,kind,sort) VALUES(?,?,?,?)', id, imgUrl(r.id, f), 'image', i));
