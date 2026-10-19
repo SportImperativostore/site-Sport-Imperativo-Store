@@ -12,6 +12,14 @@ const PROD = process.env.NODE_ENV === 'production' || !!process.env.VERCEL;
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
 app.use(compression());
+// Domínio oficial: o www e o endereço antigo da Vercel redirecionam (só leitura) para o domínio próprio.
+const CANON_HOST = 'sportimperativostore.com.br';
+app.use((req, res, next) => {
+  if (!PROD || (req.method !== 'GET' && req.method !== 'HEAD')) return next();
+  const h = String(req.hostname || '').toLowerCase();
+  if (h === 'www.' + CANON_HOST || h === 'site-sport-imperativo-store.vercel.app') return res.redirect(308, `https://${CANON_HOST}${req.originalUrl}`);
+  next();
+});
 app.use((req, res, next) => {
   res.set({
     'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'strict-origin-when-cross-origin',
