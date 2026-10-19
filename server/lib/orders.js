@@ -66,6 +66,7 @@ async function markPaid(orderId, paymentId) {
   if (!won) return false;
   // Em serverless é preciso concluir antes de responder (a função é congelada depois).
   try { await createSupplierOrders(orderId); } catch (e) { console.error('supplier dispatch', e); }
+  try { await require('./notify').notifyPaidOrder(ord, require('./automation').orderRef(orderId)); } catch (e) { console.error('notify', e.message); }
   return true;
 }
 
