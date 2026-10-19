@@ -7,6 +7,9 @@
       "excludeFiles": "public/img/catalog/**"
     }
   },
+  "crons": [
+    { "path": "/api/cron/abandoned", "schedule": "*/30 * * * *" }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/api" }
   ]

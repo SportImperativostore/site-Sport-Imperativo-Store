@@ -95,4 +95,9 @@ CREATE TABLE IF NOT EXISTS supplier_inbox(
 CREATE TABLE IF NOT EXISTS email_outbox(
   id INTEGER PRIMARY KEY, order_id INTEGER, to_email TEXT, subject TEXT, html TEXT, status TEXT DEFAULT 'queued', error TEXT,
   created_at TEXT DEFAULT (datetime('now')), sent_at TEXT);
+CREATE TABLE IF NOT EXISTS abandoned_carts(
+  id INTEGER PRIMARY KEY, email TEXT NOT NULL, name TEXT, items TEXT, token TEXT, recovered INTEGER DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')), sent_at TEXT);
+CREATE INDEX IF NOT EXISTS ix_abandoned_email ON abandoned_carts(email, recovered);
+CREATE TABLE IF NOT EXISTS email_optout(email TEXT PRIMARY KEY, created_at TEXT DEFAULT (datetime('now')));
 `;

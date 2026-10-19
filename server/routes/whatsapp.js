@@ -108,4 +108,16 @@ admin.post('/emails/test', wrap(async (req, res) => {
   res.json({ to, ...out, configured: !!(process.env.RESEND_API_KEY && process.env.MAIL_FROM) });
 }));
 
+// Prévia do e-mail de carrinho abandonado (vai só para o administrador logado) e estado da recuperação.
+admin.post('/abandoned/preview', wrap(async (req, res) => {
+  const to = (req.user && req.user.email) || '';
+  if (!to) throw new HttpError(400, 'Administrador sem e-mail cadastrado.');
+  res.json({ to, ...(await require('../lib/abandoned').preview(to)) });
+}));
+admin.get('/abandoned/status', wrap(async (_req, res) => {
+  const A2 = require('../lib/abandoned');
+  const c = await q.get("SELECT COUNT(*) n, SUM(CASE WHEN sent_at IS NOT NULL THEN 1 ELSE 0 END) sent, SUM(recovered) rec FROM abandoned_carts");
+  res.json({ enabled: process.env.ABANDONED_CART === 'on', cronSecret: !!process.env.CRON_SECRET, total: c.n || 0, sent: c.sent || 0, recovered: c.rec || 0, due: (await A2.run({ dry: true })).due });
+}));
+
 module.exports = { webhook, admin };

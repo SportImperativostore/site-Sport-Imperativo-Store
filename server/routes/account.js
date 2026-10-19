@@ -135,7 +135,26 @@ r.post('/checkout', rateLimit('checkout', 30, 10 * 60 * 1000), wrap(async (req, 
   const baseUrl = process.env.PUBLIC_URL || `${req.protocol}://${req.get('host')}`;
   const row = await q.get('SELECT * FROM orders WHERE id=?', order.id);
   try { await pay.createPayment(row, baseUrl, String(b.deviceId || '').slice(0, 120)); } catch (e) { console.error('payment', e.message); await orders.setStatus(order.id, 'cancelled', 'Falha ao criar pagamento'); throw new HttpError(e.userMessage ? 422 : 502, e.userMessage || 'Não foi possível iniciar o pagamento. Tente novamente.'); }
+  try { await require('../lib/abandoned').recover(customer.email); } catch { /* não bloqueia o pedido */ }
   res.json({ orderId: order.id, token: order.accessToken });
+}));
+
+/* ----- Carrinho abandonado ----- */
+r.post('/cart/capture', rateLimit('capture', 30, 10 * 60 * 1000), wrap(async (req, res) => {
+  const b = req.body || {};
+  try { await require('../lib/abandoned').capture({ email: b.email, name: b.name, items: b.items }); } catch (e) { console.error('capture', e.message); }
+  res.json({ ok: true });
+}));
+r.get('/email/unsubscribe', wrap(async (req, res) => {
+  const ok = await require('../lib/abandoned').unsubscribe(req.query.t);
+  res.set('Cache-Control', 'no-store').type('html').send(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sport Imperativo Store</title><body style="font-family:system-ui,Arial;max-width:520px;margin:12vh auto;padding:0 20px;color:#0d1b33"><h2>${ok ? 'Pronto, você não receberá mais lembretes.' : 'Link inválido ou já utilizado.'}</h2><p><a href="/" style="color:#0b5cff">Voltar para a loja</a></p></body>`);
+}));
+// Tarefa agendada da Vercel (Cron): exige o segredo CRON_SECRET no cabeçalho Authorization.
+r.get('/cron/abandoned', wrap(async (req, res) => {
+  const sec = process.env.CRON_SECRET;
+  if (!sec) throw new HttpError(503, 'CRON_SECRET não configurado.');
+  if (req.get('authorization') !== `Bearer ${sec}`) throw new HttpError(401, 'Não autorizado.');
+  res.json(await require('../lib/abandoned').run());
 }));
 
 // Webhook do gateway
