@@ -36,6 +36,7 @@ export default async function checkout() {
     if (step === 1) body = `<h3>Seus dados</h3><div class="fgrid">${f('name', 'Nome completo', 'autocomplete="name" required', true)}${f('cpf', 'CPF', 'inputmode="numeric" maxlength="14" autocomplete="off" placeholder="000.000.000-00"')}${f('email', 'E-mail', 'type="email" autocomplete="email"')}${f('phone', 'Telefone', 'inputmode="tel" autocomplete="tel" placeholder="(11) 90000-0000"')}${f('whatsapp', 'WhatsApp (opcional)', 'inputmode="tel" placeholder="(11) 90000-0000"')}</div>
       <p class="inst" style="margin-top:12px"><strong>Por que pedimos o CPF?</strong> Nossos produtos são importados e os Correios/Receita Federal exigem o CPF do destinatário na declaração de importação. Sem ele, a encomenda não é liberada.</p>
       <p class="inst" style="margin-top:8px;font-size:12.5px">Usaremos seu e-mail para confirmar o pedido e, se você não concluir a compra, enviar um lembrete (você pode cancelar quando quiser).</p>
+      <label class="check" style="margin-top:10px;display:flex;gap:8px;align-items:flex-start;font-size:13.5px"><input type="checkbox" id="mkt" ${d.mkt ? 'checked' : ''}><span>Quero receber ofertas e novidades por e-mail (opcional).</span></label>
       ${state.user ? '' : `<p class="inst" style="margin-top:12px">Já tem conta? <a href="/login?next=/checkout" style="color:var(--blue);font-weight:700">Entrar</a> para usar endereços salvos e acompanhar pedidos.</p>`}`;
     if (step === 2) body = `<h3>Endereço de entrega</h3>${saved.length ? `<div class="field" style="margin-bottom:12px"><label>Endereços salvos</label><select id="saved"><option value="">Usar outro endereço</option>${saved.map((a, i) => `<option value="${i}">${e(a.label || 'Endereço')} — ${e(a.street)}, ${e(a.number)}</option>`).join('')}</select></div>` : ''}<div class="fgrid">
       ${f('cep', 'CEP', 'inputmode="numeric" maxlength="9" autocomplete="postal-code"')}<div></div>${f('street', 'Rua', 'autocomplete="address-line1"', true)}${f('number', 'Número', 'autocomplete="off"')}${f('complement', 'Complemento', 'autocomplete="address-line2"')}${f('district', 'Bairro')}${f('city', 'Cidade')}${f('state', 'Estado (UF)', 'maxlength="2" style="text-transform:uppercase"')}</div>`;
@@ -69,6 +70,7 @@ export default async function checkout() {
       collect(); persist();
       const m = val[step] && val[step]();
       if (m) return paint(m);
+      if (step === 1 && $('#mkt')) { d.mkt = $('#mkt').checked; if (d.mkt) { try { api('/marketing/optin', { method: 'POST', body: { email: d.email, name: d.name, source: 'checkout' } }).catch(() => {}); } catch { /* opcional */ } } }
       if (step === 1) { try { api('/cart/capture', { method: 'POST', body: { email: d.email, name: d.name, items: cartPayload().items } }).catch(() => {}); } catch { /* lembrete é opcional */ } }
       if (step === 2) { cctx.cep = d.cep.replace(/\D/g, ''); saveCtx(); try { await reprice(); } catch (er) { return paint(er.message); } }
       if (step < 4) { step++; return paint(); }

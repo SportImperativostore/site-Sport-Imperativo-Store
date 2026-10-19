@@ -11,7 +11,7 @@ const r = express.Router();
 const lim = rateLimit('auth', 20, 10 * 60 * 1000);
 
 r.post('/auth/register', lim, wrap(async (req, res) => {
-  const { name, email, password, cpf, phone, consent } = req.body || {};
+  const { name, email, password, cpf, phone, consent, marketing } = req.body || {};
   if (!name || String(name).trim().length < 3) throw new HttpError(400, 'Informe seu nome completo.');
   if (!validEmail(email)) throw new HttpError(400, 'E-mail inválido.');
   if (!password || String(password).length < 8) throw new HttpError(400, 'A senha deve ter ao menos 8 caracteres.');
@@ -20,6 +20,7 @@ r.post('/auth/register', lim, wrap(async (req, res) => {
   const mail = String(email).toLowerCase().trim();
   if (await q.get('SELECT 1 x FROM users WHERE email=?', mail)) throw new HttpError(409, 'Este e-mail já está cadastrado.');
   const id = Number((await q.run('INSERT INTO users(name,email,password_hash,cpf,phone,consent_at) VALUES(?,?,?,?,?,datetime(\'now\'))', String(name).trim().slice(0, 100), mail, A.hashPassword(String(password)), onlyDigits(cpf) || null, onlyDigits(phone) || null)).lastInsertRowid);
+  if (marketing) { try { await require('../lib/marketing').optIn({ email: mail, name: String(name).trim(), source: 'cadastro' }); } catch (e) { console.error('optin', e.message); } }   // aceite separado e opcional (LGPD)
   await A.startSession(res, id);
   res.json({ user: await q.get('SELECT id,name,email,cpf,phone,whatsapp,role FROM users WHERE id=?', id) });
 }));
@@ -145,8 +146,10 @@ r.post('/cart/capture', rateLimit('capture', 30, 10 * 60 * 1000), wrap(async (re
   try { await require('../lib/abandoned').capture({ email: b.email, name: b.name, items: b.items }); } catch (e) { console.error('capture', e.message); }
   res.json({ ok: true });
 }));
+const doUnsub = async (req) => (req.query.m ? require('../lib/marketing').unsubscribeByToken(req.query.m) : require('../lib/abandoned').unsubscribe(req.query.t));
+r.post('/email/unsubscribe', wrap(async (req, res) => { await doUnsub(req); res.sendStatus(200); }));      // "um clique" do Gmail (List-Unsubscribe-Post)
 r.get('/email/unsubscribe', wrap(async (req, res) => {
-  const ok = await require('../lib/abandoned').unsubscribe(req.query.t);
+  const ok = await doUnsub(req);
   res.set('Cache-Control', 'no-store').type('html').send(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sport Imperativo Store</title><body style="font-family:system-ui,Arial;max-width:520px;margin:12vh auto;padding:0 20px;color:#0d1b33"><h2>${ok ? 'Pronto, você não receberá mais lembretes.' : 'Link inválido ou já utilizado.'}</h2><p><a href="/" style="color:#0b5cff">Voltar para a loja</a></p></body>`);
 }));
 // Tarefa agendada da Vercel (Cron): exige o segredo CRON_SECRET no cabeçalho Authorization.
@@ -154,7 +157,9 @@ r.get('/cron/abandoned', wrap(async (req, res) => {
   const sec = process.env.CRON_SECRET;
   if (!sec) throw new HttpError(503, 'CRON_SECRET não configurado.');
   if (req.get('authorization') !== `Bearer ${sec}`) throw new HttpError(401, 'Não autorizado.');
-  res.json(await require('../lib/abandoned').run());
+  const out = { carrinho: await require('../lib/abandoned').run() };
+  try { out.marketing = await require('../lib/marketing').processQueue(); } catch (e) { out.marketing = { error: e.message }; }
+  res.json(out);
 }));
 
 // Webhook do gateway

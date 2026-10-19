@@ -5,13 +5,13 @@ const { q } = require('../db');
 const base = () => (process.env.PUBLIC_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? 'https://' + process.env.VERCEL_PROJECT_PRODUCTION_URL : '') || 'http://localhost:3000').replace(/\/+$/, '');
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-async function sendMail({ orderId, to, subject, html }) {
+async function sendMail({ orderId, to, subject, html, headers }) {
   const key = process.env.RESEND_API_KEY, from = process.env.MAIL_FROM;
   const r = await q.run('INSERT INTO email_outbox(order_id,to_email,subject,html,status) VALUES(?,?,?,?,?)', orderId || null, to, subject, html, 'queued');
   const id = r.lastInsertRowid;
   if (!key || !from) return { queued: true, id };
   try {
-    const res = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ from, to: [to], subject, html, ...(process.env.MAIL_REPLY_TO ? { reply_to: process.env.MAIL_REPLY_TO } : {}) }), signal: AbortSignal.timeout(15000) });
+    const res = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ from, to: [to], subject, html, ...(headers ? { headers } : {}), ...(process.env.MAIL_REPLY_TO ? { reply_to: process.env.MAIL_REPLY_TO } : {}) }), signal: AbortSignal.timeout(15000) });
     if (!res.ok) throw new Error('Resend HTTP ' + res.status);
     await q.run("UPDATE email_outbox SET status='sent', sent_at=datetime('now') WHERE id=?", id);
     return { sent: true, id };

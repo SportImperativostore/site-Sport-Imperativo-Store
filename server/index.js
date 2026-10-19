@@ -38,6 +38,7 @@ app.use(A.csrfGuard);
 app.get('/img/p/:id.svg', require('./routes/store').imgHandler);
 app.use('/api/admin', (req, res, next) => { res.set('Cache-Control', 'no-store'); next(); }, require('./routes/admin'));
 app.use('/api', require('./routes/whatsapp').webhook);
+app.use('/api', require('./routes/marketing').pub);
 app.use('/api', require('./routes/store'));
 app.use('/api', require('./routes/account'));
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Rota não encontrada.' }));

@@ -286,4 +286,5 @@ r.post('/price-table/apply', wrap(async (req, res) => {
   res.json({ ok: true, updated: ids.length });
 }));
 r.use(require('./whatsapp').admin);
+r.use(require('./marketing').admin);
 module.exports = r;

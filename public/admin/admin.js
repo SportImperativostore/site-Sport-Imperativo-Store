@@ -17,7 +17,7 @@ const ENT_TYPES = [['sport', 'Esporte / seção'], ['category', 'Categoria'], ['
 const ENT_LABEL = Object.fromEntries(ENT_TYPES);
 
 /* ---------- Layout ---------- */
-const NAV = [['dashboard', 'Dashboard'], ['orders', 'Pedidos'], ['supplier-orders', 'Ordens a fornecedores'], ['whatsapp', 'WhatsApp / Pós-venda'], ['products', 'Produtos'], ['prices', 'Tabela de preços'], ['entities', 'Categorias, clubes e ligas'], ['suppliers', 'Fornecedores'], ['coupons', 'Cupons'], ['banners', 'Banners'], ['reviews', 'Avaliações'], ['testimonials', 'Prova social'], ['sizes', 'Tamanhos'], ['size_guides', 'Guias de tamanho'], ['pages', 'Páginas e políticas'], ['settings', 'Configurações'], ['users', 'Clientes'], ['audit', 'Logs / Backup']];
+const NAV = [['dashboard', 'Dashboard'], ['orders', 'Pedidos'], ['supplier-orders', 'Ordens a fornecedores'], ['whatsapp', 'WhatsApp / Pós-venda'], ['marketing', 'E-mail marketing'], ['products', 'Produtos'], ['prices', 'Tabela de preços'], ['entities', 'Categorias, clubes e ligas'], ['suppliers', 'Fornecedores'], ['coupons', 'Cupons'], ['banners', 'Banners'], ['reviews', 'Avaliações'], ['testimonials', 'Prova social'], ['sizes', 'Tamanhos'], ['size_guides', 'Guias de tamanho'], ['pages', 'Páginas e políticas'], ['settings', 'Configurações'], ['users', 'Clientes'], ['audit', 'Logs / Backup']];
 function shell(active, html) {
   $('#root').innerHTML = `<div class="app"><nav class="side"><a class="logo" href="#/dashboard"><img src="/img/logo.png" alt="Sport Imperativo"></a>${NAV.map(([k, n]) => `<a href="#/${k}" class="${active === k ? 'on' : ''}">${n}</a>`).join('')}<small>CONTA</small><a href="/" target="_blank">Ver loja ↗</a><a href="#" id="out">Sair</a></nav><main>${html}</main></div>`;
   $('#out').onclick = async (ev) => { ev.preventDefault(); await api('/auth/logout', { method: 'POST' }); S.user = null; boot(); };
@@ -302,6 +302,51 @@ async function whatsappPage() {
   $$('[data-act]').forEach((b) => b.onclick = async () => { const id = b.dataset.id; try { await api(`/admin/whatsapp/inbox/${id}/assign`, { method: 'POST', body: { action: b.dataset.act, order: ($(`[data-o="${id}"]`) || {}).value, tracking: ($(`[data-t="${id}"]`) || {}).value } }); toast('Feito.'); whatsappPage(); } catch (err) { toast(err.message, true); } });
 }
 
+const AUD = { opted: 'Todos que aceitaram receber ofertas', buyers: 'Quem aceitou e já comprou', nonbuyers: 'Quem aceitou e ainda não comprou', invite: 'CONVITE único: clientes já cadastrados/compradores que ainda não aceitaram' };
+async function marketingPage() {
+  const [ov, camps] = await Promise.all([api('/admin/marketing/overview'), api('/admin/marketing/campaigns')]);
+  const stat = (n, l) => `<div class="card" style="text-align:center"><div style="font-size:26px;font-weight:800">${n}</div><small>${l}</small></div>`;
+  const rows = camps.map((c) => {
+    const pct = c.total ? Math.round(((c.sent + c.failed) / c.total) * 100) : 0;
+    const st = { draft: 'Rascunho', sending: 'Enviando', done: 'Concluída', cancelled: 'Cancelada' }[c.status] || c.status;
+    return `<tr><td>${e(c.name)}<br><small>${e(c.subject)}</small></td><td>${e(AUD[c.audience] || c.audience)}</td><td>${st}</td><td>${c.sent}/${c.total} (${pct}%)${c.failed ? ` • ${c.failed} falhas` : ''}</td><td>${dt(c.started_at || c.created_at)}</td>
+      <td>${c.status === 'draft' ? `<button class="btn sm" data-start="${c.id}">Iniciar envio</button>` : ''}${c.status === 'sending' || c.status === 'draft' ? ` <button class="btn sm ghost" data-cancel="${c.id}">Cancelar</button>` : ''}</td></tr>`;
+  }).join('');
+  shell('marketing', `<h1>E-mail marketing</h1>
+  <p><small>Só recebe quem marcou "Quero receber ofertas" no cadastro ou no checkout (LGPD). Todo e-mail leva o link para cancelar. O envio é feito em lotes, respeitando o limite diário do Resend.</small></p>
+  <div class="grid4" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px">
+    ${stat(ov.opted, 'aceitaram ofertas')}${stat(ov.buyers, 'aceitaram e já compraram')}${stat(ov.unsub, 'cancelaram')}${stat(ov.invite, 'clientes para convidar')}${stat(`${ov.sentToday}/${ov.dailyLimit}`, 'enviados hoje / limite diário')}</div>
+  <p>Envio de campanhas: ${ov.enabled ? '<span class="pill g">LIGADO</span>' : '<span class="pill y">DESLIGADO — defina MARKETING_ENABLED=on na Vercel (e CRON_SECRET) para enviar</span>'} • tarefa agendada ${ov.cronSecret ? '<span class="pill g">ok</span>' : '<span class="pill r">sem CRON_SECRET</span>'}</p>
+  <div class="card"><b>Nova campanha</b>
+    <div class="fgrid" style="margin-top:10px">
+      <div class="field"><label>Nome interno</label><input id="mn" placeholder="Ex.: Promoção de camisas retrô"></div>
+      <div class="field"><label>Assunto do e-mail</label><input id="ms" maxlength="150" placeholder="Ex.: Retrôs com 10% de desconto"></div>
+      <div class="field"><label>Para quem</label><select id="ma">${Object.entries(AUD).map(([k, v]) => `<option value="${k}">${e(v)}</option>`).join('')}</select></div>
+      <div class="field"><label>Título (dentro do e-mail)</label><input id="mt2" maxlength="120"></div>
+      <div class="field full"><label>Texto (separe parágrafos com uma linha em branco)</label><textarea id="mb" rows="5"></textarea></div>
+      <div class="field"><label>Imagem de banner (URL ou /img/banners/…)</label><input id="mbn" placeholder="https://…"></div>
+      <div class="field"><label>Cupom (opcional)</label><input id="mc" placeholder="CODIGO10"></div>
+      <div class="field"><label>Texto do botão</label><input id="mbt" maxlength="40" placeholder="Ver ofertas"></div>
+      <div class="field"><label>Link do botão</label><input id="mbl" placeholder="/futebol/retro ou https://…"></div>
+      <div class="field full"><label>Produtos em destaque (cole os links das páginas de produto, um por linha, até 8)</label><textarea id="mp" rows="3" placeholder="https://sportimperativostore.com.br/produto/…"></textarea></div>
+    </div>
+    <div class="toolbar" style="margin-top:10px"><button class="btn" id="mprev">Ver prévia</button><button class="btn" id="mtest">Enviar teste para mim</button><button class="btn pri" id="msave">Salvar como rascunho</button> <small id="mres"></small></div>
+    <iframe id="mfr" style="width:100%;height:420px;border:1px solid var(--line);border-radius:10px;margin-top:10px;display:none;background:#fff"></iframe></div>
+  <div class="card"><b>Campanhas</b><div class="tw"><table style="margin-top:8px"><thead><tr><th>Campanha</th><th>Público</th><th>Status</th><th>Progresso</th><th>Data</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="6"><small>Nenhuma campanha ainda.</small></td></tr>'}</tbody></table></div></div>`);
+  const body = () => ({ name: $('#mn').value, subject: $('#ms').value, audience: $('#ma').value, title: $('#mt2').value, body: $('#mb').value, banner: $('#mbn').value, coupon: $('#mc').value, button_text: $('#mbt').value, button_link: $('#mbl').value, products: $('#mp').value });
+  const res = (m) => { $('#mres').textContent = m; };
+  $('#mprev').onclick = async () => { try { const r = await api('/admin/marketing/preview', { method: 'POST', body: body() }); const f = $('#mfr'); f.style.display = 'block'; f.srcdoc = r.html; } catch (er) { res(er.message); } };
+  $('#mtest').onclick = async () => { res('Enviando…'); try { const r = await api('/admin/marketing/test', { method: 'POST', body: body() }); res(r.sent ? `Teste enviado para ${r.to}.` : 'Não foi possível enviar o teste (verifique o envio de e-mails).'); } catch (er) { res(er.message); } };
+  $('#msave').onclick = async () => { try { await api('/admin/marketing/campaigns', { method: 'POST', body: body() }); toast('Rascunho salvo.'); marketingPage(); } catch (er) { res(er.message); } };
+  $$('[data-start]').forEach((b) => b.onclick = async () => {
+    const c = camps.find((x) => x.id === +b.dataset.start); let n = '?';
+    try { n = (await api('/admin/marketing/audience/' + c.audience)).count; } catch { /* segue */ }
+    if (!confirm(`Iniciar o envio de "${c.name}" para ${n} pessoas? O envio sai em lotes ao longo dos dias, respeitando o limite diário.`)) return;
+    try { const r = await api(`/admin/marketing/campaigns/${c.id}/start`, { method: 'POST', body: {} }); toast(`Envio iniciado: ${r.total} destinatários na fila.`); marketingPage(); } catch (er) { toast(er.message, true); }
+  });
+  $$('[data-cancel]').forEach((b) => b.onclick = async () => { if (!confirm('Cancelar esta campanha? O que ainda não foi enviado será descartado.')) return; try { await api(`/admin/marketing/campaigns/${b.dataset.cancel}/cancel`, { method: 'POST', body: {} }); toast('Campanha cancelada.'); marketingPage(); } catch (er) { toast(er.message, true); } });
+}
+
 /* ---------- Router + login ---------- */
 async function router() {
   if (!S.user) return;
@@ -312,6 +357,7 @@ async function router() {
     else if (path === 'supplier-orders') await supplierOrders();
     else if (path === 'whatsapp') await whatsappPage();
     else if (path === 'prices') await pricesPage();
+    else if (path === 'marketing') await marketingPage();
     else if (path === 'products') arg ? await productForm(arg) : await productsList(qs);
     else if (path === 'entities') arg ? await entityForm(arg, qs) : await entitiesList(qs);
     else if (path === 'size_guides') arg ? await guideForm(arg) : await guidesList();

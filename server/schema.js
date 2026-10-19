@@ -100,4 +100,13 @@ CREATE TABLE IF NOT EXISTS abandoned_carts(
   created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')), sent_at TEXT);
 CREATE INDEX IF NOT EXISTS ix_abandoned_email ON abandoned_carts(email, recovered);
 CREATE TABLE IF NOT EXISTS email_optout(email TEXT PRIMARY KEY, created_at TEXT DEFAULT (datetime('now')));
+CREATE TABLE IF NOT EXISTS marketing_contacts(
+  email TEXT PRIMARY KEY, name TEXT, source TEXT, token TEXT, opted_in_at TEXT, invited_at TEXT, unsub_at TEXT, created_at TEXT DEFAULT (datetime('now')));
+CREATE TABLE IF NOT EXISTS mkt_campaigns(
+  id INTEGER PRIMARY KEY, name TEXT, subject TEXT, params TEXT, audience TEXT DEFAULT 'opted', status TEXT DEFAULT 'draft',
+  total INTEGER DEFAULT 0, sent INTEGER DEFAULT 0, failed INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')), started_at TEXT, finished_at TEXT);
+CREATE TABLE IF NOT EXISTS mkt_queue(
+  id INTEGER PRIMARY KEY, campaign_id INTEGER NOT NULL, email TEXT NOT NULL, name TEXT, token TEXT, status TEXT DEFAULT 'queued', error TEXT, sent_at TEXT,
+  UNIQUE(campaign_id, email));
+CREATE INDEX IF NOT EXISTS ix_mkt_queue_status ON mkt_queue(campaign_id, status);
 `;

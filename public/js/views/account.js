@@ -11,7 +11,7 @@ export async function auth({ params, query }) {
       ${mode === 'register' ? '<label>Nome completo</label><input name="name" autocomplete="name" required><label style="margin-top:10px">CPF (opcional)</label><input name="cpf" inputmode="numeric" maxlength="14" autocomplete="off"><label style="margin-top:10px">Telefone (opcional)</label><input name="phone" inputmode="tel" autocomplete="tel">' : ''}
       <label style="margin-top:10px">E-mail</label><input name="email" type="email" autocomplete="email" required>
       <label style="margin-top:10px">Senha${mode === 'register' ? ' (mín. 8 caracteres)' : ''}</label><input name="password" type="password" autocomplete="${mode === 'login' ? 'current-password' : 'new-password'}" required>
-      ${mode === 'register' ? '<label class="check"><input type="checkbox" name="consent"><span>Li e aceito os <a href="/pagina/termos-de-uso" target="_blank" style="text-decoration:underline">Termos de Uso</a> e a <a href="/pagina/politica-de-privacidade" target="_blank" style="text-decoration:underline">Política de Privacidade</a> (LGPD).</span></label>' : ''}
+      ${mode === 'register' ? '<label class="check"><input type="checkbox" name="consent"><span>Li e aceito os <a href="/pagina/termos-de-uso" target="_blank" style="text-decoration:underline">Termos de Uso</a> e a <a href="/pagina/politica-de-privacidade" target="_blank" style="text-decoration:underline">Política de Privacidade</a> (LGPD).</span></label><label class="check"><input type="checkbox" name="marketing"><span>Quero receber ofertas e novidades por e-mail (opcional; você pode cancelar quando quiser).</span></label>' : ''}
       <div class="alert err" id="err" hidden role="alert"></div>
       <button class="btn block" style="margin-top:14px">${mode === 'login' ? 'ENTRAR' : 'CRIAR CONTA'}</button></form>
     <p class="inst" style="margin-top:14px;text-align:center">${mode === 'login' ? `Novo por aqui? <a href="/cadastro?next=${encodeURIComponent(next)}" style="color:var(--blue);font-weight:700">Criar conta</a>` : `Já tem conta? <a href="/login?next=${encodeURIComponent(next)}" style="color:var(--blue);font-weight:700">Entrar</a>`}</p></div></div>`;
@@ -20,7 +20,7 @@ export async function auth({ params, query }) {
   if (f.phone) f.phone.addEventListener('input', (ev) => { ev.target.value = maskPhone(ev.target.value); });
   f.addEventListener('submit', async (ev) => {
     ev.preventDefault();
-    const body = Object.fromEntries(new FormData(f)); body.consent = !!f.consent?.checked;
+    const body = Object.fromEntries(new FormData(f)); body.consent = !!f.consent?.checked; body.marketing = !!f.marketing?.checked;
     const btn = $('button', f); btn.disabled = true;
     try {
       const r = await api('/auth/' + (mode === 'login' ? 'login' : 'register'), { method: 'POST', body });
