@@ -78,9 +78,15 @@ function init() {
   return (ready ||= (async () => {
     getClient();
     if (isFile) await client.executeMultiple('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;');
-    await client.executeMultiple(SCHEMA);
-    if (isFile) { try { await client.execute('ALTER TABLE testimonials ADD COLUMN product_id INTEGER'); } catch { /* já existe */ } }
-    await migrate();
+    // Cada partida a frio da Vercel refazia o schema inteiro (dezenas de idas ao banco). Agora só roda quando o schema muda.
+    const ver = require('crypto').createHash('sha1').update(SCHEMA + String(migrate)).digest('hex').slice(0, 16);
+    const cur = await client.execute("SELECT value FROM settings WHERE key='schema_version'").then((r) => (r.rows[0] ? r.rows[0].value : null)).catch(() => null);
+    if (cur !== ver) {
+      await client.executeMultiple(SCHEMA);
+      if (isFile) { try { await client.execute('ALTER TABLE testimonials ADD COLUMN product_id INTEGER'); } catch { /* já existe */ } }
+      await migrate();
+      await client.execute({ sql: "INSERT INTO settings(key,value) VALUES('schema_version',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", args: [ver] });
+    }
     await refreshSettings();
   })());
 }
