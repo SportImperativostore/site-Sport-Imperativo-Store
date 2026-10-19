@@ -98,4 +98,14 @@ admin.post('/orders/:id/tracking', wrap(async (req, res) => {
 }));
 admin.get('/emails', wrap(async (_req, res) => res.json(await q.all('SELECT id,order_id,to_email,subject,status,error,created_at,sent_at FROM email_outbox ORDER BY id DESC LIMIT 100'))));
 
+// Teste de envio: manda um e-mail de verdade para o administrador logado (confirma Resend, remetente e Reply-To).
+admin.post('/emails/test', wrap(async (req, res) => {
+  const mail = require('../lib/mailer');
+  const to = (req.user && req.user.email) || '';
+  if (!to) throw new HttpError(400, 'Administrador sem e-mail cadastrado.');
+  const html = mail.layout(`<h2 style="margin:0 0 8px">Teste de e-mail da loja</h2><p>Se você está lendo isto, o envio de e-mails da <b>Sport Imperativo Store</b> está funcionando.</p><p>Remetente: <b>${mail.esc(process.env.MAIL_FROM || 'não configurado')}</b><br>Respostas vão para: <b>${mail.esc(process.env.MAIL_REPLY_TO || 'o próprio remetente')}</b></p>`);
+  const out = await mail.sendMail({ orderId: null, to, subject: 'Teste de e-mail — Sport Imperativo Store', html });
+  res.json({ to, ...out, configured: !!(process.env.RESEND_API_KEY && process.env.MAIL_FROM) });
+}));
+
 module.exports = { webhook, admin };
