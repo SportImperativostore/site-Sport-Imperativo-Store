@@ -43,7 +43,7 @@ async function render(cartRow, tokenValue) {
 
 /** Roda pela tarefa agendada. Só envia se ABANDONED_CART=on; com dry=true apenas conta. */
 async function run({ dry = false } = {}) {
-  const on = process.env.ABANDONED_CART === 'on';
+  const on = await require('./flags').flag('abandoned_cart_enabled', 'ABANDONED_CART');
   const due = await q.all("SELECT * FROM abandoned_carts WHERE recovered=0 AND sent_at IS NULL AND updated_at <= datetime('now', ?) AND created_at >= datetime('now', ?) ORDER BY id LIMIT ?", `-${DELAY_MIN} minutes`, `-${MAX_AGE_H} hours`, BATCH);
   const out = { enabled: on, due: due.length, sent: 0, skipped: 0 };
   for (const c of due) {

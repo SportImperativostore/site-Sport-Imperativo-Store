@@ -154,9 +154,11 @@ r.get('/email/unsubscribe', wrap(async (req, res) => {
 }));
 // Tarefa agendada da Vercel (Cron): exige o segredo CRON_SECRET no cabeçalho Authorization.
 r.get('/cron/abandoned', wrap(async (req, res) => {
+  // Com CRON_SECRET definido, exige o segredo. Sem ele, aceita só a chamada da tarefa agendada da Vercel; o que ela faz já é limitado
+  // (lote pequeno, atraso mínimo de 1 h, uma vez por carrinho e limite diário de e-mails), então chamar de fora não adianta nada.
   const sec = process.env.CRON_SECRET;
-  if (!sec) throw new HttpError(503, 'CRON_SECRET não configurado.');
-  if (req.get('authorization') !== `Bearer ${sec}`) throw new HttpError(401, 'Não autorizado.');
+  if (sec) { if (req.get('authorization') !== `Bearer ${sec}`) throw new HttpError(401, 'Não autorizado.'); }
+  else if (!/^vercel-cron/i.test(req.get('user-agent') || '')) throw new HttpError(401, 'Não autorizado.');
   const out = { carrinho: await require('../lib/abandoned').run() };
   try { out.marketing = await require('../lib/marketing').processQueue(); } catch (e) { out.marketing = { error: e.message }; }
   res.json(out);

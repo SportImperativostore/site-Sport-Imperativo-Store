@@ -286,6 +286,7 @@ async function whatsappPage() {
     <p>E-mail ao cliente: ${st.emailConfigured ? '<span class="pill g">configurado</span>' : '<span class="pill y">sem RESEND_API_KEY/MAIL_FROM — e-mails ficam na fila abaixo</span>'}</p>
     <p><button class="btn sm" id="mt">Enviar e-mail de teste para mim</button> <small id="mtr"></small></p>
     <p><button class="btn sm" id="ab">Prévia do e-mail "esqueceu no carrinho"</button> <small id="abr"></small></p>
+    <p><label class="chk" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="abt"> Enviar lembretes de carrinho abandonado (1 e-mail, 1 hora depois, só para quem informou o e-mail)</label></p>
     <p><small id="abs">Carrinho abandonado: carregando…</small></p></div></div>
   <div class="card"><b>URL do webhook (cole no app da Meta → WhatsApp → Configuração)</b><pre class="msg">${e(st.webhookUrl)}</pre><small>Token de verificação = valor de WHATSAPP_WEBHOOK_VERIFY_TOKEN. Assine o campo <b>messages</b>.</small></div>
   <div class="card"><b>Template de mensagem a criar/aprovar no WhatsApp Manager</b><p><small>A Meta exige template aprovado para a loja iniciar conversa com o fornecedor. Nome: <b>${e(st.template.name)}</b> • idioma <b>${e(st.template.language)}</b> • categoria <b>UTILITY</b>. Corpo (6 variáveis):</small></p><pre class="msg">${e(st.template.components[0].text)}</pre></div>
@@ -297,7 +298,11 @@ async function whatsappPage() {
   $('#share').onchange = async (ev) => { await api('/admin/settings', { method: 'PUT', body: { supplier_share_phone: ev.target.checked ? '1' : '0' } }); toast('Salvo.'); };
   $('#mt').onclick = async () => { const out = $('#mtr'); out.textContent = 'Enviando…'; try { const r = await api('/admin/emails/test', { method: 'POST', body: {} }); out.textContent = r.sent ? `Enviado para ${r.to}. Confira a caixa de entrada (e o spam).` : r.failed ? 'Falhou: veja o status na lista de e-mails abaixo.' : 'Sem configuração: ficou na fila (verifique RESEND_API_KEY e MAIL_FROM).'; toast(r.sent ? 'E-mail de teste enviado.' : 'Veja o resultado ao lado do botão.', !r.sent); } catch (err) { out.textContent = err.message; toast(err.message, true); } };
   $('#ab').onclick = async () => { const out = $('#abr'); out.textContent = 'Enviando…'; try { const r = await api('/admin/abandoned/preview', { method: 'POST', body: {} }); out.textContent = r.sent ? `Prévia enviada para ${r.to}.` : 'Não foi possível enviar a prévia (veja o status dos e-mails abaixo).'; } catch (err) { out.textContent = err.message; } };
-  api('/admin/abandoned/status').then((s) => { $('#abs').textContent = `Carrinho abandonado: ${s.enabled ? 'LIGADO' : 'DESLIGADO (defina ABANDONED_CART=on na Vercel para ligar)'} • tarefa agendada ${s.cronSecret ? 'configurada' : 'sem CRON_SECRET'} • capturados: ${s.total} • lembretes enviados: ${s.sent} • recuperados: ${s.recovered} • na fila agora: ${s.due}`; }).catch(() => { $('#abs').textContent = ''; });
+  api('/admin/abandoned/status').then((s) => {
+    $('#abt').checked = !!s.enabled;
+    $('#abt').onchange = async (ev) => { try { await api('/admin/settings', { method: 'PUT', body: { abandoned_cart_enabled: ev.target.checked ? '1' : '0' } }); toast(ev.target.checked ? 'Lembretes de carrinho LIGADOS.' : 'Lembretes de carrinho DESLIGADOS.'); } catch (er) { ev.target.checked = !ev.target.checked; toast(er.message, true); } };
+    $('#abs').textContent = `Carrinho abandonado: ${s.enabled ? 'LIGADO' : 'DESLIGADO'} • capturados: ${s.total} • lembretes enviados: ${s.sent} • recuperados: ${s.recovered} • na fila agora: ${s.due}`;
+  }).catch(() => { $('#abs').textContent = ''; });
   $('#tt').onclick = async () => { try { await api('/admin/whatsapp/test', { method: 'POST', body: { to: $('#tn').value } }); toast('Template enviado. Confira o WhatsApp.'); } catch (err) { toast(err.message, true); } };
   $$('[data-act]').forEach((b) => b.onclick = async () => { const id = b.dataset.id; try { await api(`/admin/whatsapp/inbox/${id}/assign`, { method: 'POST', body: { action: b.dataset.act, order: ($(`[data-o="${id}"]`) || {}).value, tracking: ($(`[data-t="${id}"]`) || {}).value } }); toast('Feito.'); whatsappPage(); } catch (err) { toast(err.message, true); } });
 }
@@ -316,7 +321,7 @@ async function marketingPage() {
   <p><small>Só recebe quem marcou "Quero receber ofertas" no cadastro ou no checkout (LGPD). Todo e-mail leva o link para cancelar. O envio é feito em lotes, respeitando o limite diário do Resend.</small></p>
   <div class="grid4" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px">
     ${stat(ov.opted, 'aceitaram ofertas')}${stat(ov.buyers, 'aceitaram e já compraram')}${stat(ov.unsub, 'cancelaram')}${stat(ov.invite, 'clientes para convidar')}${stat(`${ov.sentToday}/${ov.dailyLimit}`, 'enviados hoje / limite diário')}</div>
-  <p>Envio de campanhas: ${ov.enabled ? '<span class="pill g">LIGADO</span>' : '<span class="pill y">DESLIGADO — defina MARKETING_ENABLED=on na Vercel (e CRON_SECRET) para enviar</span>'} • tarefa agendada ${ov.cronSecret ? '<span class="pill g">ok</span>' : '<span class="pill r">sem CRON_SECRET</span>'}</p>
+  <p><label class="chk" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="mon" ${ov.enabled ? 'checked' : ''}> Permitir o envio de campanhas ${ov.enabled ? '<span class="pill g">LIGADO</span>' : '<span class="pill y">DESLIGADO</span>'}</label><small>Ligado, as campanhas iniciadas saem em lotes pela tarefa agendada (a cada 30 minutos).</small></p>
   <div class="card"><b>Nova campanha</b>
     <div class="fgrid" style="margin-top:10px">
       <div class="field"><label>Nome interno</label><input id="mn" placeholder="Ex.: Promoção de camisas retrô"></div>
@@ -335,6 +340,7 @@ async function marketingPage() {
   <div class="card"><b>Campanhas</b><div class="tw"><table style="margin-top:8px"><thead><tr><th>Campanha</th><th>Público</th><th>Status</th><th>Progresso</th><th>Data</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="6"><small>Nenhuma campanha ainda.</small></td></tr>'}</tbody></table></div></div>`);
   const body = () => ({ name: $('#mn').value, subject: $('#ms').value, audience: $('#ma').value, title: $('#mt2').value, body: $('#mb').value, banner: $('#mbn').value, coupon: $('#mc').value, button_text: $('#mbt').value, button_link: $('#mbl').value, products: $('#mp').value });
   const res = (m) => { $('#mres').textContent = m; };
+  $('#mon').onchange = async (ev) => { try { await api('/admin/settings', { method: 'PUT', body: { marketing_enabled: ev.target.checked ? '1' : '0' } }); toast(ev.target.checked ? 'Envio de campanhas LIGADO.' : 'Envio de campanhas DESLIGADO.'); marketingPage(); } catch (er) { ev.target.checked = !ev.target.checked; toast(er.message, true); } };
   $('#mprev').onclick = async () => { try { const r = await api('/admin/marketing/preview', { method: 'POST', body: body() }); const f = $('#mfr'); f.style.display = 'block'; f.srcdoc = r.html; } catch (er) { res(er.message); } };
   $('#mtest').onclick = async () => { res('Enviando…'); try { const r = await api('/admin/marketing/test', { method: 'POST', body: body() }); res(r.sent ? `Teste enviado para ${r.to}.` : 'Não foi possível enviar o teste (verifique o envio de e-mails).'); } catch (er) { res(er.message); } };
   $('#msave').onclick = async () => { try { await api('/admin/marketing/campaigns', { method: 'POST', body: body() }); toast('Rascunho salvo.'); marketingPage(); } catch (er) { res(er.message); } };

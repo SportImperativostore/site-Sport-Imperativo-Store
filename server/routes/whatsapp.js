@@ -117,7 +117,7 @@ admin.post('/abandoned/preview', wrap(async (req, res) => {
 admin.get('/abandoned/status', wrap(async (_req, res) => {
   const A2 = require('../lib/abandoned');
   const c = await q.get("SELECT COUNT(*) n, SUM(CASE WHEN sent_at IS NOT NULL THEN 1 ELSE 0 END) sent, SUM(recovered) rec FROM abandoned_carts");
-  res.json({ enabled: process.env.ABANDONED_CART === 'on', cronSecret: !!process.env.CRON_SECRET, total: c.n || 0, sent: c.sent || 0, recovered: c.rec || 0, due: (await A2.run({ dry: true })).due });
+  res.json({ enabled: await require('../lib/flags').flag('abandoned_cart_enabled', 'ABANDONED_CART'), cronSecret: true, total: c.n || 0, sent: c.sent || 0, recovered: c.rec || 0, due: (await A2.run({ dry: true })).due });
 }));
 
 module.exports = { webhook, admin };

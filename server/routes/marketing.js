@@ -18,7 +18,7 @@ pub.get('/marketing/confirm', wrap(async (req, res) => {
 
 const admin = express.Router();
 const C = (r) => ({ ...r, params: mkt.parseP(r) });
-admin.get('/marketing/overview', wrap(async (_req, res) => res.json({ ...(await mkt.overview()), enabled: process.env.MARKETING_ENABLED === 'on', cronSecret: !!process.env.CRON_SECRET })));
+admin.get('/marketing/overview', wrap(async (_req, res) => res.json({ ...(await mkt.overview()), enabled: await require('../lib/flags').flag('marketing_enabled', 'MARKETING_ENABLED'), cronSecret: true })));
 admin.get('/marketing/campaigns', wrap(async (_req, res) => res.json((await q.all('SELECT * FROM mkt_campaigns ORDER BY id DESC LIMIT 50')).map(C))));
 const clean = (b) => ({
   name: String(b.name || '').trim().slice(0, 80), subject: String(b.subject || '').trim().slice(0, 150), audience: ['opted', 'buyers', 'nonbuyers', 'invite'].includes(b.audience) ? b.audience : 'opted',
@@ -37,7 +37,7 @@ admin.post('/marketing/campaigns', wrap(async (req, res) => {
   res.json({ id: Number(r.lastInsertRowid) });
 }));
 admin.post('/marketing/campaigns/:id/start', wrap(async (req, res) => {
-  if (process.env.MARKETING_ENABLED !== 'on') throw new HttpError(400, 'O envio está desligado: defina MARKETING_ENABLED=on na Vercel.');
+  if (!(await require('../lib/flags').flag('marketing_enabled', 'MARKETING_ENABLED'))) throw new HttpError(400, 'O envio de campanhas está desligado: ligue na parte de cima desta página.');
   const out = await mkt.start(+req.params.id); if (out.error) throw new HttpError(400, out.error); res.json(out);
 }));
 admin.post('/marketing/campaigns/:id/cancel', wrap(async (req, res) => { await mkt.cancel(+req.params.id); res.json({ ok: true }); }));

@@ -89,7 +89,7 @@ async function cancel(id) { await q.run("UPDATE mkt_queue SET status='skipped' W
 
 /** Chamado pela tarefa agendada: envia um lote respeitando o limite diário. */
 async function processQueue() {
-  if (process.env.MARKETING_ENABLED !== 'on') return { enabled: false };
+  if (!(await require('./flags').flag('marketing_enabled', 'MARKETING_ENABLED'))) return { enabled: false };
   const sentToday = (await q.get("SELECT COUNT(*) n FROM mkt_queue WHERE status='sent' AND date(sent_at)=date('now')")).n;
   let room = Math.min(BATCH, DAILY() - sentToday); const out = { enabled: true, sent: 0, failed: 0, room };
   if (room <= 0) return out;
