@@ -11,7 +11,7 @@ async function sendMail({ orderId, to, subject, html }) {
   const id = r.lastInsertRowid;
   if (!key || !from) return { queued: true, id };
   try {
-    const res = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ from, to: [to], subject, html }), signal: AbortSignal.timeout(15000) });
+    const res = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ from, to: [to], subject, html, ...(process.env.MAIL_REPLY_TO ? { reply_to: process.env.MAIL_REPLY_TO } : {}) }), signal: AbortSignal.timeout(15000) });
     if (!res.ok) throw new Error('Resend HTTP ' + res.status);
     await q.run("UPDATE email_outbox SET status='sent', sent_at=datetime('now') WHERE id=?", id);
     return { sent: true, id };
