@@ -295,7 +295,7 @@ async function whatsappPage() {
   $('#share').onchange = async (ev) => { await api('/admin/settings', { method: 'PUT', body: { supplier_share_phone: ev.target.checked ? '1' : '0' } }); toast('Salvo.'); };
   $('#mt').onclick = async () => { const out = $('#mtr'); out.textContent = 'Enviando…'; try { const r = await api('/admin/emails/test', { method: 'POST', body: {} }); out.textContent = r.sent ? `Enviado para ${r.to}. Confira a caixa de entrada (e o spam).` : r.failed ? 'Falhou: veja o status na lista de e-mails abaixo.' : 'Sem configuração: ficou na fila (verifique RESEND_API_KEY e MAIL_FROM).'; toast(r.sent ? 'E-mail de teste enviado.' : 'Veja o resultado ao lado do botão.', !r.sent); } catch (err) { out.textContent = err.message; toast(err.message, true); } };
   $('#tt').onclick = async () => { try { await api('/admin/whatsapp/test', { method: 'POST', body: { to: $('#tn').value } }); toast('Template enviado. Confira o WhatsApp.'); } catch (err) { toast(err.message, true); } };
-  $('[data-act]').forEach((b) => b.onclick = async () => { const id = b.dataset.id; try { await api(`/admin/whatsapp/inbox/${id}/assign`, { method: 'POST', body: { action: b.dataset.act, order: ($(`[data-o="${id}"]`) || {}).value, tracking: ($(`[data-t="${id}"]`) || {}).value } }); toast('Feito.'); whatsappPage(); } catch (err) { toast(err.message, true); } });
+  $$('[data-act]').forEach((b) => b.onclick = async () => { const id = b.dataset.id; try { await api(`/admin/whatsapp/inbox/${id}/assign`, { method: 'POST', body: { action: b.dataset.act, order: ($(`[data-o="${id}"]`) || {}).value, tracking: ($(`[data-t="${id}"]`) || {}).value } }); toast('Feito.'); whatsappPage(); } catch (err) { toast(err.message, true); } });
 }
 
 /* ---------- Router + login ---------- */
