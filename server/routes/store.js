@@ -139,7 +139,7 @@ r.get('/search/suggest', wrap(async (req, res) => {
 }));
 
 r.post('/cart/price', wrap(async (req, res) => {
-  const out = await priceCart({ items: req.body.items, cep: req.body.cep, method: req.body.method, coupon: req.body.coupon, userId: req.user && req.user.id });
+  const out = await priceCart({ items: req.body.items, cep: req.body.cep, method: req.body.method, coupon: req.body.coupon, userId: req.user && req.user.id, email: req.body.email, cpf: req.body.cpf });
   // dados internos (fornecedor/SKU do fornecedor) nunca vão ao navegador
   res.json({ ...out, lines: out.lines.map(({ supplierId, supplierSku, ...l }) => l) });
 }));

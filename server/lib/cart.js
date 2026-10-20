@@ -31,6 +31,12 @@ async function checkCoupon(code, lines, ctx) {
   const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
   if ((c.starts_at && c.starts_at > now) || (c.ends_at && c.ends_at < now)) throw new HttpError(400, 'Cupom fora da validade.');
   if (c.max_uses && c.uses >= c.max_uses) throw new HttpError(400, 'Cupom esgotado.');
+  // cada pessoa (conta, e-mail ou CPF) usa o mesmo cupom uma única vez (pedidos já pagos)
+  const mail = String(ctx.email || '').toLowerCase().trim(), doc = String(ctx.cpf || '').replace(/\D/g, '');
+  if (ctx.userId || mail || doc) {
+    const used = await q.get(`SELECT 1 x FROM orders WHERE coupon_code=? AND status NOT IN ('received','payment_pending','cancelled') AND (user_id=? OR (?<>'' AND json_extract(customer,'$.email')=?) OR (?<>'' AND json_extract(customer,'$.cpf')=?)) LIMIT 1`, c.code, ctx.userId || -1, mail, mail, doc, doc);
+    if (used) throw new HttpError(400, 'Você já utilizou este cupom. Cada cupom vale uma única vez por pessoa.');
+  }
   if (c.first_purchase) {
     const prior = ctx.userId
       ? await q.get("SELECT 1 x FROM orders WHERE user_id=? AND status NOT IN ('received','payment_pending','cancelled') LIMIT 1", ctx.userId)
@@ -55,7 +61,7 @@ async function checkCoupon(code, lines, ctx) {
 }
 
 /** Calcula carrinho completo no servidor (nunca confiar em preços vindos do cliente). */
-async function priceCart({ items, cep, method, coupon, userId }) {
+async function priceCart({ items, cep, method, coupon, userId, email, cpf }) {
   if (!Array.isArray(items) || !items.length) throw new HttpError(400, 'Carrinho vazio.');
   if (items.length > 50) throw new HttpError(400, 'Itens demais no carrinho.');
   const lines = [], warnings = [];
@@ -137,10 +143,12 @@ async function priceCart({ items, cep, method, coupon, userId }) {
   const shippingRaw = groups.reduce((a, g) => a + g.priceCents, 0);
 
   // Vários cupons (até 3, separados por vírgula): os descontos se somam; frete grátis zera o frete.
-  const codes = [...new Set(String(coupon || '').toUpperCase().split(/[\s,;+]+/).filter(Boolean))].slice(0, 3);
+  // Regra da loja: UM cupom por pedido, e cada pessoa só pode usar cada cupom uma vez.
+  const codes = [...new Set(String(coupon || '').toUpperCase().split(/[\s,;+]+/).filter(Boolean))];
+  if (codes.length > 1) throw new HttpError(400, 'Use apenas um cupom por pedido.');
   const coups = []; let merch = 0, freeShip = false, shipping = shippingRaw;
   for (const code of codes) {
-    const c = await checkCoupon(code, lines, { userId });
+    const c = await checkCoupon(code, lines, { userId, email, cpf });
     coups.push(c);
     if (c.freeShipping) freeShip = true; else merch += c.discount;
   }

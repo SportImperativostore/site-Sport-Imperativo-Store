@@ -125,7 +125,7 @@ r.post('/checkout', rateLimit('checkout', 30, 10 * 60 * 1000), wrap(async (req, 
   if (onlyDigits(c.phone).length < 10) throw new HttpError(400, 'Telefone inválido.');
   if (onlyDigits(a.cep).length !== 8 || !a.street || !a.number || !a.district || !a.city || !/^[A-Za-z]{2}$/.test(a.state || '')) throw new HttpError(400, 'Endereço incompleto.');
   if (!['pix', 'card'].includes(b.paymentMethod)) throw new HttpError(400, 'Escolha a forma de pagamento.');
-  const cart = await priceCart({ items: b.items, cep: a.cep, method: b.method, coupon: b.coupon, userId: req.user && req.user.id });
+  const cart = await priceCart({ items: b.items, cep: a.cep, method: b.method, coupon: b.coupon, userId: req.user && req.user.id, email: c.email, cpf: c.cpf });
   if (cart.needCep) throw new HttpError(400, 'Não foi possível calcular o frete.');
   if (cart.hasImport && !b.importAck) throw new HttpError(400, 'Confirme que está ciente das condições de envio de produtos importados.');
   const customer = { name: String(c.name).trim().slice(0, 100), cpf: onlyDigits(c.cpf), email: String(c.email).toLowerCase().trim(), phone: onlyDigits(c.phone), whatsapp: onlyDigits(c.whatsapp || c.phone) };

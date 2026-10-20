@@ -48,7 +48,7 @@ export default async function cart() {
         <div id="groups">${groupsHtml(c)}</div></div>
       <p style="margin-top:14px"><a href="/futebol" style="color:var(--blue);font-weight:700">← Continuar comprando</a></p></div>
     <aside class="sticky"><div class="panel"><h3>Resumo do pedido</h3>
-      <div class="coupon"><input id="coupon" placeholder="Cupom de desconto" value="" maxlength="30"><button class="btn sm" id="apply">${(c.coupons || []).length ? 'ADICIONAR' : 'APLICAR'}</button></div>
+      <div class="coupon"><input id="coupon" placeholder="Cupom de desconto" value="" maxlength="30"><button class="btn sm" id="apply">${(c.coupons || []).length ? 'TROCAR' : 'APLICAR'}</button></div>
       ${(c.coupons || []).map((k) => `<div class="alert ok" style="margin:0 0 8px">Cupom <b>${e(k.code)}</b> aplicado. <a href="#" data-rmc="${e(k.code)}" style="color:var(--bad)">remover</a></div>`).join('')}
       ${summaryHtml(c)}
       ${c.hasImport ? `<div class="alert warn" style="font-size:13px">Seu pedido contém produto(s) importado(s). Prazos e eventuais tributos serão exibidos novamente antes do pagamento.</div>` : ''}
@@ -60,7 +60,7 @@ export default async function cart() {
       const rm = t.closest('[data-rm]'); if (rm) { state.cart.splice(+rm.dataset.rm, 1); saveCart(); if (!state.cart.length) return go('/carrinho', true); return draw(); }
       const ed = t.closest('[data-edit]'); if (ed) return editItem(+ed.dataset.edit, draw);
       if (t.closest('#calc')) { const v = $('#cep').value.replace(/\D/g, ''); if (v.length !== 8) return toast('CEP inválido.', { err: true }); cctx.cep = v; saveCtx(); return draw(); }
-      if (t.closest('#apply')) { const v = $('#coupon').value.trim().toUpperCase(); if (!v) return; cctx.coupon = [...new Set([...String(cctx.coupon || '').split(',').filter(Boolean), v])].slice(0, 3).join(','); saveCtx(); return draw(); }
+      if (t.closest('#apply')) { const v = $('#coupon').value.trim().toUpperCase(); if (!v) return; cctx.coupon = v; saveCtx(); return draw(); }
       const rmc = t.closest('[data-rmc]'); if (rmc) { ev.preventDefault(); const left = String(cctx.coupon || '').split(',').filter((x) => x && x !== rmc.dataset.rmc); if (left.length) cctx.coupon = left.join(','); else delete cctx.coupon; saveCtx(); return draw(); }
     });
     $('#cep').addEventListener('input', (ev) => { ev.target.value = maskCEP(ev.target.value); });
