@@ -44,8 +44,8 @@ export default async function product({ params }) {
         <div class="two" id="cust-fields" hidden><div class="field"><label for="c-name">Nome</label><input id="c-name" maxlength="14" placeholder="Ex.: NEYMAR" autocomplete="off" style="text-transform:uppercase"></div><div class="field"><label for="c-num">Número</label><input id="c-num" inputmode="numeric" maxlength="2" placeholder="10" autocomplete="off"></div></div>
         <small style="color:var(--mut);display:block;margin-top:6px" id="cust-note" hidden>Produtos personalizados não podem ser trocados, exceto por defeito.</small></div>
       <div class="optlabel">Opcionais</div><div class="custom-box">
-        <label class="check" style="margin:0"><input type="checkbox" id="patch-on"><span><b>PATCH</b> (aplicação no braço) — <b>+${brl(p.customization.patchCents)}</b></span></label>
-        <div class="field" id="patch-f" hidden style="margin-top:8px"><label for="patch-t">Qual patch?</label><input id="patch-t" maxlength="40" placeholder="Ex.: Libertadores, Champions, Brasileirão" autocomplete="off"></div>
+        <label class="check" style="margin:0"><input type="checkbox" id="patch-on"><span><b>PATCH</b> (aplicação no braço) — <b>+${brl(p.customization.patchCents)}</b> cada</span></label>
+        <div class="field" id="patch-f" hidden style="margin-top:8px"><label for="patch-t">Quais patches? <small>(separe por vírgula — cada patch a mais: +${brl(p.customization.patchCents)})</small></label><input id="patch-t" maxlength="60" placeholder="Ex.: Libertadores, Brasileirão, Mundial" autocomplete="off"></div>
         <label class="check" style="margin:10px 0 0"><input type="checkbox" id="spons-on"><span><b>PATROCINADOR</b> — <b>+${brl(p.customization.sponsorCents)}</b></span></label>
         <div class="field" id="spons-f" hidden style="margin-top:8px"><label for="spons-t">Qual patrocinador?</label><input id="spons-t" maxlength="40" placeholder="Ex.: Nome do patrocinador" autocomplete="off"></div></div>` : ''}
       <div class="buy"><div class="qty"><button data-q="-1" aria-label="Menos">−</button><span id="qty">1</span><button data-q="1" aria-label="Mais">+</button></div>
@@ -84,10 +84,11 @@ export default async function product({ params }) {
   };
   const updateTotal = () => {
     const t = $('#custom-total'); if (!t || !p.customization) return;
-    const add = (sel.custom ? p.customization.priceCents : 0) + ($('#patch-on') && $('#patch-on').checked ? p.customization.patchCents : 0) + ($('#spons-on') && $('#spons-on').checked ? p.customization.sponsorCents : 0);
+    const add = (sel.custom ? p.customization.priceCents : 0) + ($('#patch-on') && $('#patch-on').checked ? p.customization.patchCents * Math.min(6, Math.max(1, ($('#patch-t').value || '').split(/[,;/+]/).map((x) => x.trim()).filter(Boolean).length)) : 0) + ($('#spons-on') && $('#spons-on').checked ? p.customization.sponsorCents : 0);
     t.hidden = !add; if (add) t.innerHTML = `Com opcionais: <b>${brl(pr.final + add)}</b> por unidade`;
   };
   $('#patch-on') && $('#patch-on').addEventListener('change', (ev) => { $('#patch-f').hidden = !ev.target.checked; updateTotal(); });
+  $('#patch-t') && $('#patch-t').addEventListener('input', updateTotal);
   $('#spons-on') && $('#spons-on').addEventListener('change', (ev) => { $('#spons-f').hidden = !ev.target.checked; updateTotal(); });
   $('#cust-on') && $('#cust-on').addEventListener('change', (ev) => { sel.custom = ev.target.checked; $('#cust-fields').hidden = $('#cust-note').hidden = !sel.custom; updateTotal(); });
   $('#c-num') && $('#c-num').addEventListener('input', (ev) => { ev.target.value = ev.target.value.replace(/\D/g, '').slice(0, 2); });

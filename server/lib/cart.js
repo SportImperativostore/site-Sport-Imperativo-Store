@@ -65,7 +65,7 @@ async function priceCart({ items, cep, method, coupon, userId, email, cpf }) {
   if (!Array.isArray(items) || !items.length) throw new HttpError(400, 'Carrinho vazio.');
   if (items.length > 50) throw new HttpError(400, 'Itens demais no carrinho.');
   const lines = [], warnings = [];
-  const persCents = parseInt(setting('personalization_cents', '2500'), 10), patchCents = parseInt(setting('patch_cents', '3000'), 10), sponsorCents = parseInt(setting('sponsor_cents', '2500'), 10);
+  const persCents = parseInt(setting('personalization_cents', '2500'), 10), patchCents = parseInt(setting('patch_cents', '3000'), 10), sponsorCents = parseInt(setting('sponsor_cents', '3000'), 10);
   for (const it of items) {
     const p = await q.get('SELECT * FROM products WHERE id=? AND active=1', +it.productId);
     if (!p) { warnings.push('Um produto não está mais disponível e foi removido.'); continue; }
@@ -86,7 +86,7 @@ async function priceCart({ items, cep, method, coupon, userId, email, cpf }) {
       const name = String(it.custom.name || '').toUpperCase().replace(/[^A-Z0-9 .'\-ÁÀÂÃÉÊÍÓÔÕÚÇ]/gi, '').slice(0, 14);
       const number = String(it.custom.number || '').replace(/\D/g, '').slice(0, 2);
       custom = { name, number, patch, sponsor };
-      customCents = (name || number ? (p.custom_price_cents ?? persCents) : 0) + (patch ? patchCents : 0) + (sponsor ? sponsorCents : 0);
+      customCents = (name || number ? (p.custom_price_cents ?? persCents) : 0) + (patch ? Math.min(6, patch.split(/[,;/+]/).map((x) => x.trim()).filter(Boolean).length || 1) * patchCents : 0) + (sponsor ? sponsorCents : 0);
     }
     // Tamanhos acima de 2XG (3XG, 4XG, 5XG...) têm acréscimo por peça (padrão R$ 15,00; chave size_extra_cents).
     const bigSize = size && /^([3-9])XG$/i.test(size) ? parseInt(setting('size_extra_cents', '1500'), 10) || 0 : 0;
