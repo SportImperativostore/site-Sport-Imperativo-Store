@@ -9,7 +9,7 @@ export default async function product({ params }) {
   $('#app').innerHTML = '<div class="wrap"><div class="skeleton" style="height:520px;margin-top:24px"></div></div>';
   const { product: p, feedbacks, reviews, related, ratingDist, crumbPath } = await api('/products/' + params[0]);
   setMeta(p.meta.title || `${p.name} | Sport Imperativo Store`, p.meta.description || p.description);
-  const pr = p.pricing, imp = p.fulfillment === 'import';
+  const pr = p.pricing, imp = p.fulfillment === 'import', BIG = 1500;   // acréscimo p/ tamanhos acima de 2XG (igual ao servidor)
   const media = [...p.images.filter((i) => i.kind === 'image').map((i) => ({ t: 'img', url: i.url })), ...p.images.filter((i) => i.kind === 'video').map((i) => ({ t: 'vid', url: i.url }))];
   if (p.video) media.push({ t: 'vid', url: p.video });
   const sel = { size: null, qty: 1, custom: false };
@@ -37,6 +37,7 @@ export default async function product({ params }) {
         <div id="custom-total" class="inst" style="margin-top:6px" hidden></div></div>
       ${imp ? `<div class="info-box import">${icon.globe}<div><b>Produto importado / sob encomenda</b><br>Enviado do exterior (${e(p.shipping.origin)}). Prazo estimado: <b>${p.shipping.leadMin || 15}–${p.shipping.leadMax || 30} dias úteis</b>. ${p.shipping.rule === 'free' ? '<b>Frete grátis/promocional.</b> ' : ''}<br><small>${e(p.shipping.importNotice || '')}</small></div></div>`
         : `<div class="info-box stock">${icon.truck}<div><b>Pronta entrega</b> — enviado do Brasil. Frete calculado pelo CEP.${p.shipping.rule === 'free' ? ' <b>Frete grátis.</b>' : ''}</div></div>`}
+      ${p.variants.some((v) => /^[3-9]XG$/i.test(v.size)) ? `<div class="inst" style="margin:10px 0 0;font-size:13px">Tamanhos acima de 2XG (3XG ou maiores): <b>+ ${brl(BIG)}</b> por peça.</div>` : ''}
       ${p.variants.length ? `<div class="optlabel"><span>Tamanho <span id="size-sel" style="color:var(--blue)"></span></span><button data-guide>TABELA DE MEDIDAS</button></div>
         <div class="sizes" id="sizes">${p.variants.map((v) => { const off = !imp && v.stock <= 0; return `<button class="size ${off ? 'off' : ''}" ${off ? 'disabled' : ''} data-size="${e(v.size)}" title="${off ? 'Esgotado' : !imp && v.stock <= 3 ? 'Últimas unidades' : ''}">${e(v.size)}</button>`; }).join('')}</div><div class="err" id="size-err" style="color:var(--bad);font-size:13px;margin-top:6px" hidden>Selecione um tamanho.</div>` : ''}
       ${p.customization ? `<div class="optlabel">Personalização</div><div class="custom-box"><label class="check" style="margin:0"><input type="checkbox" id="cust-on"><span><b>PERSONALIZAR CAMISA</b> — custo da personalização: <b>${brl(p.customization.priceCents)}</b></span></label>
@@ -69,7 +70,9 @@ export default async function product({ params }) {
   $('.thumbs').addEventListener('click', (ev) => { const b = ev.target.closest('[data-m]'); if (!b) return; $$('.thumbs button').forEach((x) => x.classList.toggle('on', x === b)); main.innerHTML = mediaView(media[+b.dataset.m]); });
   main.addEventListener('mousemove', (ev) => { const z = $('.zoom', main); if (!z) return; const r = main.getBoundingClientRect(); z.style.backgroundPosition = `${((ev.clientX - r.left) / r.width) * 100}% ${((ev.clientY - r.top) / r.height) * 100}%`; });
   main.addEventListener('click', () => { const img = $('img', main); if (img) modal(`<h3>${e(p.name)} <button class="x" data-action="modal-close">${icon.x}</button></h3><img src="${e(img.src)}" alt="" style="width:100%;border-radius:10px">`); });
-  $('#sizes') && $('#sizes').addEventListener('click', (ev) => { const b = ev.target.closest('.size'); if (!b || b.disabled) return; $$('#sizes .size').forEach((x) => x.classList.toggle('on', x === b)); sel.size = b.dataset.size; $('#size-sel').textContent = '• ' + sel.size; $('#size-err').hidden = true; });
+  $('#sizes') && $('#sizes').addEventListener('click', (ev) => { const b = ev.target.closest('.size'); if (!b || b.disabled) return; $$('#sizes .size').forEach((x) => x.classList.toggle('on', x === b)); sel.size = b.dataset.size; $('#size-sel').textContent = '• ' + sel.size; $('#size-err').hidden = true;
+    const big = /^[3-9]XG$/i.test(sel.size) ? BIG : 0; const pe = $('.pbox .price'), px = $('.pbox .pix b');   // preço exibido acompanha o acréscimo do tamanho
+    if (pe) pe.textContent = brl(pr.final + big); if (px) px.textContent = brl(Math.round((pr.final + big) * (1 - pr.pixPct / 100))); });
   $('[data-guide]') && $('[data-guide]').addEventListener('click', () => openGuide(p.sizeGuide ? p.sizeGuide.name : 'Torcedor'));
   $$('[data-q]').forEach((b) => b.addEventListener('click', () => { sel.qty = Math.max(1, Math.min(20, sel.qty + +b.dataset.q)); $('#qty').textContent = sel.qty; }));
   const custom = () => {

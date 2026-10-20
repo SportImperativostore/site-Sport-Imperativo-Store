@@ -88,11 +88,14 @@ async function priceCart({ items, cep, method, coupon, userId, email, cpf }) {
       custom = { name, number, patch, sponsor };
       customCents = (name || number ? (p.custom_price_cents ?? persCents) : 0) + (patch ? patchCents : 0) + (sponsor ? sponsorCents : 0);
     }
-    const unit = price.final + customCents;
+    // Tamanhos acima de 2XG (3XG, 4XG, 5XG...) têm acréscimo por peça (padrão R$ 15,00; chave size_extra_cents).
+    const bigSize = size && /^([3-9])XG$/i.test(size) ? parseInt(setting('size_extra_cents', '1500'), 10) || 0 : 0;
+    const base = price.final + bigSize;
+    const unit = base + customCents;
     const img = await q.get("SELECT url FROM product_images WHERE product_id=? AND kind='image' ORDER BY sort,id LIMIT 1", p.id);
     lines.push({
       key: `${p.id}|${size || ''}|${custom ? [custom.name, custom.number, custom.patch, custom.sponsor].join('#') : ''}`, productId: p.id, slug: p.slug, name: p.name, image: img ? img.url : `/img/p/${p.id}.svg`,
-      size, qty, unitCents: price.final, customCents, custom, lineCents: unit * qty, pixLineCents: Math.round(price.final * (1 - price.pixPct / 100)) * qty + customCents * qty,
+      size, qty, unitCents: base, customCents, custom, lineCents: unit * qty, pixLineCents: Math.round(base * (1 - price.pixPct / 100)) * qty + customCents * qty,
       fulfillment: p.fulfillment, rule: p.shipping_rule, fixed: p.shipping_fixed_cents || 0, weight: (p.weight_g || 400) * qty,
       leadMin: p.lead_min, leadMax: p.lead_max, origin: p.origin, customizable: !!p.customizable, supplierId: p.supplier_id, supplierSku: p.supplier_sku,
       listUnit: price.original,
