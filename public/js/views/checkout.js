@@ -43,6 +43,9 @@ export default async function checkout() {
     if (step === 3) body = `<h3>Entrega</h3>${groupsHtml(cart)}
       ${cart.hasImport ? `<div class="alert warn"><b>Produto importado / sob encomenda.</b> Este produto é enviado do exterior; o prazo é maior que o de pronta entrega. Informações sobre tributos/taxas de importação conforme a legislação e a modalidade da compra: ${e(state.config.settings.import_notice)}</div><label class="check"><input type="checkbox" id="ack" ${d.ack ? 'checked' : ''}><span>Li e estou ciente do prazo maior de entrega, de que o produto é importado e de que podem existir tributos/taxas de importação.</span></label>` : ''}`;
     if (step === 4) body = `<h3>Pagamento</h3>
+      <div class="field" style="margin:0 0 14px"><label for="cpn">Cupom de desconto</label>
+        <div style="display:flex;gap:8px"><input id="cpn" value="${e(cctx.coupon || '')}" maxlength="30" placeholder="Ex.: BEMVINDO10" style="text-transform:uppercase;flex:1"><button type="button" class="btn sm" id="cpn-apply">${cart.coupon ? 'TROCAR' : 'APLICAR'}</button>${cart.coupon ? '<button type="button" class="btn sm ghost" id="cpn-rm">REMOVER</button>' : ''}</div>
+        ${cart.coupon ? `<small style="color:var(--ok);font-weight:700">Cupom ${e(cart.coupon.code)} aplicado.</small>` : ''}</div>
       <label class="pay-opt"><input type="radio" name="pm" value="pix" ${d.paymentMethod === 'pix' ? 'checked' : ''}><span style="flex:1"><b>Pix</b><small>Aprovação imediata • <b class="g">${brl(cart.pixTotal)}</b> (${cart.pixPct}% de desconto)</small></span></label>
       <label class="pay-opt"><input type="radio" name="pm" value="card" ${d.paymentMethod === 'card' ? 'checked' : ''}><span style="flex:1"><b>Cartão de crédito</b><small>Em até ${cart.installments.max}x • ${brl(cart.total)} (parcelas com juros conforme o meio de pagamento, informados antes de você confirmar). Você digita os dados do cartão em ambiente seguro do meio de pagamento.</small></span></label>
       ${d.paymentMethod === 'card' ? `<div class="field" style="margin:0 0 12px"><label>Parcelamento</label><select id="inst">${Array.from({ length: cart.installments.n }, (_, i) => `<option value="${i + 1}" ${d.installments == i + 1 ? 'selected' : ''}>${i + 1}x</option>`).join('')}</select></div>` : ''}
@@ -65,6 +68,9 @@ export default async function checkout() {
       if (ev.target.name === 'ship-method') { cctx.method = ev.target.value; saveCtx(); collect(); await reprice(); paint(); }
       if (ev.target.name === 'pm') { collect(); paint(); }
     });
+    const setCoupon = async (code) => { collect(); const old = cctx.coupon; if (code) cctx.coupon = code; else delete cctx.coupon; saveCtx(); try { await reprice(); paint(); } catch (er) { if (old) cctx.coupon = old; else delete cctx.coupon; saveCtx(); try { await reprice(); } catch { /* mantém */ } paint(er.message); } };
+    $('#cpn-apply') && $('#cpn-apply').addEventListener('click', () => { const v = ($('#cpn').value || '').trim().toUpperCase(); if (v) setCoupon(v); });
+    $('#cpn-rm') && $('#cpn-rm').addEventListener('click', () => setCoupon(''));
     $('#back') && $('#back').addEventListener('click', () => { collect(); step--; paint(); });
     $('#next').addEventListener('click', async (ev) => {
       collect(); persist();
