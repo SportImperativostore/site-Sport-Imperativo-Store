@@ -41,7 +41,7 @@ route(/^\/pagina\/([\w-]+)$/, () => import('./views/page.js'));
 route(/^\/feedbacks$/, () => import('./views/feedbacks.js'));
 
 document.addEventListener('click', (ev) => {
-  const a = ev.target.closest('a[href]');
+  const a = ev.target.closest('a[href]:not([data-action])');     // links com data-action (ex.: Sair) são ações, não navegação
   if (a && !ev.defaultPrevented && ev.button === 0 && !ev.metaKey && !ev.ctrlKey && !ev.shiftKey && !a.target && a.origin === location.origin && !a.hasAttribute('download') && !a.pathname.startsWith('/admin') && !a.pathname.startsWith('/api')) {
     ev.preventDefault();
     if (a.pathname + a.search !== location.pathname + location.search) history.pushState({}, '', a.pathname + a.search + a.hash);
