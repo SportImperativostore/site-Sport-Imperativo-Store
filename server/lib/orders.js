@@ -28,7 +28,7 @@ async function createOrder({ cart, customer, address, userId, paymentMethod, ins
       `INSERT INTO orders(user_id,access_token,status,customer,address,subtotal_cents,discount_cents,shipping_cents,total_cents,coupon_code,payment_method,installments,shipping_info,import_ack)
        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       userId || null, accessToken, 'payment_pending', JSON.stringify(customer), JSON.stringify(address), cart.subtotal, cart.discount, cart.shipping,
-      paymentMethod === 'pix' ? cart.pixTotal : cart.total, cart.coupon ? cart.coupon.code : null, paymentMethod, installments || 1,
+      paymentMethod === 'pix' ? cart.pixTotal : cart.total, (cart.coupons && cart.coupons.length ? cart.coupons.map((c) => c.code).join(',') : null), paymentMethod, installments || 1,
       JSON.stringify(cart.groups.map((g) => ({ id: g.id, title: g.title, origin: g.origin, carrier: g.selected && g.selected.carrier, price: g.priceCents, daysMin: g.selected && g.selected.daysMin, daysMax: g.selected && g.selected.daysMax }))),
       importAck ? 1 : 0);
     const orderId = Number(r.lastInsertRowid);
@@ -59,7 +59,7 @@ async function markPaid(orderId, paymentId) {
         await Q.run('UPDATE products SET stock=MAX(0,stock-?) WHERE id=?', it.qty, it.product_id);
       }
     }
-    if (ord.coupon_code) await Q.run('UPDATE coupons SET uses=uses+1 WHERE code=?', ord.coupon_code);
+    for (const code of String(ord.coupon_code || '').split(',').filter(Boolean)) await Q.run('UPDATE coupons SET uses=uses+1 WHERE code=?', code);
     for (const g of JSON.parse(ord.shipping_info || '[]')) await Q.run('INSERT INTO shipments(order_id,grp,status) VALUES(?,?,?)', orderId, g.id, 'pending');
     return true;
   });

@@ -136,19 +136,24 @@ async function priceCart({ items, cep, method, coupon, userId }) {
   }
   const shippingRaw = groups.reduce((a, g) => a + g.priceCents, 0);
 
-  let coup = null, discount = 0, shipping = shippingRaw;
-  if (coupon) {
-    coup = await checkCoupon(coupon, lines, { userId });
-    discount = coup.discount;
-    if (coup.freeShipping) { discount = shippingRaw; shipping = 0; }
+  // Vários cupons (até 3, separados por vírgula): os descontos se somam; frete grátis zera o frete.
+  const codes = [...new Set(String(coupon || '').toUpperCase().split(/[\s,;+]+/).filter(Boolean))].slice(0, 3);
+  const coups = []; let merch = 0, freeShip = false, shipping = shippingRaw;
+  for (const code of codes) {
+    const c = await checkCoupon(code, lines, { userId });
+    coups.push(c);
+    if (c.freeShipping) freeShip = true; else merch += c.discount;
   }
-  discount = Math.min(discount, subtotal + shipping);
-  const total = subtotal - (coup && coup.freeShipping ? 0 : discount) + shipping;
+  if (freeShip) shipping = 0;
+  merch = Math.min(merch, subtotal);
+  const coup = coups[0] || null;
+  const discount = merch + (freeShip ? shippingRaw : 0);
+  const total = subtotal - merch + shipping;
   const pixPct = parseFloat(setting('pix_pct', '5'));
   const pixTotal = Math.max(0, Math.round(total - (lines.reduce((a, l) => a + l.lineCents, 0) - lines.reduce((a, l) => a + l.pixLineCents, 0))));
   const maxInst = parseInt(setting('max_installments', '12'), 10), minInst = parseInt(setting('min_installment_cents', '3000'), 10);
   return {
-    lines, subtotal, discount: coup && coup.freeShipping ? shippingRaw : discount, shipping, shippingRaw, total, pixTotal, pixPct,
+    lines, subtotal, discount, coupons: coups, shipping, shippingRaw, total, pixTotal, pixPct,
     installments: { n: Math.max(1, Math.min(maxInst, Math.floor(total / minInst))), max: maxInst }, groups, coupon: coup, needCep, warnings,
     hasImport: importLines.length > 0, hasStock: stockLines.length > 0,
   };

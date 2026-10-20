@@ -7,7 +7,7 @@ export const saveCtx = () => { try { localStorage.setItem(KEY, JSON.stringify(cc
 
 export function summaryHtml(c, { showCoupon = true } = {}) {
   return `<div class="sum"><div><span>Subtotal</span><span>${brl(c.subtotal)}</span></div>
-    ${c.discount ? `<div class="disc"><span>Desconto${c.coupon ? ' (' + e(c.coupon.code) + ')' : ''}</span><span>-${brl(c.discount)}</span></div>` : ''}
+    ${c.discount ? `<div class="disc"><span>Desconto${(c.coupons || []).length ? ' (' + c.coupons.map((k) => e(k.code)).join(' + ') + ')' : ''}</span><span>-${brl(c.discount)}</span></div>` : ''}
     <div><span>Frete</span><span>${c.needCep ? 'a calcular' : c.shipping ? brl(c.shipping) : '<b style="color:var(--ok)">GRÁTIS</b>'}</span></div>
     <div class="tot"><span>Total</span><span>${brl(c.total)}</span></div>
     <div class="pix" style="text-align:right">${brl(c.pixTotal)} no Pix (${c.pixPct}% off)</div>
@@ -48,8 +48,8 @@ export default async function cart() {
         <div id="groups">${groupsHtml(c)}</div></div>
       <p style="margin-top:14px"><a href="/futebol" style="color:var(--blue);font-weight:700">← Continuar comprando</a></p></div>
     <aside class="sticky"><div class="panel"><h3>Resumo do pedido</h3>
-      <div class="coupon"><input id="coupon" placeholder="Cupom de desconto" value="${e(cctx.coupon || '')}" maxlength="30"><button class="btn sm" id="apply">${c.coupon ? 'TROCAR' : 'APLICAR'}</button></div>
-      ${c.coupon ? `<div class="alert ok" style="margin:0 0 8px">Cupom <b>${e(c.coupon.code)}</b> aplicado. <a href="#" id="rm-coupon" style="color:var(--bad)">remover</a></div>` : ''}
+      <div class="coupon"><input id="coupon" placeholder="Cupom de desconto" value="" maxlength="30"><button class="btn sm" id="apply">${(c.coupons || []).length ? 'ADICIONAR' : 'APLICAR'}</button></div>
+      ${(c.coupons || []).map((k) => `<div class="alert ok" style="margin:0 0 8px">Cupom <b>${e(k.code)}</b> aplicado. <a href="#" data-rmc="${e(k.code)}" style="color:var(--bad)">remover</a></div>`).join('')}
       ${summaryHtml(c)}
       ${c.hasImport ? `<div class="alert warn" style="font-size:13px">Seu pedido contém produto(s) importado(s). Prazos e eventuais tributos serão exibidos novamente antes do pagamento.</div>` : ''}
       <a class="btn block" href="/checkout" style="margin-top:12px">FINALIZAR COMPRA</a></div></aside></div></div>`;
@@ -60,8 +60,8 @@ export default async function cart() {
       const rm = t.closest('[data-rm]'); if (rm) { state.cart.splice(+rm.dataset.rm, 1); saveCart(); if (!state.cart.length) return go('/carrinho', true); return draw(); }
       const ed = t.closest('[data-edit]'); if (ed) return editItem(+ed.dataset.edit, draw);
       if (t.closest('#calc')) { const v = $('#cep').value.replace(/\D/g, ''); if (v.length !== 8) return toast('CEP inválido.', { err: true }); cctx.cep = v; saveCtx(); return draw(); }
-      if (t.closest('#apply')) { const v = $('#coupon').value.trim().toUpperCase(); if (!v) return; cctx.coupon = v; saveCtx(); return draw(); }
-      if (t.closest('#rm-coupon')) { ev.preventDefault(); delete cctx.coupon; saveCtx(); return draw(); }
+      if (t.closest('#apply')) { const v = $('#coupon').value.trim().toUpperCase(); if (!v) return; cctx.coupon = [...new Set([...String(cctx.coupon || '').split(',').filter(Boolean), v])].slice(0, 3).join(','); saveCtx(); return draw(); }
+      const rmc = t.closest('[data-rmc]'); if (rmc) { ev.preventDefault(); const left = String(cctx.coupon || '').split(',').filter((x) => x && x !== rmc.dataset.rmc); if (left.length) cctx.coupon = left.join(','); else delete cctx.coupon; saveCtx(); return draw(); }
     });
     $('#cep').addEventListener('input', (ev) => { ev.target.value = maskCEP(ev.target.value); });
     $('#cep').addEventListener('keydown', (ev) => { if (ev.key === 'Enter') $('#calc').click(); });
