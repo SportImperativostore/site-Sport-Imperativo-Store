@@ -28,7 +28,7 @@ admin.post('/marketing/preview', wrap(async (req, res) => { const c = clean(req.
 admin.post('/marketing/test', wrap(async (req, res) => {
   const c = clean(req.body || {}); const to = (req.user && req.user.email) || '';
   if (!c.subject || !c.params.body) throw new HttpError(400, 'Informe assunto e texto.');
-  res.json({ to, ...(await mkt.sendTest(c.params, c.subject, to)) });
+  res.json({ to, ...(await mkt.sendTest(c.params, c.subject, to, c.audience)) });
 }));
 admin.post('/marketing/campaigns', wrap(async (req, res) => {
   const c = clean(req.body || {});

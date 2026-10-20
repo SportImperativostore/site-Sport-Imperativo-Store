@@ -76,7 +76,7 @@ const headersFor = (ct) => (ct ? { 'List-Unsubscribe': `<${mail.base()}/api/emai
 
 /* ---------- campanhas ---------- */
 const parseP = (c) => { try { return JSON.parse(c.params || '{}'); } catch { return {}; } };
-async function sendTest(params, subject, to) { return mail.sendMail({ orderId: null, to, subject: '[TESTE] ' + subject, html: await render(params, 'teste') }); }
+async function sendTest(params, subject, to, audience) { return mail.sendMail({ orderId: null, to, subject: '[TESTE] ' + subject, html: await render(params, 'teste', audience === 'invite' ? 'convite' : 'campanha') }); }
 async function start(id) {
   const c = await q.get('SELECT * FROM mkt_campaigns WHERE id=?', id); if (!c || c.status !== 'draft') return { error: 'Campanha não está em rascunho.' };
   const rows = await audienceRows(c.audience);
