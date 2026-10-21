@@ -6,6 +6,18 @@ const { norm } = require('./util');
 // apelido → termos reais que existem nos produtos. Cada valor é uma lista de alternativas; cada alternativa é uma lista de palavras (E).
 const A = (list, ...alts) => list.forEach((k) => (ALIASES[norm(k)] = alts.map((a) => norm(a).split(' '))));
 const ALIASES = {};
+// cores (masculino/feminino/inglês → palavra usada nos produtos e nas tags de cor)
+A(['preto', 'preta', 'black', 'pretas', 'pretos'], 'preta', 'preto');
+A(['vermelho', 'vermelha', 'red', 'vermelhas', 'vermelhos'], 'vermelha', 'vermelho');
+A(['branco', 'branca', 'white', 'brancas', 'brancos'], 'branca', 'branco');
+A(['amarelo', 'amarela', 'yellow', 'amarelas', 'amarelos'], 'amarela', 'amarelo');
+A(['roxo', 'roxa', 'purple', 'lilas'], 'roxa', 'roxo');
+A(['azul', 'blue', 'azuis'], 'azul');
+A(['verde', 'green', 'verdes'], 'verde');
+A(['laranja', 'orange'], 'laranja');
+A(['rosa', 'pink'], 'rosa');
+A(['cinza', 'gray', 'grey', 'cinzento'], 'cinza');
+A(['marrom', 'brown'], 'marrom');
 // clubes
 A(['manutd', 'man utd', 'mufc', 'man united', 'manchester u', 'red devils', 'diabos vermelhos'], 'manchester united');
 A(['mancity', 'man city', 'mcfc', 'city'], 'manchester city');
