@@ -6,7 +6,7 @@ const art = require('../lib/art');
 const { wrap, HttpError, norm, onlyDigits } = require('../lib/util');
 
 const r = express.Router();
-const PUBLIC_SETTINGS = ['store_name', 'slogan', 'whatsapp', 'instagram', 'whatsapp_link', 'youtube', 'email', 'pix_pct', 'max_installments', 'import_notice', 'free_shipping_over_cents', 'personalization_cents', 'instagram_feedback_url', 'company_name', 'cnpj'];
+const PUBLIC_SETTINGS = ['store_name', 'slogan', 'whatsapp', 'instagram', 'whatsapp_link', 'youtube', 'email', 'pix_pct', 'max_installments', 'import_notice', 'free_shipping_over_cents', 'payments_notice', 'personalization_cents', 'instagram_feedback_url', 'company_name', 'cnpj'];
 const cacheHdr = (res, s = 60) => res.set('Cache-Control', `public, s-maxage=${s}, stale-while-revalidate=${s * 5}, max-age=${Math.min(s, 30)}`);
 
 r.get('/config', wrap(async (_req, res) => {

@@ -17,7 +17,7 @@ const ENT_TYPES = [['sport', 'Esporte / seção'], ['category', 'Categoria'], ['
 const ENT_LABEL = Object.fromEntries(ENT_TYPES);
 
 /* ---------- Layout ---------- */
-const NAV = [['dashboard', 'Dashboard'], ['orders', 'Pedidos'], ['supplier-orders', 'Ordens a fornecedores'], ['whatsapp', 'WhatsApp / Pós-venda'], ['marketing', 'E-mail marketing'], ['products', 'Produtos'], ['prices', 'Tabela de preços'], ['entities', 'Categorias, clubes e ligas'], ['suppliers', 'Fornecedores'], ['coupons', 'Cupons'], ['banners', 'Banners'], ['reviews', 'Avaliações'], ['testimonials', 'Prova social'], ['sizes', 'Tamanhos'], ['size_guides', 'Guias de tamanho'], ['pages', 'Páginas e políticas'], ['settings', 'Configurações'], ['users', 'Clientes'], ['audit', 'Logs / Backup']];
+const NAV = [['dashboard', 'Dashboard'], ['orders', 'Pedidos'], ['manual-order', 'Pedido manual'], ['supplier-orders', 'Ordens a fornecedores'], ['whatsapp', 'WhatsApp / Pós-venda'], ['marketing', 'E-mail marketing'], ['products', 'Produtos'], ['prices', 'Tabela de preços'], ['entities', 'Categorias, clubes e ligas'], ['suppliers', 'Fornecedores'], ['coupons', 'Cupons'], ['banners', 'Banners'], ['reviews', 'Avaliações'], ['testimonials', 'Prova social'], ['sizes', 'Tamanhos'], ['size_guides', 'Guias de tamanho'], ['pages', 'Páginas e políticas'], ['settings', 'Configurações'], ['users', 'Clientes'], ['audit', 'Logs / Backup']];
 function shell(active, html) {
   $('#root').innerHTML = `<div class="app"><nav class="side"><a class="logo" href="#/dashboard"><img src="/img/logo.png" alt="Sport Imperativo"></a>${NAV.map(([k, n]) => `<a href="#/${k}" class="${active === k ? 'on' : ''}">${n}</a>`).join('')}<small>CONTA</small><a href="/" target="_blank">Ver loja ↗</a><a href="#" id="out">Sair</a></nav><main>${html}</main></div>`;
   $('#out').onclick = async (ev) => { ev.preventDefault(); await api('/auth/logout', { method: 'POST' }); S.user = null; boot(); };
@@ -108,6 +108,23 @@ async function dashboard() {
 
 /* ---------- Pedidos ---------- */
 const STAT_PILL = { delivered: 'g', cancelled: 'r', payment_pending: 'y', awaiting_supplier: 'y', received: 'y' };
+async function manualOrder() {
+  const f = (id, l, ph = '', w = '') => `<div class="field" ${w ? `style="width:${w}"` : ''}><label>${l}</label><input id="${id}" placeholder="${ph}"></div>`;
+  shell('manual-order', `<h1>Pedido manual</h1><p>Para venda fechada fora do site (ex.: WhatsApp). Se marcar "já foi pago", o pedido entra no fluxo normal (fornecedor, aviso, estoque).</p>
+  <div class="card"><b>Cliente</b><div class="toolbar">${f('mn', 'Nome completo')}${f('mc', 'CPF')}${f('me', 'E-mail')}${f('mp', 'Telefone')}</div></div>
+  <div class="card"><b>Endereço</b><div class="toolbar">${f('ac', 'CEP', '', '120px')}${f('as', 'Rua')}${f('an', 'Número', '', '90px')}${f('ao', 'Complemento')}${f('ad', 'Bairro')}${f('at', 'Cidade')}${f('au', 'UF', '', '70px')}</div></div>
+  <div class="card"><b>Itens</b> (um por linha: <code>ID do produto; tamanho; quantidade</code> — o ID aparece na lista de produtos)<textarea id="mi" rows="4" style="width:100%" placeholder="5035; M; 1"></textarea>
+  <div class="toolbar" style="margin-top:8px">${f('mk', 'Cupom (opcional)')}</div></div>
+  <label class="check"><input type="checkbox" id="mpaid"> Já foi pago (Pix/transferência confirmado por mim)</label><br><br>
+  <button class="btn" id="mgo">Criar pedido</button>`);
+  $('#mgo').onclick = async () => {
+    const items = $('#mi').value.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).map((l) => { const [id, size, qty] = l.split(/[;,]/).map((x) => x.trim()); return { productId: +id, size: size || null, qty: +qty || 1 }; });
+    try {
+      const r = await api('/admin/orders/manual', { method: 'POST', body: { customer: { name: $('#mn').value, cpf: $('#mc').value, email: $('#me').value, phone: $('#mp').value }, address: { cep: $('#ac').value, street: $('#as').value, number: $('#an').value, complement: $('#ao').value, district: $('#ad').value, city: $('#at').value, state: $('#au').value }, items, coupon: $('#mk').value, paid: $('#mpaid').checked } });
+      toast('Pedido ' + r.ref + ' criado (' + brl(r.total) + ').'); location.hash = '#/orders/' + r.id;
+    } catch (err) { toast(err.message || 'Erro ao criar o pedido.'); }
+  };
+}
 async function ordersList(qs) {
   const p = new URLSearchParams(qs || '');
   const rows = await api('/admin/orders?' + p);
@@ -363,6 +380,7 @@ async function router() {
   try {
     if (path === 'dashboard') await dashboard();
     else if (path === 'orders') arg ? await orderPage(arg) : await ordersList(qs);
+    else if (path === 'manual-order') await manualOrder();
     else if (path === 'supplier-orders') await supplierOrders();
     else if (path === 'whatsapp') await whatsappPage();
     else if (path === 'prices') await pricesPage();

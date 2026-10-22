@@ -180,6 +180,11 @@ function buildMobileMenu() {
   <div class="acc-item"><a href="/ofertas" style="color:var(--bad)">🔥 OFERTAS</a></div>
   <div class="acc-item"><a href="/feedbacks">❤️ FEEDBACKS</a></div><div class="acc-item"><a href="/conta">Minha conta</a></div><div class="acc-item"><a href="/favoritos">Favoritos</a></div></div>`;
 }
+/* Aviso temporário (ex.: pagamento online em manutenção): troca a faixa do topo quando o admin preenche "payments_notice". */
+function applyNotice() {
+  const n = (state.config.settings.payments_notice || '').trim(), m = $('#topbar-msg');
+  if (n && m) { m.textContent = '⚠️ ' + n; m.parentNode.parentNode.style.background = '#b45309'; m.parentNode.parentNode.style.color = '#fff'; }
+}
 function buildFooter() {
   const s = state.config.settings;
   const wa = (s.whatsapp || '').replace(/\D/g, '');
@@ -278,6 +283,6 @@ document.addEventListener('scroll', (ev) => {
     const [cfg, menu, me] = await Promise.all([api('/config'), api('/menu'), api('/auth/me')]);
     state.config = cfg; state.sizes = cfg.sizes; state.menu = menu; state.user = me.user; state.favorites = new Set(me.favorites);
   } catch (err) { $('#app').innerHTML = `<div class="wrap empty"><h3>Loja temporariamente indisponível</h3><p>${e(err.message)}</p></div>`; return; }
-  buildNav(); buildMobileMenu(); buildFooter(); renderAccountLink(); initSearch(); cookieBanner(); renderCartCount(); initFx();
+  applyNotice(); buildNav(); buildMobileMenu(); buildFooter(); renderAccountLink(); initSearch(); cookieBanner(); renderCartCount(); initFx();
   render();
 })();
