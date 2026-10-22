@@ -43,7 +43,7 @@ async function createPayment(order, baseUrl, deviceId) {
       }),
     });
     const j = await res.json();
-    if (!res.ok) throw new Error('Gateway: ' + (j.message || res.status));
+    if (!res.ok) { const err = new Error('Gateway: ' + (j.message || res.status)); if (/without key enabled/i.test(j.message || '')) err.userMessage = 'O Pix está temporariamente indisponível. Pague com cartão de crédito (até 12x) ou tente o Pix mais tarde.'; throw err; }
     const td = (j.point_of_interaction || {}).transaction_data || {};
     // O antifraude pode recusar logo após criar o código: confere antes de mostrar um Pix que já nasceu cancelado.
     let st = j.status, detail = j.status_detail;
