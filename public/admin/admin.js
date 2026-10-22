@@ -92,7 +92,10 @@ async function formPage(key, id) {
 /* ---------- Dashboard ---------- */
 async function dashboard() {
   const d = await api('/admin/dashboard'); const max = Math.max(1, ...d.daily.map((x) => x.rev));
-  shell('dashboard', `<h1>Dashboard</h1><div class="kpis">
+  let fn = null; try { fn = await api('/admin/funnel?days=7'); } catch { /* opcional */ }
+  const FN = { view_product: 'Viram um produto', add_to_cart: 'Colocaram no carrinho', view_cart: 'Abriram o carrinho', begin_checkout: 'Iniciaram o checkout', step_dados: 'Etapa: seus dados', step_endereco: 'Etapa: endereço', step_entrega: 'Etapa: entrega', step_pagamento: 'Chegaram ao pagamento', place_order: 'Geraram o pedido', whatsapp_buy: 'Clicaram em comprar pelo WhatsApp' };
+  const funnel = fn ? `<div class="card" style="margin-bottom:14px"><b>Funil de compra — últimos ${fn.days} dias</b> <small>(pessoas únicas; só passam a contar depois da ativação)</small><table style="margin-top:8px">${fn.steps.map((s) => `<tr><td>${FN[s.name] || s.name}</td><td><b>${s.n}</b></td></tr>`).join('')}<tr><td><b>Pedidos pagos</b></td><td><b>${fn.paid}</b></td></tr></table></div>` : '';
+  shell('dashboard', `<h1>Dashboard</h1>${funnel}<div class="kpis">
     <div class="kpi"><span>Faturamento (total)</span><b>${brl(d.revenue)}</b></div><div class="kpi"><span>Pedidos pagos</span><b>${d.orders}</b></div><div class="kpi"><span>Ticket médio</span><b>${brl(d.ticket)}</b></div><div class="kpi"><span>Produtos vendidos</span><b>${d.itemsSold}</b></div>
     <div class="kpi"><span>Últimos 30 dias</span><b>${brl(d.last30.rev)}</b><span>${d.last30.n} pedidos</span></div><div class="kpi"><span>Últimos 7 dias</span><b>${brl(d.last7.rev)}</b><span>${d.last7.n} pedidos</span></div>
     <div class="kpi"><span>Clientes</span><b>${d.customers}</b></div><div class="kpi"><span>Avaliações pendentes</span><b>${d.pendingReviews}</b></div>

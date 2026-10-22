@@ -99,6 +99,8 @@ CREATE TABLE IF NOT EXISTS abandoned_carts(
   id INTEGER PRIMARY KEY, email TEXT NOT NULL, name TEXT, items TEXT, token TEXT, recovered INTEGER DEFAULT 0,
   created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')), sent_at TEXT);
 CREATE INDEX IF NOT EXISTS ix_abandoned_email ON abandoned_carts(email, recovered);
+CREATE TABLE IF NOT EXISTS events(id INTEGER PRIMARY KEY, sid TEXT, name TEXT, path TEXT, ref TEXT, created_at TEXT DEFAULT (datetime('now')));
+CREATE INDEX IF NOT EXISTS ix_events_name ON events(name, created_at);
 CREATE TABLE IF NOT EXISTS email_optout(email TEXT PRIMARY KEY, created_at TEXT DEFAULT (datetime('now')));
 CREATE TABLE IF NOT EXISTS marketing_contacts(
   email TEXT PRIMARY KEY, name TEXT, source TEXT, token TEXT, opted_in_at TEXT, invited_at TEXT, unsub_at TEXT, created_at TEXT DEFAULT (datetime('now')));

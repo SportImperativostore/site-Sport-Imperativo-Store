@@ -1,4 +1,4 @@
-import { $, $$, e, brl, api, state, addToCart, toast, modal, closeModal, icon, starsHtml, productCard, setMeta, maskCEP, toggleFav } from '../lib.js';
+import { $, $$, e, brl, api, state, addToCart, track, toast, modal, closeModal, icon, starsHtml, productCard, setMeta, maskCEP, toggleFav } from '../lib.js';
 import { openCartDrawer, go } from '../app.js';
 import { storiesStrip } from './stories.js';
 import { openGuide } from './guide.js';
@@ -9,6 +9,7 @@ export default async function product({ params }) {
   $('#app').innerHTML = '<div class="wrap"><div class="skeleton" style="height:520px;margin-top:24px"></div></div>';
   const { product: p, feedbacks, reviews, related, ratingDist, crumbPath } = await api('/products/' + params[0]);
   setMeta(p.meta.title || `${p.name} | Sport Imperativo Store`, p.meta.description || p.description);
+  track('view_product');
   const pr = p.pricing, imp = p.fulfillment === 'import', BIG = 1500;   // acréscimo p/ tamanhos acima de 2XG (igual ao servidor)
   const media = [...p.images.filter((i) => i.kind === 'image').map((i) => ({ t: 'img', url: i.url })), ...p.images.filter((i) => i.kind === 'video').map((i) => ({ t: 'vid', url: i.url }))];
   if (p.video) media.push({ t: 'vid', url: p.video });
@@ -51,6 +52,7 @@ export default async function product({ params }) {
       <div class="buy"><div class="qty"><button data-q="-1" aria-label="Menos">−</button><span id="qty">1</span><button data-q="1" aria-label="Mais">+</button></div>
         <button class="btn" id="add" ${p.availability.code === 'out' ? 'disabled' : ''}>${p.availability.code === 'out' ? 'ESGOTADO' : 'ADICIONAR AO CARRINHO'}</button></div>
       <button class="btn dark block" id="buy-now" style="margin-top:10px" ${p.availability.code === 'out' ? 'disabled' : ''}>COMPRAR AGORA</button>
+      <button class="btn block" id="buy-wa" style="margin-top:10px;background:#25d366;color:#fff" ${p.availability.code === 'out' ? 'disabled' : ''}>COMPRAR PELO WHATSAPP</button>
       <div class="optlabel">Calcular frete e prazo</div>
       <div class="ship-calc field"><input id="cep" inputmode="numeric" placeholder="00000-000" maxlength="9" autocomplete="postal-code"><button class="btn sm ghost" id="calc" style="height:42px">CALCULAR</button></div><div class="ship-res" id="ship-res"></div>
     </div></div>
@@ -102,6 +104,12 @@ export default async function product({ params }) {
   const flash = (b) => { const t = b.textContent; b.classList.add('ok'); b.textContent = '✓ ADICIONADO'; setTimeout(() => { b.classList.remove('ok'); b.textContent = t; }, 1500); };
   const onAdd = (ev) => { if (addItem()) { flash(ev.currentTarget); openCartDrawer(); } };
   $('#add').addEventListener('click', onAdd); $('#add-m').addEventListener('click', onAdd);
+  $('#buy-wa') && $('#buy-wa').addEventListener('click', () => {
+    if (p.variants.length && !sel.size) { $('#size-err').hidden = false; $('#sizes').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    const s = state.config.settings, num = String(s.whatsapp || '5511917765409').replace(/D/g, ''); const c = custom();
+    const msg = ['Olá! Quero comprar:', p.name, sel.size ? 'Tamanho: ' + sel.size : '', 'Quantidade: ' + sel.qty, c && (c.name || c.number) ? 'Personalização: ' + (c.name || '') + ' ' + (c.number || '') : '', c && c.patch ? 'Patch: ' + c.patch : '', c && c.sponsor ? 'Patrocinador: ' + c.sponsor : '', location.origin + '/produto/' + p.slug].filter(Boolean).join('\n');
+    track('whatsapp_buy'); window.open('https://wa.me/' + (num.startsWith('55') ? num : '55' + num) + '?text=' + encodeURIComponent(msg), '_blank', 'noopener');
+  });
   $('#buy-now').addEventListener('click', () => { if (addItem()) go('/checkout'); });
   $('[data-share]').addEventListener('click', async () => { try { if (navigator.share) await navigator.share({ title: p.name, url: location.href }); else { await navigator.clipboard.writeText(location.href); toast('Link copiado!'); } } catch { /* cancelado */ } });
   $('#cep').addEventListener('input', (ev) => { ev.target.value = maskCEP(ev.target.value); });

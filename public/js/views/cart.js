@@ -1,4 +1,4 @@
-import { $, $$, e, brl, api, state, saveCart, cartPayload, cartKey, toast, modal, closeModal, icon, setMeta, maskCEP } from '../lib.js';
+import { $, $$, e, brl, api, state, track, saveCart, cartPayload, cartKey, toast, modal, closeModal, icon, setMeta, maskCEP } from '../lib.js';
 import { go } from '../app.js';
 
 const KEY = 'si_cartctx';
@@ -21,7 +21,7 @@ export function groupsHtml(c, selectable = true) {
 }
 
 export default async function cart() {
-  setMeta('Carrinho | Sport Imperativo Store');
+  setMeta('Carrinho | Sport Imperativo Store'); track('view_cart');
   if (!state.cart.length) { $('#app').innerHTML = '<div class="wrap empty"><h3>Seu carrinho está vazio</h3><p>Que tal escolher o próximo uniforme?</p><p style="margin-top:14px"><a class="btn" href="/futebol">COMEÇAR A COMPRAR</a></p></div>'; return; }
   const draw = async () => {
     let c;
@@ -52,13 +52,20 @@ export default async function cart() {
       ${(c.coupons || []).map((k) => `<div class="alert ok" style="margin:0 0 8px">Cupom <b>${e(k.code)}</b> aplicado. <a href="#" data-rmc="${e(k.code)}" style="color:var(--bad)">remover</a></div>`).join('')}
       ${summaryHtml(c)}
       ${c.hasImport ? `<div class="alert warn" style="font-size:13px">Seu pedido contém produto(s) importado(s). Prazos e eventuais tributos serão exibidos novamente antes do pagamento.</div>` : ''}
-      <a class="btn block" href="/checkout" style="margin-top:12px">FINALIZAR COMPRA</a></div></aside></div></div>`;
+      <a class="btn block" href="/checkout" style="margin-top:12px">FINALIZAR COMPRA</a>
+      <button class="btn block" id="cart-wa" style="margin-top:10px;background:#25d366;color:#fff">FINALIZAR PELO WHATSAPP</button></div></aside></div></div>`;
     const root = $('#app .wrap');
     root.addEventListener('click', async (ev) => {
       const t = ev.target;
       const q = t.closest('[data-q]'); if (q) { const it = state.cart[+q.dataset.q]; it.qty = Math.max(1, Math.min(20, it.qty + +q.dataset.d)); saveCart(); return draw(); }
       const rm = t.closest('[data-rm]'); if (rm) { state.cart.splice(+rm.dataset.rm, 1); saveCart(); if (!state.cart.length) return go('/carrinho', true); return draw(); }
       const ed = t.closest('[data-edit]'); if (ed) return editItem(+ed.dataset.edit, draw);
+      if (t.closest('#cart-wa')) {
+        const s = state.config.settings, num = String(s.whatsapp || '5511917765409').replace(/D/g, '');
+        const lines = c.lines.map((l) => `• ${l.name}${l.size ? ' — Tam. ' + l.size : ''} — ${l.qty}x${l.custom && (l.custom.name || l.custom.number) ? ' — Personalização: ' + (l.custom.name || '') + ' ' + (l.custom.number || '') : ''}${l.custom && l.custom.patch ? ' — Patch: ' + l.custom.patch : ''}${l.custom && l.custom.sponsor ? ' — Patrocinador: ' + l.custom.sponsor : ''}`);
+        const msg = ['Olá! Quero finalizar meu pedido:', ...lines, c.coupons && c.coupons.length ? 'Cupom: ' + c.coupons.map((k) => k.code).join(', ') : '', 'Total: ' + brl(c.total) + ' (Pix: ' + brl(c.pixTotal) + ')'].filter(Boolean).join('\n');
+        track('whatsapp_buy'); window.open('https://wa.me/' + (num.startsWith('55') ? num : '55' + num) + '?text=' + encodeURIComponent(msg), '_blank', 'noopener'); return;
+      }
       if (t.closest('#calc')) { const v = $('#cep').value.replace(/\D/g, ''); if (v.length !== 8) return toast('CEP inválido.', { err: true }); cctx.cep = v; saveCtx(); return draw(); }
       if (t.closest('#apply')) { const v = $('#coupon').value.trim().toUpperCase(); if (!v) return; cctx.coupon = v; saveCtx(); return draw(); }
       const rmc = t.closest('[data-rmc]'); if (rmc) { ev.preventDefault(); const left = String(cctx.coupon || '').split(',').filter((x) => x && x !== rmc.dataset.rmc); if (left.length) cctx.coupon = left.join(','); else delete cctx.coupon; saveCtx(); return draw(); }

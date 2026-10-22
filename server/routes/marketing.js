@@ -16,8 +16,25 @@ pub.get('/marketing/confirm', wrap(async (req, res) => {
   res.set('Cache-Control', 'no-store').type('html').send(page(ok ? 'Pronto! Você vai receber nossas ofertas por e-mail.' : 'Link inválido ou expirado.'));
 }));
 
+/* Funil de compra: eventos anônimos (sem dados pessoais) para ver em que etapa as pessoas desistem. */
+const EVENTS = ['view_product', 'add_to_cart', 'view_cart', 'begin_checkout', 'step_dados', 'step_endereco', 'step_entrega', 'step_pagamento', 'place_order', 'whatsapp_buy'];
+pub.post('/track', rateLimit('track', 120, 10 * 60 * 1000), wrap(async (req, res) => {
+  const b = req.body || {};
+  if (EVENTS.includes(b.name) && /^[a-z0-9]{8,32}$/i.test(String(b.sid || ''))) {
+    try { await q.run('INSERT INTO events(sid,name,path,ref) VALUES(?,?,?,?)', String(b.sid), b.name, String(b.path || '').slice(0, 120), String(b.ref || '').slice(0, 60)); } catch { /* funil é opcional */ }
+  }
+  res.json({ ok: true });
+}));
+
 const admin = express.Router();
 const C = (r) => ({ ...r, params: mkt.parseP(r) });
+admin.get('/funnel', wrap(async (req, res) => {
+  const days = Math.max(1, Math.min(60, parseInt(req.query.days, 10) || 7));
+  const rows = await q.all("SELECT name, COUNT(DISTINCT sid) n FROM events WHERE created_at >= datetime('now', ?) GROUP BY name", `-${days} days`);
+  const m = Object.fromEntries(rows.map((r) => [r.name, r.n]));
+  const paid = (await q.get("SELECT COUNT(*) n FROM orders WHERE created_at >= datetime('now', ?) AND status NOT IN ('received','payment_pending','cancelled')", `-${days} days`)).n;
+  res.json({ days, steps: EVENTS.map((k) => ({ name: k, n: m[k] || 0 })), paid });
+}));
 admin.get('/marketing/overview', wrap(async (_req, res) => res.json({ ...(await mkt.overview()), enabled: await require('../lib/flags').flag('marketing_enabled', 'MARKETING_ENABLED'), cronSecret: true })));
 admin.get('/marketing/campaigns', wrap(async (_req, res) => res.json((await q.all('SELECT * FROM mkt_campaigns ORDER BY id DESC LIMIT 50')).map(C))));
 const clean = (b) => ({

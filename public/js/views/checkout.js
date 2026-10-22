@@ -1,4 +1,4 @@
-import { $, $$, e, brl, api, state, saveCart, cartPayload, toast, setMeta, maskCPF, maskCEP, maskPhone } from '../lib.js';
+import { $, $$, e, brl, api, state, track, saveCart, cartPayload, toast, setMeta, maskCPF, maskCEP, maskPhone } from '../lib.js';
 import { go } from '../app.js';
 import { cctx, saveCtx, summaryHtml, groupsHtml } from './cart.js';
 
@@ -6,7 +6,7 @@ const DRAFT = 'si_checkout_draft';
 const STEPS = ['Dados', 'Endereço', 'Entrega', 'Pagamento'];
 
 export default async function checkout() {
-  setMeta('Finalizar compra | Sport Imperativo Store');
+  setMeta('Finalizar compra | Sport Imperativo Store'); track('begin_checkout'); const seen = new Set();
   if (!state.cart.length) return go('/carrinho', true);
   // Identificador de segurança do dispositivo (Mercado Pago) — melhora a aprovação do pagamento.
   if (!document.getElementById('mp-security')) { const sc = document.createElement('script'); sc.id = 'mp-security'; sc.src = 'https://www.mercadopago.com/v2/security.js'; sc.setAttribute('view', 'checkout'); sc.async = true; document.head.appendChild(sc); }
@@ -30,6 +30,7 @@ export default async function checkout() {
   };
 
   async function paint(err) {
+    const ev = ['', 'step_dados', 'step_endereco', 'step_entrega', 'step_pagamento'][step]; if (ev && !seen.has(ev)) { seen.add(ev); track(ev); }
     const stepsHtml = `<div class="steps">${STEPS.map((s, i) => `<div class="step ${i + 1 === step ? 'on' : i + 1 < step ? 'done' : ''}"><i>${i + 1 < step ? '✓' : i + 1}</i><span>${s}</span></div>`).join('')}</div>`;
     let body = '';
     const f = (id, label, extra = '', full = false) => `<div class="field ${full ? 'full' : ''}"><label for="${id}">${label}</label><input id="${id}" name="${id}" value="${e(d[id] ?? '')}" ${extra}></div>`;
@@ -86,7 +87,7 @@ export default async function checkout() {
         const r = await api('/checkout', { method: 'POST', body: { items: cartPayload().items, coupon: cctx.coupon, method: cctx.method, importAck: d.ack, deviceId: window.MP_DEVICE_SESSION_ID || '',
           customer: { name: d.name, cpf: d.cpf, email: d.email, phone: d.phone, whatsapp: d.whatsapp || d.phone },
           address: { cep: d.cep, street: d.street, number: d.number, complement: d.complement, district: d.district, city: d.city, state: d.state }, paymentMethod: d.paymentMethod, installments: d.installments } });
-        state.cart = []; saveCart(); delete cctx.coupon; saveCtx(); try { sessionStorage.removeItem(DRAFT); } catch { /* ignore */ }
+        track('place_order'); state.cart = []; saveCart(); delete cctx.coupon; saveCtx(); try { sessionStorage.removeItem(DRAFT); } catch { /* ignore */ }
         go(`/pedido/${r.orderId}?t=${encodeURIComponent(r.token)}`);
       } catch (er) { paint(er.message); }
     });

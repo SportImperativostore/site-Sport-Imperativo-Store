@@ -24,7 +24,17 @@ export function loadCart() { try { state.cart = JSON.parse(localStorage.getItem(
 export function saveCart() { try { localStorage.setItem(CK, JSON.stringify(state.cart)); } catch { /* ignore */ } renderCartCount(); }
 export const cartKey = (i) => `${i.productId}|${i.size || ''}|${i.custom ? [i.custom.name, i.custom.number, i.custom.patch, i.custom.sponsor].map((x) => x || '').join('#') : ''}`;
 export const cartQty = () => state.cart.reduce((a, i) => a + i.qty, 0);
+/* Funil anônimo (sem dados pessoais): ajuda a ver em que etapa as pessoas desistem. Não registra administradores. */
+export function track(name) {
+  try {
+    if (state.user && state.user.role === 'admin') return;
+    let sid = null; try { sid = sessionStorage.getItem('si_sid'); if (!sid) { sid = Math.random().toString(36).slice(2, 12) + Date.now().toString(36); sessionStorage.setItem('si_sid', sid); } } catch { sid = 'anon' + Math.random().toString(36).slice(2, 10); }
+    const ref = (document.referrer || '').replace(/^https?:[/][/]/, '').split('/')[0].slice(0, 60);
+    fetch('/api/track', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'fetch' }, body: JSON.stringify({ name, sid, path: location.pathname, ref }) }).catch(() => {});
+  } catch { /* opcional */ }
+}
 export function addToCart(item) {
+  track('add_to_cart');
   const k = cartKey(item), ex = state.cart.find((i) => cartKey(i) === k);
   if (ex) ex.qty = Math.min(20, ex.qty + item.qty); else state.cart.push(item);
   saveCart();
