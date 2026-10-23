@@ -12,6 +12,7 @@ const cacheHdr = (res, s = 60) => res.set('Cache-Control', `public, s-maxage=${s
 r.get('/config', wrap(async (_req, res) => {
   const s = allSettings(), o = {};
   for (const k of PUBLIC_SETTINGS) o[k] = s[k] ?? '';
+  o.hosted_installments = s.infinitepay_handle || process.env.INFINITEPAY_HANDLE ? '1' : ''; // parcelas escolhidas na página do meio de pagamento
   cacheHdr(res);
   res.json({ settings: o, sizes: (await q.all('SELECT name FROM sizes ORDER BY sort,name')).map((x) => x.name) });
 }));
