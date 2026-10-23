@@ -90,10 +90,13 @@ async function createInfinitePay(order, customer, baseUrl) {
     items: [{ quantity: 1, price: order.total_cents, description: `Pedido SIS-${10000 + order.id} - Sport Imperativo Store` }],
     customer: { name: customer.name, email: customer.email, ...(phone.length >= 10 ? { phone_number: '+55' + phone.replace(/^55/, '') } : {}) },
   };
+  // Endereço já informado na loja: segue preenchido na página de pagamento (o cliente não digita de novo).
+  try { const ad = JSON.parse(order.address); if (ad && ad.cep) body.address = { cep: String(ad.cep), street: ad.street, neighborhood: ad.district, number: String(ad.number || ''), complement: ad.complement || '' }; } catch { /* endereço é opcional */ }
   const send = async () => { const r = await fetch(IP_API + '/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); return [r, await r.text()]; };
   let [res, text] = await send();
   // Telefone fora do padrão que a InfinitePay aceita: refaz sem o telefone (ele é só um dado opcional do comprador).
   if (res.status === 422 && /phone_number/.test(text)) { delete body.customer.phone_number; [res, text] = await send(); }
+  if (res.status === 422 && /address/.test(text)) { delete body.address; [res, text] = await send(); }
   let j = {}; try { j = JSON.parse(text); } catch { /* resposta não-JSON */ }
   const url = j.url || j.link || j.checkout_url || j.payment_url || (j.data && (j.data.url || j.data.link));
   if (!res.ok || !url) throw new Error('Gateway InfinitePay: ' + res.status + ' ' + text.slice(0, 160));
