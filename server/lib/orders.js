@@ -97,7 +97,7 @@ async function createSupplierOrders(orderId) {
 const dispatchSupplierOrder = (id, o) => require('./automation').dispatchSupplierOrder(id, o);
 const markSupplierSent = (id) => require('./automation').markManualSent(id);
 async function orderView(o) {
-  const [itemsRaw, shipments, events, pay] = await Promise.all([q.all('SELECT name,size,qty,unit_cents,custom_name,custom_number,custom_cents,custom_extra,fulfillment,image FROM order_items WHERE order_id=?', o.id), q.all('SELECT grp,carrier,code,url,status,shipped_at FROM shipments WHERE order_id=?', o.id), q.all('SELECT status,created_at FROM order_events WHERE order_id=? ORDER BY id', o.id), q.get('SELECT method,status,pix_code,pix_qr,checkout_url FROM payments WHERE order_id=? ORDER BY id DESC LIMIT 1', o.id)]);
+  const [itemsRaw, shipments, events, pay] = await Promise.all([q.all('SELECT name,size,qty,unit_cents,custom_name,custom_number,custom_cents,custom_extra,fulfillment,image FROM order_items WHERE order_id=?', o.id), q.all('SELECT grp,carrier,code,url,status,shipped_at FROM shipments WHERE order_id=?', o.id), q.all('SELECT status,created_at FROM order_events WHERE order_id=? ORDER BY id', o.id), q.get('SELECT provider,method,status,pix_code,pix_qr,checkout_url FROM payments WHERE order_id=? ORDER BY id DESC LIMIT 1', o.id)]);
   const stepOf = (st) => (st === 'cancelled' || st === 'payment_pending' ? st : TIMELINE[TL_INDEX[st] ?? 0]);
   const ev = events.map((e) => ({ status: stepOf(e.status), label: CUSTOMER_MSG[e.status] || CUSTOMER_LABEL[e.status], created_at: e.created_at })).filter((e, i, a) => !i || a[i - 1].label !== e.label);
   const hasTracking = shipments.some((x) => x.code);
