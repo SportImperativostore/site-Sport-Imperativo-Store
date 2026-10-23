@@ -6,7 +6,8 @@ export const brl = (c) => (c / 100).toLocaleString('pt-BR', { style: 'currency',
 export const debounce = (fn, ms = 250) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
 export const maskCPF = (v) => v.replace(/\D/g, '').slice(0, 11).replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
 export const maskCEP = (v) => v.replace(/\D/g, '').slice(0, 8).replace(/(\d{5})(\d)/, '$1-$2');
-export const maskPhone = (v) => v.replace(/\D/g, '').slice(0, 11).replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d{1,4})$/, '$1-$2');
+/* Aceita número colado/digitado com o 55 do país na frente (ex.: +55 11 99999-9999) sem cortar o final. */
+export const maskPhone = (v) => { const d = v.replace(/\D/g, ''); return (d.length > 11 && d.startsWith('55') ? d.slice(2) : d).slice(0, 11).replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d{1,4})$/, '$1-$2'); };
 
 export const state = { config: null, sizes: [], menu: [], user: null, favorites: new Set(), cart: [] };
 
