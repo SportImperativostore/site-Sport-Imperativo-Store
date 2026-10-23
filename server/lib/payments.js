@@ -1,11 +1,14 @@
 /* Camada de pagamento. Cartão NUNCA passa por este servidor: o cliente é redirecionado ao checkout hospedado do gateway
  * (Mercado Pago Checkout Pro) ou, em modo de teste, simulado. Pix é gerado via API do gateway. */
-const { q } = require('../db');
+const { q, setting } = require('../db');
 const { markPaid } = require('./orders');
 const crypto = require('crypto');
 
 // Sem token: modo de teste (pagamento simulado) — bloqueado em produção/Vercel, a menos que ALLOW_MOCK_PAYMENTS=1.
+const IP_API = 'https://api.checkout.infinitepay.io';
+const ipHandle = () => String(process.env.INFINITEPAY_HANDLE || setting('infinitepay_handle', '') || '').replace(/^$/, '').trim();
 const provider = () => {
+  if (ipHandle()) return 'infinitepay';
   if (process.env.MP_ACCESS_TOKEN) return 'mercadopago';
   const prod = process.env.NODE_ENV === 'production' || process.env.VERCEL;
   return prod && process.env.ALLOW_MOCK_PAYMENTS !== '1' ? 'none' : 'mock';
@@ -18,6 +21,7 @@ async function createPayment(order, baseUrl, deviceId) {
   const customer = JSON.parse(order.customer);
   const method = order.payment_method;
   const amount = order.total_cents;
+  if (provider() === 'infinitepay') return createInfinitePay(order, customer, baseUrl);
   if (provider() === 'mock') {
     const code = method === 'pix' ? '00020126580014BR.GOV.BCB.PIX0136mock-' + crypto.randomBytes(8).toString('hex') + '5204000053039865802BR5920SPORT IMPERATIVO STORE6009SAO PAULO62070503***6304ABCD' : null;
     const r = await q.run('INSERT INTO payments(order_id,provider,method,status,amount_cents,pix_code,checkout_url) VALUES(?,?,?,?,?,?,?)', order.id, 'mock', method, 'pending', amount, code, method === 'pix' ? null : `${baseUrl}/pedido/${order.id}?t=${order.access_token}&mock=card`);
@@ -77,6 +81,36 @@ async function createPayment(order, baseUrl, deviceId) {
   return await q.get('SELECT * FROM payments WHERE id=?', Number(r.lastInsertRowid));
 }
 
+/* InfinitePay: checkout hospedado (Pix e cartão em até 12x). O cartão nunca passa por este servidor. */
+async function createInfinitePay(order, customer, baseUrl) {
+  const phone = String(customer.phone || '').replace(/D/g, '');
+  const back = `${baseUrl}/pedido/${order.id}?t=${order.access_token}`;
+  const body = {
+    handle: ipHandle(), order_nsu: String(order.id), redirect_url: back, webhook_url: `${baseUrl}/api/webhooks/infinitepay`,
+    items: [{ quantity: 1, price: order.total_cents, description: `Pedido SIS-${10000 + order.id} - Sport Imperativo Store` }],
+    customer: { name: customer.name, email: customer.email, ...(phone.length >= 10 ? { phone_number: '+55' + phone.replace(/^55/, '') } : {}) },
+  };
+  const res = await fetch(IP_API + '/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const text = await res.text(); let j = {}; try { j = JSON.parse(text); } catch { /* resposta não-JSON */ }
+  const url = j.url || j.link || j.checkout_url || j.payment_url || (j.data && (j.data.url || j.data.link));
+  if (!res.ok || !url) throw new Error('Gateway InfinitePay: ' + res.status + ' ' + text.slice(0, 160));
+  const r = await q.run('INSERT INTO payments(order_id,provider,method,status,external_id,amount_cents,checkout_url,raw) VALUES(?,?,?,?,?,?,?,?)', order.id, 'infinitepay', order.payment_method, 'pending', String(order.id), order.total_cents, url, text.slice(0, 500));
+  return await q.get('SELECT * FROM payments WHERE id=?', Number(r.lastInsertRowid));
+}
+
+/** Webhook InfinitePay: não confia no corpo; confirma no payment_check antes de dar o pedido como pago. */
+async function handleInfinitePayWebhook(b) {
+  b = b || {}; const orderId = parseInt(b.order_nsu, 10);
+  if (!orderId || provider() !== 'infinitepay') return;
+  const order = await q.get('SELECT * FROM orders WHERE id=?', orderId); if (!order) return;
+  const res = await fetch(IP_API + '/payment_check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ handle: ipHandle(), order_nsu: String(orderId), transaction_nsu: b.transaction_nsu, slug: b.invoice_slug || b.slug }) });
+  if (!res.ok) return;
+  const c = await res.json();
+  const pay = await q.get('SELECT * FROM payments WHERE order_id=? ORDER BY id DESC LIMIT 1', orderId);
+  if (pay) await q.run('UPDATE payments SET raw=? WHERE id=?', JSON.stringify({ paid: c.paid, amount: c.amount, paid_amount: c.paid_amount, installments: c.installments, capture_method: c.capture_method }), pay.id);
+  if (c.success !== false && c.paid && Number(c.amount || c.paid_amount) >= order.total_cents) await markPaid(orderId, pay && pay.id);
+}
+
 /** Webhook: nunca confia no corpo; consulta o pagamento direto na API do gateway. */
 async function handleMercadoPagoWebhook(body, query) {
   const id = (body && body.data && body.data.id) || query['data.id'] || query.id;
@@ -92,4 +126,4 @@ async function handleMercadoPagoWebhook(body, query) {
   if (p.status === 'approved' && Math.round(p.transaction_amount * 100) >= order.total_cents) await markPaid(orderId, pay.id);
   else if (['rejected', 'cancelled'].includes(p.status)) await q.run("UPDATE payments SET status=? WHERE id=?", p.status, pay.id);
 }
-module.exports = { createPayment, handleMercadoPagoWebhook, provider };
+module.exports = { createPayment, handleMercadoPagoWebhook, handleInfinitePayWebhook, provider };

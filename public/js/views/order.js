@@ -10,12 +10,12 @@ export default async function order({ params, query }) {
     let o;
     try { o = await api(`/orders/${id}?t=${encodeURIComponent(t)}`); } catch (err) { $('#app').innerHTML = `<div class="wrap empty"><h3>Pedido não encontrado</h3><p>${e(err.message)}</p><p style="margin-top:14px"><a class="btn" href="/">Voltar à loja</a></p></div>`; clearInterval(timer); return; }
     const pending = o.status === 'payment_pending';
-    const pay = o.payment || {};
+    const pay = o.payment || {}; const hosted = pay.provider === 'infinitepay';
     const addr = o.address;
     $('#app').innerHTML = `<div class="wrap"><h1 class="page-h">Pedido #${e(o.ref)}</h1>
     <div class="two-col"><div>
-      ${pending ? `<div class="panel pixbox"><h3>${o.paymentMethod === 'pix' ? 'Pague com Pix' : 'Finalize o pagamento no cartão'}</h3>
-        ${o.paymentMethod === 'pix' ? `<p class="inst">Valor: <b style="font-size:20px;color:var(--ink)">${brl(o.total)}</b></p>${pay.pix_qr ? `<img src="data:image/png;base64,${e(pay.pix_qr)}" alt="QR Code Pix" width="220" height="220" style="margin:10px auto">` : ''}
+      ${pending ? `<div class="panel pixbox"><h3>${hosted ? 'Finalize o pagamento' : o.paymentMethod === 'pix' ? 'Pague com Pix' : 'Finalize o pagamento no cartão'}</h3>
+        ${hosted ? `<p class="inst">Valor: <b style="font-size:20px;color:var(--ink)">${brl(o.total)}</b></p><a class="btn" href="${e(pay.checkout_url)}">PAGAR AGORA (Pix ou cartão)</a><p class="inst" style="margin-top:8px">Você será levado ao ambiente seguro de pagamento. Não armazenamos dados do cartão. A confirmação é automática.</p>` : o.paymentMethod === 'pix' ? `<p class="inst">Valor: <b style="font-size:20px;color:var(--ink)">${brl(o.total)}</b></p>${pay.pix_qr ? `<img src="data:image/png;base64,${e(pay.pix_qr)}" alt="QR Code Pix" width="220" height="220" style="margin:10px auto">` : ''}
           <textarea id="pixcode" readonly aria-label="Pix copia e cola">${e(pay.pix_code || '')}</textarea><button class="btn" id="copy">COPIAR CÓDIGO PIX</button>
           <p class="inst" style="margin-top:10px">Abra o app do seu banco, escolha <b>Pix copia e cola</b> e cole o código. A confirmação é automática.</p>`
           : `${pay.checkout_url && !/mock=card/.test(pay.checkout_url) ? `<a class="btn" href="${e(pay.checkout_url)}">PAGAR COM CARTÃO</a><p class="inst" style="margin-top:8px">Você será levado ao ambiente seguro do gateway. Não armazenamos dados do cartão.</p>` : '<p class="inst">Ambiente de teste: o gateway real ainda não está configurado.</p>'}`}
