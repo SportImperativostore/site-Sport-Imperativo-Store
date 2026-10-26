@@ -17,7 +17,7 @@ const MP = process.env.MP_API_URL || 'https://api.mercadopago.com';
 const mpHeaders = (extra = {}) => ({ Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`, 'Content-Type': 'application/json', ...extra });
 
 async function createPayment(order, baseUrl, deviceId) {
-  if (order.payment_method === 'pix' && asaasOn()) { try { return await createAsaasPix(order); } catch (e) { console.error('asaas pix falhou, usa o meio principal:', e.message); } }
+  if (order.payment_method === 'pix' && asaasOn()) { try { return await createAsaasPix(order); } catch (e) { console.error('asaas pix falhou, usa o meio principal:', e.message); try { await q.run('INSERT INTO order_events(order_id,status,note) VALUES(?,?,?)', order.id, 'received', ('Asaas falhou: ' + e.message).slice(0, 240)); } catch { /* só diagnóstico */ } } }
   if (provider() === 'none') throw new Error('Gateway de pagamento não configurado (defina MP_ACCESS_TOKEN).');
   const customer = JSON.parse(order.customer);
   const method = order.payment_method;
