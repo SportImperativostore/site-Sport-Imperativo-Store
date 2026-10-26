@@ -57,6 +57,10 @@ async function checkCoupon(code, lines, ctx) {
   let discount = 0;
   if (c.type === 'percent') discount = Math.round(base * (c.value / 100));
   else if (c.type === 'fixed') discount = Math.min(base, Math.round(c.value * 100));
+  else if (c.type === 'free_personalization') {   // nome/número grátis (patch e patrocinador continuam pagos)
+    discount = eligible.reduce((a, l) => a + (l.persLine || 0) * l.qty, 0);
+    if (!discount) throw new HttpError(400, 'Este cupom vale para itens com nome e número personalizados. Adicione a personalização ao produto.');
+  }
   return { id: c.id, code: c.code, type: c.type, discount, freeShipping: c.type === 'free_shipping' };
 }
 
@@ -78,7 +82,7 @@ async function priceCart({ items, cep, method, coupon, userId, email, cpf }) {
       if (!v) throw new HttpError(400, `Selecione o tamanho de "${p.name}".`);
       if (p.fulfillment === 'stock' && v.stock < qty) throw new HttpError(400, `"${p.name}" (${size}): apenas ${v.stock} em estoque.`);
     } else if (p.fulfillment === 'stock' && p.stock < qty) throw new HttpError(400, `"${p.name}": apenas ${p.stock} em estoque.`);
-    let custom = null, customCents = 0;
+    let custom = null, customCents = 0, persLine = 0;
     const txt = (v) => String(v || '').replace(/[<>"]/g, '').trim().slice(0, 40);
     const patch = txt(it.custom && it.custom.patch), sponsor = txt(it.custom && it.custom.sponsor);
     if (it.custom && (it.custom.name || it.custom.number || patch || sponsor)) {
@@ -86,7 +90,8 @@ async function priceCart({ items, cep, method, coupon, userId, email, cpf }) {
       const name = String(it.custom.name || '').toUpperCase().replace(/[^A-Z0-9 .'\-ÁÀÂÃÉÊÍÓÔÕÚÇ]/gi, '').slice(0, 14);
       const number = String(it.custom.number || '').replace(/\D/g, '').slice(0, 2);
       custom = { name, number, patch, sponsor };
-      customCents = (name || number ? (p.custom_price_cents ?? persCents) : 0) + (patch ? Math.min(6, patch.split(/[,;/+]/).map((x) => x.trim()).filter(Boolean).length || 1) * patchCents : 0) + (sponsor ? sponsorCents : 0);
+      persLine = name || number ? (p.custom_price_cents ?? persCents) : 0;
+      customCents = persLine + (patch ? Math.min(6, patch.split(/[,;/+]/).map((x) => x.trim()).filter(Boolean).length || 1) * patchCents : 0) + (sponsor ? sponsorCents : 0);
     }
     // Tamanhos acima de 2XG (3XG, 4XG, 5XG...) têm acréscimo por peça (padrão R$ 15,00; chave size_extra_cents).
     const bigSize = size && /^([3-9])XG$/i.test(size) ? parseInt(setting('size_extra_cents', '1500'), 10) || 0 : 0;
@@ -95,7 +100,7 @@ async function priceCart({ items, cep, method, coupon, userId, email, cpf }) {
     const img = await q.get("SELECT url FROM product_images WHERE product_id=? AND kind='image' ORDER BY sort,id LIMIT 1", p.id);
     lines.push({
       key: `${p.id}|${size || ''}|${custom ? [custom.name, custom.number, custom.patch, custom.sponsor].join('#') : ''}`, productId: p.id, slug: p.slug, name: p.name, image: img ? img.url : `/img/p/${p.id}.svg`,
-      size, qty, unitCents: base, customCents, custom, lineCents: unit * qty, pixLineCents: Math.round(base * (1 - price.pixPct / 100)) * qty + customCents * qty,
+      size, qty, unitCents: base, customCents, persLine, custom, lineCents: unit * qty, pixLineCents: Math.round(base * (1 - price.pixPct / 100)) * qty + customCents * qty,
       fulfillment: p.fulfillment, rule: p.shipping_rule, fixed: p.shipping_fixed_cents || 0, weight: (p.weight_g || 400) * qty,
       leadMin: p.lead_min, leadMax: p.lead_max, origin: p.origin, customizable: !!p.customizable, supplierId: p.supplier_id, supplierSku: p.supplier_sku,
       listUnit: price.original,

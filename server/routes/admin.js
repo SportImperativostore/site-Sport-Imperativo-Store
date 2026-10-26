@@ -86,7 +86,7 @@ crud('sizes', 'sizes', { name: 'str', sort: 'int' }, { order: 'sort,name' });
 crud('size_guides', 'size_guides', { name: 'str', headers: 'json', rows: 'json', notes: 'text' }, { order: 'id' });
 crud('banners', 'banners', { title: 'text', subtitle: 'text', cta_text: 'text', link: 'text', image_desktop: 'text', image_mobile: 'text', starts_at: 'date', ends_at: 'date', sort: 'int', active: 'bool' }, { order: 'sort,id' });
 crud('coupons', 'coupons', { code: 'str', type: 'str', value: 'num', product_id: 'int', entity_id: 'int', min_cents: 'money', first_purchase: 'bool', is_public: 'bool', description: 'text', starts_at: 'date', ends_at: 'date', max_uses: 'int', active: 'bool' }, {
-  hooks: { validate(b, vals, cols) { if (!/^[A-Za-z0-9_-]{3,30}$/.test(b.code || '')) throw new HttpError(400, 'Código inválido (3-30 letras/números).'); vals[cols.indexOf('code')] = b.code.toUpperCase(); if (!['percent', 'fixed', 'free_shipping'].includes(b.type)) throw new HttpError(400, 'Tipo inválido.'); } },
+  hooks: { validate(b, vals, cols) { if (!/^[A-Za-z0-9_-]{3,30}$/.test(b.code || '')) throw new HttpError(400, 'Código inválido (3-30 letras/números).'); vals[cols.indexOf('code')] = b.code.toUpperCase(); if (!['percent', 'fixed', 'free_shipping', 'free_personalization'].includes(b.type)) throw new HttpError(400, 'Tipo inválido.'); } },
 });
 crud('testimonials', 'testimonials', { kind: 'str', name: 'text', product_name: 'text', product_id: 'int', stars: 'int', body: 'text', media_url: 'text', link: 'text', sort: 'int', active: 'bool' }, { order: 'sort,id' });
 
