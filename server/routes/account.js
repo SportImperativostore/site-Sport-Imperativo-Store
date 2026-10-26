@@ -166,6 +166,7 @@ r.get('/cron/abandoned', wrap(async (req, res) => {
 
 // Webhook do gateway
 r.post('/webhooks/mercadopago', wrap(async (req, res) => { try { await pay.handleMercadoPagoWebhook(req.body, req.query); } catch (e) { console.error('webhook', e.message); } res.sendStatus(200); }));
+r.post('/webhooks/asaas', wrap(async (req, res) => { try { await pay.handleAsaasWebhook(req.headers, req.body); } catch (e) { console.error('webhook asaas', e.message); } res.sendStatus(200); }));
 r.post('/webhooks/infinitepay', wrap(async (req, res) => { try { await pay.handleInfinitePayWebhook(req.body); } catch (e) { console.error('webhook ip', e.message); } res.sendStatus(200); }));
 // Simulação de pagamento (SOMENTE modo mock, sem credenciais de gateway configuradas)
 r.post('/dev/pay/:id', wrap(async (req, res) => {

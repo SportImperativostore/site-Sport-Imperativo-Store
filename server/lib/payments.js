@@ -17,6 +17,7 @@ const MP = process.env.MP_API_URL || 'https://api.mercadopago.com';
 const mpHeaders = (extra = {}) => ({ Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`, 'Content-Type': 'application/json', ...extra });
 
 async function createPayment(order, baseUrl, deviceId) {
+  if (order.payment_method === 'pix' && asaasOn()) { try { return await createAsaasPix(order); } catch (e) { console.error('asaas pix falhou, usa o meio principal:', e.message); } }
   if (provider() === 'none') throw new Error('Gateway de pagamento não configurado (defina MP_ACCESS_TOKEN).');
   const customer = JSON.parse(order.customer);
   const method = order.payment_method;
@@ -81,6 +82,36 @@ async function createPayment(order, baseUrl, deviceId) {
   return await q.get('SELECT * FROM payments WHERE id=?', Number(r.lastInsertRowid));
 }
 
+/* Asaas: Pix dentro do site (QR Code e copia-e-cola gerados por API). Ativa quando ASAAS_API_KEY existe; o cartão segue na InfinitePay. */
+const asaasOn = () => !!process.env.ASAAS_API_KEY;
+const ASAAS = () => (process.env.ASAAS_ENV === 'sandbox' ? 'https://api-sandbox.asaas.com/v3' : 'https://api.asaas.com/v3');
+const asaas = async (method, url, body) => {
+  const res = await fetch(ASAAS() + url, { method, headers: { 'Content-Type': 'application/json', access_token: process.env.ASAAS_API_KEY, 'User-Agent': 'SportImperativoStore' }, body: body ? JSON.stringify(body) : undefined });
+  const text = await res.text(); let j = {}; try { j = JSON.parse(text); } catch { /* não-JSON */ }
+  if (!res.ok) throw new Error('Asaas ' + res.status + ' ' + text.slice(0, 200));
+  return j;
+};
+async function createAsaasPix(order) {
+  const c = JSON.parse(order.customer);
+  const cus = await asaas('POST', '/customers', { name: c.name, cpfCnpj: c.cpf, email: c.email, mobilePhone: String(c.phone || '').replace(/D/g, '').replace(/^55/, '') || undefined, externalReference: 'order-' + order.id, notificationDisabled: true });
+  const due = new Date(Date.now() + 24 * 3600 * 1000).toISOString().slice(0, 10);
+  const pay = await asaas('POST', '/payments', { customer: cus.id, billingType: 'PIX', value: order.total_cents / 100, dueDate: due, externalReference: String(order.id), description: `Pedido SIS-${10000 + order.id} - Sport Imperativo Store` });
+  const qr = await asaas('GET', `/payments/${pay.id}/pixQrCode`);
+  const r = await q.run('INSERT INTO payments(order_id,provider,method,status,external_id,amount_cents,pix_code,pix_qr,raw) VALUES(?,?,?,?,?,?,?,?,?)', order.id, 'asaas', 'pix', 'pending', pay.id, order.total_cents, qr.payload, qr.encodedImage, JSON.stringify({ status: pay.status }));
+  return await q.get('SELECT * FROM payments WHERE id=?', Number(r.lastInsertRowid));
+}
+/** Webhook Asaas: confere o token do aviso e consulta a cobrança na API antes de aprovar o pedido (nunca confia no corpo). */
+async function handleAsaasWebhook(headers, body) {
+  const want = process.env.ASAAS_WEBHOOK_TOKEN;
+  if (!asaasOn() || (want && headers['asaas-access-token'] !== want)) return;
+  const pid = body && body.payment && body.payment.id; if (!pid || !/^(PAYMENT_RECEIVED|PAYMENT_CONFIRMED)$/.test(String(body.event))) return;
+  const p = await asaas('GET', '/payments/' + encodeURIComponent(pid));
+  const orderId = parseInt(p.externalReference, 10); if (!orderId) return;
+  const order = await q.get('SELECT * FROM orders WHERE id=?', orderId); if (!order) return;
+  const pay = await q.get("SELECT * FROM payments WHERE order_id=? AND provider='asaas' ORDER BY id DESC LIMIT 1", orderId);
+  if (['RECEIVED', 'CONFIRMED'].includes(p.status) && Math.round(p.value * 100) >= order.total_cents) await markPaid(orderId, pay && pay.id);
+}
+
 /* InfinitePay: checkout hospedado (Pix e cartão em até 12x). O cartão nunca passa por este servidor. */
 async function createInfinitePay(order, customer, baseUrl) {
   const phone = String(customer.phone || '').replace(/D/g, '');
@@ -132,4 +163,4 @@ async function handleMercadoPagoWebhook(body, query) {
   if (p.status === 'approved' && Math.round(p.transaction_amount * 100) >= order.total_cents) await markPaid(orderId, pay.id);
   else if (['rejected', 'cancelled'].includes(p.status)) await q.run("UPDATE payments SET status=? WHERE id=?", p.status, pay.id);
 }
-module.exports = { createPayment, handleMercadoPagoWebhook, handleInfinitePayWebhook, provider };
+module.exports = { createPayment, handleMercadoPagoWebhook, handleInfinitePayWebhook, handleAsaasWebhook, provider };
