@@ -94,9 +94,9 @@ async function seo(req) {
         ...(row.rating_count ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: row.rating_avg, reviewCount: row.rating_count } } : {}),
         offers: { '@type': 'Offer', url: `${b}/produto/${row.slug}`, priceCurrency: 'BRL', price: (pr.final / 100).toFixed(2), availability: fp.availability.code === 'out' ? 'https://schema.org/OutOfStock' : fp.availability.code === 'on_demand' ? 'https://schema.org/PreOrder' : 'https://schema.org/InStock', itemCondition: 'https://schema.org/NewCondition' } },
       { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Início', item: b + '/' }, { '@type': 'ListItem', position: 2, name: row.name, item: `${b}/produto/${row.slug}` }] }];
-    }
+    } else req.notFound = true;   // produto inexistente/desativado: status 404 de verdade (evita "soft 404" no Google)
   } else if ((m = p.match(/^\/pagina\/([\w-]+)$/))) {
-    const pg = await q.get('SELECT title FROM pages WHERE slug=?', m[1]); if (pg) title = `${pg.title} | ${name}`;
+    const pg = await q.get('SELECT title FROM pages WHERE slug=?', m[1]); if (pg) title = `${pg.title} | ${name}`; else req.notFound = true;
   } else if (p === '/feedbacks') { title = `Feedbacks de clientes | ${name}`; desc = 'Vídeos, fotos e relatos reais de clientes da Sport Imperativo Store.'; }
   else if (p === '/ofertas') { title = `Ofertas | ${name}`; desc = 'Camisas e chuteiras em oferta com desconto, Pix e parcelamento.'; }
   else if (/^\/[a-z0-9-]+(\/[a-z0-9-]+){0,5}$/.test(p) && !['/feedbacks', '/carrinho', '/checkout', '/login', '/cadastro', '/busca', '/favoritos'].includes(p) && !p.startsWith('/conta') && !p.startsWith('/pedido')) {
@@ -106,7 +106,7 @@ async function seo(req) {
       title = `${names.slice().reverse().join(' ')} | ${name}`;
       desc = ents[ents.length - 1].description || `Compre ${names.slice().reverse().join(' ')} na ${name}. Pix, parcelamento e enviamos para o mundo todo.`;
       ld = [{ '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: ents.map((e, i) => ({ '@type': 'ListItem', position: i + 1, name: e.name, item: `${b}/${p.slice(1).split('/').slice(0, i + 1).join('/')}` })) }];
-    }
+    } else req.notFound = true;
   }
   const canon = b + (p === '/' ? '/' : p);
   return `<title>${esc(title)}</title><meta name="description" content="${esc(desc)}"><link rel="canonical" href="${esc(canon)}">
@@ -118,7 +118,9 @@ app.get('/img/og.svg', (_req, res) => res.type('image/svg+xml').send('<svg xmlns
 app.use(async (req, res, next) => {
   if (req.method !== 'GET' || path.extname(req.path)) return next();
   res.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=300');
-  res.type('html').send(template().replace('<!--SEO-->', await seo(req)));
+  const head = await seo(req);
+  if (req.notFound) res.status(404).set('Cache-Control', 'public, s-maxage=30');
+  res.type('html').send(template().replace('<!--SEO-->', head));
 });
 app.use((err, req, res, _next) => {
   const status = err.config ? 503 : err.status || (err.type === 'entity.too.large' ? 413 : 500);
