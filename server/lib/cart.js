@@ -118,32 +118,42 @@ async function priceCart({ items, cep, method, coupon, userId, email, cpf }) {
   const freeOver = parseInt(setting('free_shipping_over_cents', '0'), 10);
   let needCep = false, shippingError = null;
   if (stockLines.length) {
-    const cepLines = stockLines.filter((l) => l.rule === 'cep' || l.rule === 'custom');
-    const fixedCents = stockLines.filter((l) => l.rule === 'fixed').reduce((a, l) => a + l.fixed, 0);
-    const g = { id: 'stock', title: 'Pronta entrega', origin: 'Enviado do Brasil', items: stockLines.map((l) => l.key), options: [], selected: null, priceCents: 0, note: null };
-    if (cepLines.length) {
-      if (cepD.length !== 8) { needCep = true; g.note = 'Informe o CEP para calcular o frete.'; }
-      else {
-        // Pronta entrega: frete real pelo SuperFrete (sem estimativa). Se a cotação falhar, o checkout é bloqueado com aviso claro.
-        try {
-          const opts = await superfrete.quote({ originCep: setting('origin_cep', '11010000'), destCep: cepD, pieces: cepLines.reduce((a, l) => a + l.qty, 0), weightG: cepLines.reduce((a, l) => a + l.weight, 0) });
-          g.options = opts.map((o) => ({ ...o, price: o.price + fixedCents }));
-          g.selected = g.options.find((o) => o.id === method) || g.options[0];
-          g.priceCents = g.selected.price;
-        } catch (e) {
-          if (!e.freight) throw e;
-          console.error('superfrete:', e.message);
-          shippingError = 'O cálculo do frete está temporariamente indisponível. Tente novamente em instantes.';
-          g.note = shippingError; g.options = []; g.selected = null; g.priceCents = 0;
+    // Cada catálogo (fornecedor) pode ter um endereço de origem próprio: uma remessa e uma cotação de frete por origem.
+    const originOf = new Map();
+    for (const l of stockLines) { const r = await q.get("SELECT source FROM pe_sync WHERE product_id=? AND state='active' LIMIT 1", l.productId); originOf.set(l.key, r ? r.source : 'default'); }
+    const byOrigin = new Map();
+    for (const l of stockLines) { const k = originOf.get(l.key); if (!byOrigin.has(k)) byOrigin.set(k, []); byOrigin.get(k).push(l); }
+    const multi = byOrigin.size > 1; let nth = 0;
+    for (const [okey, sl] of byOrigin) {
+      nth++;
+      const originCep = onlyDigits(setting('pe_origin_' + okey, '')) || onlyDigits(setting('origin_cep', '11010000'));
+      const cepLines = sl.filter((l) => l.rule === 'cep' || l.rule === 'custom');
+      const fixedCents = sl.filter((l) => l.rule === 'fixed').reduce((a, l) => a + l.fixed, 0);
+      const g = { id: multi ? 'stock-' + okey : 'stock', title: multi ? 'Pronta entrega — remessa ' + nth : 'Pronta entrega', origin: 'Enviado do Brasil', items: sl.map((l) => l.key), options: [], selected: null, priceCents: 0, note: null };
+      if (cepLines.length) {
+        if (cepD.length !== 8) { needCep = true; g.note = 'Informe o CEP para calcular o frete.'; }
+        else {
+          // Frete real pelo SuperFrete (sem estimativa). Se a cotação falhar, o checkout é bloqueado com aviso claro.
+          try {
+            const opts = await superfrete.quote({ originCep, destCep: cepD, pieces: cepLines.reduce((a, l) => a + l.qty, 0), weightG: cepLines.reduce((a, l) => a + l.weight, 0) });
+            g.options = opts.map((o) => ({ ...o, price: o.price + fixedCents }));
+            g.selected = g.options.find((o) => o.id === method) || g.options[0];
+            g.priceCents = g.selected.price;
+          } catch (e) {
+            if (!e.freight) throw e;
+            console.error('superfrete:', e.message);
+            shippingError = 'O cálculo do frete está temporariamente indisponível. Tente novamente em instantes.';
+            g.note = shippingError; g.options = []; g.selected = null; g.priceCents = 0;
+          }
         }
+      } else {
+        const free = sl.every((l) => l.rule === 'free');
+        g.priceCents = free ? 0 : fixedCents;
+        g.selected = { id: 'fixed', carrier: free ? 'Frete grátis' : 'Frete fixo', price: g.priceCents, daysMin: 3, daysMax: 10 };
+        g.options = [g.selected];
       }
-    } else {
-      const free = stockLines.every((l) => l.rule === 'free');
-      g.priceCents = free ? 0 : fixedCents;
-      g.selected = { id: 'fixed', carrier: free ? 'Frete grátis' : 'Frete fixo', price: g.priceCents, daysMin: 3, daysMax: 10 };
-      g.options = [g.selected];
+      groups.push(g);
     }
-    groups.push(g);
   }
   if (importLines.length) {
     const fixedCents = importLines.filter((l) => l.rule === 'fixed' || l.rule === 'custom').reduce((a, l) => a + l.fixed, 0);
