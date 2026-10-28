@@ -127,6 +127,26 @@ const PRICE_DEF = { torcedor: 22000, jogador: 26000, retro: 26000, torcedor_ml: 
 const priceOf = (cat) => parseInt(setting(PRICE_KEY[cat], String(PRICE_DEF[cat])), 10) || PRICE_DEF[cat];
 const CAT_LABEL = { torcedor: 'Torcedor', jogador: 'Jogador', retro: 'Retrô' };
 
+/* Fornecedor de cada fonte: aparece no admin (item do pedido e ordem de compra) para você saber de quem comprar. */
+const SUPPLIERS = {
+  pe1: { name: 'Pronta Entrega 1 (Drive)', link: 'https://drive.google.com/drive/folders/1kcnlriC-6rc-WSmT9FOgj3tFoZMimlwI', notes: 'Retirada: CEP 29145-790 (Cariacica/ES)' },
+  pe2: { name: 'Pronta Entrega 2 (Drive)', link: 'https://drive.google.com/drive/folders/1NTYwkPACPJdmw6dpk2VqyAbuACcsQCqH', notes: 'Retirada: CEP 29145-790 (Cariacica/ES)' },
+  pe3: { name: 'Pronta Entrega 3 (Drive)', link: 'https://drive.google.com/drive/folders/1yr7dN2zUcZ7-T-y0-PuetTxffUOrazZC', notes: 'Retirada: CEP 87303-115' },
+  mic: { name: 'MIC Camisas de Time', link: 'https://miccamisasdetime.com.br/', notes: 'Retirada: CEP 93040-970 (São Leopoldo/RS)' },
+  ifutz: { name: 'iFutz', link: 'https://ifutz.com.br/', notes: 'Retirada: CEP 71828-421 (Brasília/DF)' },
+};
+async function ensureSuppliers() {
+  const ids = {};
+  for (const [k, sp] of Object.entries(SUPPLIERS)) {
+    let r = await q.get('SELECT id FROM suppliers WHERE name=?', sp.name);
+    if (!r) { const x = await q.run("INSERT INTO suppliers(name,link,notes,channel,active) VALUES(?,?,?,'whatsapp',1)", sp.name, sp.link, sp.notes); r = { id: Number(x.lastInsertRowid) }; }
+    ids[k] = Number(r.id);
+  }
+  return ids;
+}
+const supLink = (src, id) => src === 'mic' ? 'https://miccamisasdetime.com.br/products/' + id.replace(/^mic:/, '') : src === 'ifutz' ? 'https://ifutz.com.br/?p=' + id.replace(/^ifutz:/, '') : 'https://drive.google.com/file/d/' + id + '/view';
+const supSku = (src, id) => (src === 'mic' || src === 'ifutz') ? id.replace(/^(mic|ifutz):/, '') : id;
+
 async function ensureEntity(type, name, slug, extra = {}) {
   let e = await q.get('SELECT id FROM entities WHERE slug=?', slug);
   if (!e) { const r = await q.run('INSERT INTO entities(type,name,slug,sort,active,show_in_menu) VALUES(?,?,?,?,1,?)', type, name, slug, extra.sort ?? 100, extra.menu ?? 1); e = { id: Number(r.lastInsertRowid) }; }
@@ -217,6 +237,7 @@ async function ensureEntity(type, name, slug, extra = {}) {
     catIds[k2] = await ensureEntity('group', label, 'pe-' + k2, { menu: 1, sort: 10 });
     await q.run('INSERT OR IGNORE INTO entity_links(parent_id,child_id,sort) VALUES(?,?,?)', peId, catIds[k2], 10);
   }
+  const supIds = await ensureSuppliers();
   const defStock = parseInt(setting('pe_default_stock', '1'), 10) || 1;
   const ON = setting('pe_enabled', '0') === '1' ? 1 : 0;          // a aba só vai ao ar quando pe_enabled=1 (depois de configurar o SuperFrete)
   const old = new Map((await q.all('SELECT file_id,product_id,sizes FROM pe_sync WHERE product_id IS NOT NULL')).map((r) => { let sz = {}; try { const j = JSON.parse(r.sizes || '{}'); sz = Array.isArray(j) ? Object.fromEntries(j.map((x) => [x, 0])) : j; } catch { /* vazio */ } return [r.file_id, { ...r, sizes: JSON.stringify(sz) }]; }));
@@ -256,6 +277,7 @@ async function ensureEntity(type, name, slug, extra = {}) {
     }
     for (const v of vs) if (!sizesNow.includes(v.size)) await q.run('UPDATE variants SET stock=0 WHERE product_id=? AND size=?', pid, v.size);
     await q.run('UPDATE products SET stock=(SELECT COALESCE(SUM(stock),0) FROM variants WHERE product_id=?) WHERE id=?', pid, pid);
+    await q.run('UPDATE products SET supplier_id=?, supplier_link=?, supplier_sku=? WHERE id=?', supIds[it.source] || null, supLink(it.source, it.id), supSku(it.source, it.id), pid);
     it.productId = pid;
   }
   // 5) registro por arquivo + remoção do que saiu do Drive (só nas fontes lidas por completo)
