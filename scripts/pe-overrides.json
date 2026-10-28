@@ -1,0 +1,308 @@
+{
+ "_info": "Identificação visual (feita por revisão das fotos) de arquivos do catálogo 2, cujas pastas não trazem o nome do time. Chave = id do arquivo no Drive.",
+ "1qQWRrfToftWTKoAd-ngq1w9AhJMFMzd1": {
+  "team": "Ajax",
+  "nome_arquivo": "G",
+  "n": 1
+ },
+ "1gD0ZGV3nIaTLQJGHmNJeAePGxm1bOd1E": {
+  "team": "Napoli",
+  "nome_arquivo": "G , GG, 2GG",
+  "n": 2
+ },
+ "1PmLdotHsdqLJzJhdzowOk7ApdPJLZTYR": {
+  "team": "São Paulo",
+  "nome_arquivo": "-GG-2GG-",
+  "n": 3
+ },
+ "1bBgi0NWTEtfY1VBG34-xl8LV69VhTkiC": {
+  "team": "Santos",
+  "nome_arquivo": "-M-GG",
+  "n": 4
+ },
+ "1Glnssz62PHvU3eMJOJbU2gN_vkMswmTE": {
+  "team": "Real Madrid",
+  "nome_arquivo": "-M.-G.-GG.",
+  "n": 5
+ },
+ "1fwZB9_GzntJw5ENj2b9dZ76TunLD7F2m": {
+  "team": "Lazio",
+  "nome_arquivo": ".-2GG-3GG",
+  "n": 6
+ },
+ "1fLj1KPjabLKP-6QElnYR4czuespV7zc7": {
+  "team": "Inglaterra",
+  "nome_arquivo": "/2GG",
+  "n": 7
+ },
+ "1YVqQM2LqHfBjUeGaKvsR9qZgKNsxwa7z": {
+  "exclude": "time não identificado com segurança (camisa preta/roxa com Spotify)",
+  "nome_arquivo": "/GG/2GG",
+  "n": 8
+ },
+ "15JMEo4I-LqkidP7RVZSdcrkXh1fkGHRQ": {
+  "team": "Fluminense",
+  "nome_arquivo": "/GG/2GG//4GG",
+  "n": 9
+ },
+ "1_IcYRtIUpfSxDFJkX2sKJt6Bmt4o4cKf": {
+  "team": "Corinthians",
+  "nome_arquivo": "/M/G /GG/",
+  "n": 10
+ },
+ "17JVp8gY8d1PSSQr3wz7pwQx4XE-WxMhT": {
+  "team": "Tottenham",
+  "nome_arquivo": "/M/G./GG/2GG/3GG",
+  "n": 11
+ },
+ "172sbAKtDNl_f6HZ_P2Njdu5MW-0xKanM": {
+  "team": "Liverpool",
+  "nome_arquivo": "/M/G/GG/2GG",
+  "n": 12
+ },
+ "1BxabTLKFXK_XAfLA1dJwcYCmdJVsNsqJ": {
+  "team": "Liverpool",
+  "nome_arquivo": "2GG",
+  "n": 13
+ },
+ "1UT7rnh2NFEUgU1bTjr2gPtZ526eCThqq": {
+  "team": "Inglaterra",
+  "nome_arquivo": "2GG",
+  "n": 14
+ },
+ "1NdH2dCmLqNRaYX82FAyyLjRogroMbnaU": {
+  "team": "México",
+  "nome_arquivo": "2GG",
+  "n": 15
+ },
+ "1AZ7f7fIzQguTBHmnA5d55f0lre_HVv41": {
+  "team": "Barcelona",
+  "nome_arquivo": "2gg /",
+  "n": 16
+ },
+ "1_Bd06ejlOraqavVmOouArFm9pNPG9rXv": {
+  "team": "Milan",
+  "nome_arquivo": "3GG",
+  "n": 17
+ },
+ "1f6j-PzyK7cvjwcjPMillHD7H6H6xBKCT": {
+  "exclude": "conjunto regata + short (não é camisa)",
+  "nome_arquivo": "G",
+  "n": 18
+ },
+ "1EvaBl81jR3x8PdS7O44ZAATLl-0DCS1i": {
+  "team": "Real Betis",
+  "nome_arquivo": "G",
+  "n": 19
+ },
+ "1l302fgqUYYZa_FBEwUpDyW1hoQvUQSj4": {
+  "team": "Argentina",
+  "nome_arquivo": "G, GG, 2GG",
+  "n": 20
+ },
+ "1SzHCPc2njmLlxCf3SaVn6SJREZzXFB9l": {
+  "team": "Man City",
+  "nome_arquivo": "G,GG, 2GG",
+  "n": 21
+ },
+ "1RrusUSgvyOl7uwu8fNklehMQJHz0sEV-": {
+  "exclude": "conjunto regata + short (não é camisa)",
+  "nome_arquivo": "G/GG",
+  "n": 22
+ },
+ "1GGGEL1vl1-PbIF7lcUrU4puvgC8JK6M7": {
+  "team": "Brasil",
+  "nome_arquivo": "G/GG",
+  "n": 23
+ },
+ "1XCSVSuEiM_d4Q3GRLInRHtHqbI9qe9dP": {
+  "team": "Flamengo",
+  "nome_arquivo": "G/GG/",
+  "n": 24
+ },
+ "1lVpixc9Y1aLyeytBpKxFrQ1p_c1fAdA6": {
+  "exclude": "conjunto regata + short (não é camisa)",
+  "nome_arquivo": "GG",
+  "n": 25
+ },
+ "1bBXWfTWBO8x4OE5FQw0IVBPOkPmxMjM3": {
+  "exclude": "conjunto regata + short (não é camisa)",
+  "nome_arquivo": "GG",
+  "n": 26
+ },
+ "1ixc3-7x_fyOsQ_ARsqPWw0LM30DeMXXO": {
+  "exclude": "conjunto regata + short (não é camisa)",
+  "nome_arquivo": "GG",
+  "n": 27
+ },
+ "1k7ENyhYfVEWjtL-z1I4w5s-iBsfAkLtP": {
+  "exclude": "foto com captura de tela do celular (Arsenal)",
+  "nome_arquivo": "GG",
+  "n": 28
+ },
+ "12k3dWtUaBR3Q273VVxWbc0yKuxWPujCm": {
+  "exclude": "conjunto regata + short (não é camisa)",
+  "nome_arquivo": "GG/",
+  "n": 29
+ },
+ "1TGTfjGYY6gdX7At9lJNfQBAbOCJECdb9": {
+  "team": "RB Leipzig",
+  "nome_arquivo": "GG/ 2GG/3GG",
+  "n": 30
+ },
+ "1_pAsW-v_oWcQ_kvs-dOrApUBWcQHRSJV": {
+  "team": "Cruzeiro",
+  "nome_arquivo": "M",
+  "n": 31
+ },
+ "18cpCrMFTNZU6kha4AZRhz9pcfTGwSY3I": {
+  "team": "Aston Villa",
+  "nome_arquivo": "M, G , GG, 2GG",
+  "n": 32
+ },
+ "148mGpISWtNzG2GfOpI5ADD5Z8smpZiwt": {
+  "team": "Juventus",
+  "nome_arquivo": "M, G, GG,",
+  "n": 33
+ },
+ "1ynT3h-E_X053uyx0pT7FiHF5Lql5l7nZ": {
+  "team": "Real Madrid",
+  "nome_arquivo": "M, G, GG, 2GG",
+  "n": 34
+ },
+ "1A1SlJmowYfg0DPIRfcDgkje9MUjtHaHK": {
+  "team": "Atlético Mineiro",
+  "nome_arquivo": "M--GG-2GG-4GG",
+  "n": 35
+ },
+ "1tgAseRBlLXXtCumuF2mug5Hr-pC4XHhq": {
+  "team": "PSG",
+  "nome_arquivo": "M-2GG",
+  "n": 36
+ },
+ "1zcaJWedy5U3E-cY1m_qXnSExYv0FjPed": {
+  "team": "Cruzeiro",
+  "nome_arquivo": "M//GG/2gg/",
+  "n": 37
+ },
+ "1DZa8BPwcocA7Y6JvvRQRdsQt5kPKg4zr": {
+  "team": "Inter de Milão",
+  "nome_arquivo": "M/G/GG",
+  "n": 38
+ },
+ "13gKDq8PaalhibWcpIatwrR5RizjfGaWM": {
+  "team": "Barcelona",
+  "nome_arquivo": "M/G/GG",
+  "n": 39
+ },
+ "1TPJQCaXUkKAP286i9_ly15JxhS7l18MZ": {
+  "exclude": "foto com captura de tela do celular (Milan)",
+  "nome_arquivo": "M/G/GG/",
+  "n": 40
+ },
+ "1kIU6xU6_qs2_8Ne-OJClObCsPfG6_naO": {
+  "exclude": "time não identificado com segurança (branca com detalhes vinho)",
+  "nome_arquivo": "M/G/GG/2GG",
+  "n": 41
+ },
+ "1J17vC25IWhORfBkjBgqu3U2zxF2EG_FP": {
+  "team": "Man City",
+  "nome_arquivo": "M/G/GG/2GG",
+  "n": 42
+ },
+ "1SPQsj6whFua9RpCrJkZP45uCF0iFy5-g": {
+  "team": "Chelsea",
+  "nome_arquivo": "M/G/GG/2GG",
+  "n": 43
+ },
+ "1RupePN5Z3UxMjKO-TWDC5dFwz1SHwnZ1": {
+  "team": "PSG",
+  "nome_arquivo": "M/G/GG/2GG",
+  "n": 44
+ },
+ "1WSR-cV0-C4jSEQcD4mMEuiPj_iXD993S": {
+  "exclude": "foto com captura de tela do celular (Inter Miami)",
+  "nome_arquivo": "M/G/GG/2GG",
+  "n": 45
+ },
+ "1OnwO87E1NR0CxVpevJT2nhO--XT97rcx": {
+  "team": "Man United",
+  "nome_arquivo": "M/G/GG/2GG",
+  "n": 46
+ },
+ "1PsIgwDuBMoj3vKWP_XYA2NvAGwjYPoKf": {
+  "team": "Vasco",
+  "nome_arquivo": "P,/M/",
+  "n": 47
+ },
+ "1IZIWKycJd9jmfkB70MeJ8fbUAfyNdTWT": {
+  "team": "Corinthians",
+  "nome_arquivo": "P,M,G,GG, 2GG,",
+  "n": 48
+ },
+ "1niIU-57XcSm_i1EZQlUVyw0G0hRpKpgJ": {
+  "team": "Borussia Dortmund",
+  "nome_arquivo": "P,M,G,GG, 2GG,4GG",
+  "n": 49
+ },
+ "1LnIqAQztmy6i9KNUTtlDK2a-AnzqMJkb": {
+  "team": "Santos",
+  "nome_arquivo": "P-M GG-2GG-",
+  "n": 50
+ },
+ "1aBZktt3pTNbGyr72jDkcoLJKhr0Flw58": {
+  "team": "Fluminense",
+  "nome_arquivo": "P-M-G-GG",
+  "n": 51
+ },
+ "1Mob9TItARLJYKPQ7DUzfJC_V9GC2I4Sg": {
+  "team": "Bayern",
+  "nome_arquivo": "P-M-G-GG-2GG",
+  "n": 52
+ },
+ "1sOM1g4s8LOiRc0VikNUpnharXkVVlQ7x": {
+  "team": "Flamengo",
+  "nome_arquivo": "P/M",
+  "n": 53
+ },
+ "1T6AAkWQiq5tfWb2539BUF9O1jU5-QiF5": {
+  "team": "Vasco",
+  "nome_arquivo": "P/M/",
+  "n": 54
+ },
+ "1k6T5XiwlRyAwgXDNN_NetwqhoSN1Y2g2": {
+  "team": "Flamengo",
+  "nome_arquivo": "P/M/G/GG/2GG",
+  "n": 55
+ },
+ "11FG_tbSNM_M7PJJfb1V2it9P4QZU862e": {
+  "team": "Atlético Mineiro",
+  "nome_arquivo": "P/M/G/GG/2GG",
+  "n": 56
+ },
+ "1432Nh2JuxlpXgnAwszUc2RHxJfOkJYIY": {
+  "team": "Flamengo",
+  "nome_arquivo": "P/M/G/GG/2GG/",
+  "n": 57
+ },
+ "139hgI9zaTy6gkAomRhI8O7D2wnBJY22R": {
+  "team": "Real Madrid",
+  "nome_arquivo": "P/M/G/GG/2GG/4GG",
+  "n": 58
+ },
+ "1KqYm6dPCqbN86vMa1ZeZhB_Ek6xIw10T": {
+  "team": "Palmeiras",
+  "nome_arquivo": "P/M/G/GG/2GG/4GG",
+  "n": 59
+ },
+ "1DJVbHBKTmvDhJ37Nh-UlOy5REXoOhJNh": {
+  "team": "Palmeiras",
+  "nome_arquivo": "P/M/G/GG/2GG/4GG",
+  "n": 60
+ },
+ "1VB9MB5bjSCBb9MGzuqJYTTcqSNQrjiEc": {
+  "team": "São Paulo",
+  "nome_arquivo": "P/M/G/GG/2GG/4GG",
+  "n": 61
+ }
+}

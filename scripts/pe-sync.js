@@ -14,11 +14,12 @@ const LIMIT = parseInt((process.argv.find((a) => a.startsWith('--limit=')) || ''
 const OUT_DIR = process.env.YUPOO_DIR || 'D:\\loja\\yupoo';
 const SOURCES = [
   { key: 'pe1', label: 'Pronta Entrega 1', id: '1kcnlriC-6rc-WSmT9FOgj3tFoZMimlwI', roots: null },
-  { key: 'pe2', label: 'Pronta Entrega 2', id: '1T5vWCdHN7f0mKtJYJW1_I22DtaesbshF', roots: /^(TIMES)$/i },
+  { key: 'pe2', label: 'Pronta Entrega 2', id: '1NTYwkPACPJdmw6dpk2VqyAbuACcsQCqH', roots: null },   // pasta "TIMES" compartilhada diretamente (fotos sem time no nome: ver pe-overrides.json)
   { key: 'pe3', label: 'Pronta Entrega 3', id: '1yr7dN2zUcZ7-T-y0-PuetTxffUOrazZC', roots: /^(24\/25 BRASILEIROS|24\/25 EUROPEU|25\/27|PROMOÇÃO|RETRÔ)$/i },
 ];
 const EXCLUDE = /(KIT INFANTIL|INFANTIL|FEMININ|FEEDBACK|BASQUETE|KIT DE TREINO|TENIS|TÊNIS|BERMUDA|BON[ÉE]|CHUTEIRA|COPO|OCULOS|ÓCULOS|CUECA|CAL[ÇC]A|MOLETOM|OVERSIZED|POLO|REGATA|CAMISAS DIVERSAS)/i;
 const GENERIC = /^(TIMES.*|PLAYER|MANGA LONGA|PROMO.*)$/i;
+let OVERRIDES = {}; try { OVERRIDES = JSON.parse(fs.readFileSync(path.join(__dirname, 'pe-overrides.json'), 'utf8')); } catch { /* sem correções manuais */ }
 const H = { 'User-Agent': 'Mozilla/5.0' };
 const dec = (s) => s.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -118,7 +119,8 @@ function classify(file) {
   const joined = parts.join(' / ').toUpperCase();
   const retro = /RETR[ÔO]/.test(joined), player = /PLAYER/.test(joined), ml = /MANGA LONGA/.test(joined);
   const season = /24\/25/.test(root) ? '24/25' : /25\/27/.test(root) ? '25/27' : '';
-  return { team: team ? titleCase(team) : '', retro, player, ml, season, base: retro ? 'retro' : player ? 'jogador' : 'torcedor' };
+  const ov = OVERRIDES[file.id] || {};
+  return { exclude: ov.exclude || '', team: ov.team || (team ? titleCase(team) : ''), retro, player, ml, season, base: retro ? 'retro' : player ? 'jogador' : 'torcedor' };
 }
 const PRICE_KEY = { torcedor: 'pe_price_torcedor', jogador: 'pe_price_jogador', retro: 'pe_price_retro', torcedor_ml: 'pe_price_torcedor_ml', jogador_ml: 'pe_price_jogador_ml', retro_ml: 'pe_price_retro_ml' };
 const PRICE_DEF = { torcedor: 22000, jogador: 26000, retro: 26000, torcedor_ml: 24000, jogador_ml: 29000, retro_ml: 29000 };
@@ -167,6 +169,7 @@ async function ensureEntity(type, name, slug, extra = {}) {
   const canon = [];
   for (const it of items) {
     it.note = '';
+    if (it.exclude) { it.state = 'review'; it.note = it.exclude; continue; }
     if (!it.sizes.length) { it.state = 'review'; it.note = 'sem tamanho identificável no nome do arquivo'; continue; }
     if (!it.team) { it.state = 'review'; it.note = 'time não identificado (arquivo fora de pasta de time)'; continue; }
     if (!it.hash) { it.state = 'review'; it.note = 'foto não pôde ser baixada'; continue; }
@@ -175,6 +178,28 @@ async function ensureEntity(type, name, slug, extra = {}) {
     it.state = 'active'; canon.push(it);
   }
   for (const it of items) if (it.state === 'review') report.review.push({ source: it.source, path: it.path.join('/'), file: it.name, motivo: it.note });
+  // 3b) fontes externas (MIC e iFutz): tamanhos disponíveis; a foto é a do nosso catálogo Yupoo (modelo correspondente)
+  const EXT = require('./pe-external'); const idx = await EXT.buildIndex(q);
+  const extFound = [];
+  for (const [key, label, fn] of [['mic', 'MIC Camisas de Time', EXT.fetchMic], ['ifutz', 'iFutz', EXT.fetchIfutz]]) {
+    try { const l = await fn(); report.sources[key] = { label, accessible: true, files: l.length }; extFound.push(...l); console.log('✓ ' + label + ': ' + l.length + ' produtos'); }
+    catch (e) { report.sources[key] = { label, accessible: false, error: String(e.message) }; console.log('✗ ' + label + ': ' + e.message); }
+  }
+  extFound.sort((a, b) => b.sizes.length - a.sizes.length);       // se dois fornecedores têm o mesmo modelo, fica o que tem mais tamanhos
+  const byCat = new Map(); let soldout = 0;
+  for (const x of extFound) {
+    const p = EXT.parseTitle(x.title);
+    const it = { id: x.key, source: x.source, name: x.title, path: [], hash: null, color: null, note: '', ...p, sizes: x.sizes, stock: Object.fromEntries(x.sizes.map((z) => [z, 0])) };
+    items.push(it);
+    if (!x.sizes.length) { it.state = 'soldout'; soldout++; continue; }
+    const m = EXT.match(idx, p);
+    if (!m.prod) { it.state = 'review'; it.note = m.note; report.review.push({ source: x.source, path: '', file: x.title, motivo: m.note }); continue; }
+    it.catalog = m.prod; it.team = m.prod.name.replace(/^Camisa /, '').replace(/ \d{4}.*$/, '');
+    const dupe = byCat.get(m.prod.id);
+    if (dupe) { it.state = 'dup'; it.dupOf = dupe; report.duplicates++; continue; }
+    it.state = 'active'; canon.push(it); byCat.set(m.prod.id, it);
+  }
+  console.log('externos esgotados (ignorados): ' + soldout);
   // retrô: no máximo até 2XG (regra da loja)
   for (const it of canon) { if (it.retro) for (const z of ['3XG', '4XG', '5XG']) delete it.stock[z]; it.sizes = Object.keys(it.stock).sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b)); }
   console.log(`candidatos: ${canon.length} • duplicados unidos: ${report.duplicates} • para revisão: ${report.review.length}`);
@@ -186,7 +211,7 @@ async function ensureEntity(type, name, slug, extra = {}) {
   }
 
   // 4) grava: entidades, produtos, variantes
-  const peId = await ensureEntity('sport', 'Pronta Entrega', 'pronta-entrega', { sort: 0 });
+  const peId = await ensureEntity('sport', 'Pronta Entrega', 'pronta-entrega', { sort: 7 });
   const catIds = {};
   for (const [k2, label] of [['torcedor', 'Camisas Torcedor'], ['jogador', 'Camisas Jogador'], ['retro', 'Camisas Retrô'], ['ml', 'Manga Longa']]) {
     catIds[k2] = await ensureEntity('group', label, 'pe-' + k2, { menu: 1, sort: 10 });
@@ -198,20 +223,21 @@ async function ensureEntity(type, name, slug, extra = {}) {
   const nameCount = new Map();
   for (const it of canon) {
     const cat = it.base + (it.ml ? '_ml' : ''), price = priceOf(cat);
-    let nm = ['Camisa', it.team, it.season, it.color, it.retro ? 'Retrô' : it.player ? 'Jogador' : '', it.ml ? 'Manga Longa' : '', it.patch ? 'Com Patch' : ''].filter(Boolean).join(' ');
+    let nm = it.catalog ? it.catalog.name + ' (Pronta Entrega)' : ['Camisa', it.team, it.season, it.color, it.retro ? 'Retrô' : it.player ? 'Jogador' : '', it.ml ? 'Manga Longa' : '', it.patch ? 'Com Patch' : ''].filter(Boolean).join(' ');
     const c = (nameCount.get(nm) || 0) + 1; nameCount.set(nm, c); if (c > 1) nm += ' ' + (['', '', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'][c] || '#' + c);
     const prev = old.get(it.id);
     let pid = prev && prev.product_id;
     const sizesNow = it.sizes, before = prev && prev.sizes ? JSON.parse(prev.sizes) : {};
     const want = (sz) => (it.stock[sz] > 0 ? it.stock[sz] : defStock);      // quantidade do nome do arquivo; sem quantidade = estoque padrão
     if (!pid) {
-      const slug = 'pe-' + it.id.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 12) + '-' + Math.random().toString(36).slice(2, 5);
+      const slug = 'pe-' + (it.catalog ? require('crypto').createHash('md5').update(it.id).digest('hex').slice(0, 12) : it.id.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 12)) + '-' + Math.random().toString(36).slice(2, 5);
       const desc = `${nm}. Pronta entrega: enviada do Brasil. Modelo ${CAT_LABEL[it.base].toLowerCase()}${it.ml ? ', manga longa' : ''}.`;
       const tags = norm(`pronta entrega camisa ${it.team} ${it.season} ${CAT_LABEL[it.base]} ${it.ml ? 'manga longa' : ''}`);
       const r = await q.run(`INSERT INTO products(slug,name,description,price_cents,fulfillment,stock,shipping_rule,origin,weight_g,customizable,tags,sku,shape,active,search_text)
-        VALUES(?,?,?,?,'stock',?,'cep','Brasil',300,0,?,?, 'jersey',?,?)`, slug, nm, desc, price, sizesNow.reduce((x, z) => x + want(z), 0), tags, 'PE-' + it.id.slice(0, 10), ON, norm(`${nm} ${tags} pronta entrega`));
+        VALUES(?,?,?,?,'stock',?,'cep','Brasil',300,0,?,?, 'jersey',?,?)`, slug, nm, desc, price, sizesNow.reduce((x, z) => x + want(z), 0), tags, 'PE-' + (it.catalog ? require('crypto').createHash('md5').update(it.id).digest('hex').slice(0, 10) : it.id.slice(0, 10)), ON, norm(`${nm} ${tags} pronta entrega`));
       pid = Number(r.lastInsertRowid); report.created++;
-      await q.run("INSERT INTO product_images(product_id,url,kind,sort) VALUES(?,?, 'image',0)", pid, thumb(it.id, 1000));
+      if (it.catalog) { let n = 0; for (const u of it.catalog.imgs) await q.run("INSERT INTO product_images(product_id,url,kind,sort) VALUES(?,?, 'image',?)", pid, u, n++); }
+      else await q.run("INSERT INTO product_images(product_id,url,kind,sort) VALUES(?,?, 'image',0)", pid, thumb(it.id, 1000));
       await q.run('INSERT OR IGNORE INTO product_entities(product_id,entity_id) VALUES(?,?)', pid, peId);
       await q.run('INSERT OR IGNORE INTO product_entities(product_id,entity_id) VALUES(?,?)', pid, catIds[it.base]);
       if (it.ml) await q.run('INSERT OR IGNORE INTO product_entities(product_id,entity_id) VALUES(?,?)', pid, catIds.ml);
@@ -236,12 +262,13 @@ async function ensureEntity(type, name, slug, extra = {}) {
   const seen = new Set();
   for (const it of items) {
     seen.add(it.id);
+    if (it.state === 'soldout') { const pv = old.get(it.id); if (pv && pv.product_id) { await q.run('UPDATE products SET active=0, stock=0 WHERE id=?', pv.product_id); await q.run('UPDATE variants SET stock=0 WHERE product_id=?', pv.product_id); report.removed++; } }
     const pid = it.state === 'active' ? it.productId : it.state === 'dup' ? (it.dupOf.productId || null) : null;
     await q.run(`INSERT INTO pe_sync(file_id,source,path,name,sizes,category,hash,color,product_id,state,note,last_seen) VALUES(?,?,?,?,?,?,?,?,?,?,?,datetime('now'))
       ON CONFLICT(file_id) DO UPDATE SET source=excluded.source,path=excluded.path,name=excluded.name,sizes=excluded.sizes,category=excluded.category,hash=COALESCE(excluded.hash,pe_sync.hash),color=COALESCE(excluded.color,pe_sync.color),product_id=excluded.product_id,state=excluded.state,note=excluded.note,last_seen=excluded.last_seen`,
       it.id, it.source, it.path.join('/'), it.name, JSON.stringify(it.stock), it.base + (it.ml ? '_ml' : ''), it.hash || null, it.color || null, pid, it.state, it.note || null);
   }
-  const okSources = SOURCES.filter((s) => report.sources[s.key] && report.sources[s.key].accessible && !report.sources[s.key].partial).map((s) => s.key);
+  const okSources = Object.entries(report.sources).filter(([, v]) => v.accessible && !v.partial).map(([k]) => k);
   const gone = (await q.all("SELECT file_id,product_id,source FROM pe_sync WHERE state IN ('active','dup','review')")).filter((r) => !seen.has(r.file_id) && okSources.includes(r.source));
   if (!LIMIT) for (const g of gone) {
     await q.run("UPDATE pe_sync SET state='gone' WHERE file_id=?", g.file_id);
