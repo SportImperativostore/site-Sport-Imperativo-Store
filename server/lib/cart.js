@@ -142,6 +142,7 @@ async function priceCart({ items, cep, method, coupon, userId, email, cpf }) {
           } catch (e) {
             if (!e.freight) throw e;
             console.error('superfrete:', e.message);
+            q.run("INSERT INTO settings(key,value) VALUES('pe_last_freight_error',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", new Date().toISOString() + ' ' + String(e.message).slice(0, 300)).catch(() => {});   // diagnóstico para o admin
             shippingError = 'O cálculo do frete está temporariamente indisponível. Tente novamente em instantes.';
             g.note = shippingError; g.options = []; g.selected = null; g.priceCents = 0;
           }
