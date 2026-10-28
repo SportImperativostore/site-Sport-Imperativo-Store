@@ -119,7 +119,7 @@ export default async function product({ params }) {
     out.textContent = 'Calculando...';
     try {
       const r = await api('/cart/price', { method: 'POST', body: { items: [{ productId: p.id, size: sel.size || (p.variants[0] && p.variants[0].size), qty: sel.qty }], cep } });
-      out.innerHTML = r.groups.map((g) => g.options.map((o) => `<div><span>${e(o.carrier)} <small style="color:var(--mut)">• ${o.daysMin}–${o.daysMax} ${o.unit || 'dias úteis'}</small></span><b>${o.price ? brl(o.price) : 'GRÁTIS'}</b></div>`).join('')).join('');
+      out.innerHTML = r.groups.map((g) => g.options.map((o) => `<div><span>${e(o.carrier)} <small style="color:var(--mut)">• ${o.daysMin === o.daysMax ? o.daysMax : o.daysMin + '–' + o.daysMax} ${o.unit || 'dias úteis'}</small></span><b>${o.price ? brl(o.price) : 'GRÁTIS'}</b></div>`).join('')).join('');
     } catch (err) { out.innerHTML = `<span style="color:var(--bad)">${e(err.message)}</span>`; }
   };
   $('#calc').addEventListener('click', calc);
