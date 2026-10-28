@@ -1,6 +1,7 @@
 const { q, setting } = require('../db');
 const { pricing } = require('./catalog');
 const { HttpError, onlyDigits } = require('./util');
+const superfrete = require('./superfrete');
 
 /* ---------- FRETE ----------
  * quoteStock() é o ponto único para trocar a estimativa por uma API real (Melhor Envio, Correios, Frenet…).
@@ -115,7 +116,7 @@ async function priceCart({ items, cep, method, coupon, userId, email, cpf }) {
   const stockLines = lines.filter((l) => l.fulfillment === 'stock');
   const importLines = lines.filter((l) => l.fulfillment === 'import');
   const freeOver = parseInt(setting('free_shipping_over_cents', '0'), 10);
-  let needCep = false;
+  let needCep = false, shippingError = null;
   if (stockLines.length) {
     const cepLines = stockLines.filter((l) => l.rule === 'cep' || l.rule === 'custom');
     const fixedCents = stockLines.filter((l) => l.rule === 'fixed').reduce((a, l) => a + l.fixed, 0);
@@ -123,12 +124,18 @@ async function priceCart({ items, cep, method, coupon, userId, email, cpf }) {
     if (cepLines.length) {
       if (cepD.length !== 8) { needCep = true; g.note = 'Informe o CEP para calcular o frete.'; }
       else {
-        const opts = quoteStock(cepD, cepLines.reduce((a, l) => a + l.weight, 0));
-        const stockSub = stockLines.reduce((a, l) => a + l.lineCents, 0);
-        if (freeOver && stockSub >= freeOver) { opts[0].price = 0; g.note = 'Frete grátis por valor mínimo (PAC).'; }
-        g.options = opts.map((o) => ({ ...o, price: o.price + fixedCents }));
-        g.selected = g.options.find((o) => o.id === method) || g.options[0];
-        g.priceCents = g.selected.price;
+        // Pronta entrega: frete real pelo SuperFrete (sem estimativa). Se a cotação falhar, o checkout é bloqueado com aviso claro.
+        try {
+          const opts = await superfrete.quote({ originCep: setting('origin_cep', '11010000'), destCep: cepD, pieces: cepLines.reduce((a, l) => a + l.qty, 0), weightG: cepLines.reduce((a, l) => a + l.weight, 0) });
+          g.options = opts.map((o) => ({ ...o, price: o.price + fixedCents }));
+          g.selected = g.options.find((o) => o.id === method) || g.options[0];
+          g.priceCents = g.selected.price;
+        } catch (e) {
+          if (!e.freight) throw e;
+          console.error('superfrete:', e.message);
+          shippingError = 'O cálculo do frete está temporariamente indisponível. Tente novamente em instantes.';
+          g.note = shippingError; g.options = []; g.selected = null; g.priceCents = 0;
+        }
       }
     } else {
       const free = stockLines.every((l) => l.rule === 'free');
@@ -169,7 +176,7 @@ async function priceCart({ items, cep, method, coupon, userId, email, cpf }) {
   const pixTotal = Math.max(0, Math.round(total - (lines.reduce((a, l) => a + l.lineCents, 0) - lines.reduce((a, l) => a + l.pixLineCents, 0))));
   const maxInst = parseInt(setting('max_installments', '12'), 10), minInst = parseInt(setting('min_installment_cents', '3000'), 10);
   return {
-    lines, subtotal, discount, coupons: coups, shipping, shippingRaw, total, pixTotal, pixPct,
+    lines, subtotal, discount, coupons: coups, shipping, shippingRaw, total, pixTotal, pixPct, shippingError,
     installments: { n: Math.max(1, Math.min(maxInst, Math.floor(total / minInst))), max: maxInst }, groups, coupon: coup, needCep, warnings,
     hasImport: importLines.length > 0, hasStock: stockLines.length > 0,
   };

@@ -8,7 +8,7 @@ export const saveCtx = () => { try { localStorage.setItem(KEY, JSON.stringify(cc
 export function summaryHtml(c, { showCoupon = true } = {}) {
   return `<div class="sum"><div><span>Subtotal</span><span>${brl(c.subtotal)}</span></div>
     ${c.discount ? `<div class="disc"><span>Desconto${(c.coupons || []).length ? ' (' + c.coupons.map((k) => e(k.code)).join(' + ') + ')' : ''}</span><span>-${brl(c.discount)}</span></div>` : ''}
-    <div><span>Frete</span><span>${c.needCep ? 'a calcular' : c.shipping ? brl(c.shipping) : '<b style="color:var(--ok)">GRÁTIS</b>'}</span></div>
+    <div><span>Frete</span><span>${c.needCep || c.shippingError ? 'a calcular' : c.shipping ? brl(c.shipping) : '<b style="color:var(--ok)">GRÁTIS</b>'}</span></div>
     <div class="tot"><span>Total</span><span>${brl(c.total)}</span></div>
     <div class="pix" style="text-align:right">${brl(c.pixTotal)} no Pix (${c.pixPct}% off)</div>
     <div class="inst" style="text-align:right">ou em até ${c.installments.n}x no cartão (juros conforme o meio de pagamento)</div></div>`;
@@ -61,7 +61,7 @@ export default async function cart() {
       const rm = t.closest('[data-rm]'); if (rm) { state.cart.splice(+rm.dataset.rm, 1); saveCart(); if (!state.cart.length) return go('/carrinho', true); return draw(); }
       const ed = t.closest('[data-edit]'); if (ed) return editItem(+ed.dataset.edit, draw);
       if (t.closest('#cart-wa')) {
-        const s = state.config.settings, num = String(s.whatsapp || '5511917765409').replace(/D/g, '');
+        const s = state.config.settings, num = String(s.whatsapp || '5511917765409').replace(/\D/g, '');
         const lines = c.lines.map((l) => `• ${l.name}${l.size ? ' — Tam. ' + l.size : ''} — ${l.qty}x${l.custom && (l.custom.name || l.custom.number) ? ' — Personalização: ' + (l.custom.name || '') + ' ' + (l.custom.number || '') : ''}${l.custom && l.custom.patch ? ' — Patch: ' + l.custom.patch : ''}${l.custom && l.custom.sponsor ? ' — Patrocinador: ' + l.custom.sponsor : ''}`);
         const msg = ['Olá! Quero finalizar meu pedido:', ...lines, c.coupons && c.coupons.length ? 'Cupom: ' + c.coupons.map((k) => k.code).join(', ') : '', 'Total: ' + brl(c.total) + ' (Pix: ' + brl(c.pixTotal) + ')'].filter(Boolean).join('\n');
         track('whatsapp_buy'); window.open('https://wa.me/' + (num.startsWith('55') ? num : '55' + num) + '?text=' + encodeURIComponent(msg), '_blank', 'noopener'); return;

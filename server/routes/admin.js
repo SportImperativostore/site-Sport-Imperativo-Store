@@ -95,7 +95,7 @@ r.get('/pages', async (_req, res) => res.json(await q.all('SELECT slug,title,bod
 r.put('/pages/:slug', async (req, res) => { await q.run("INSERT INTO pages(slug,title,body,updated_at) VALUES(?,?,?,datetime('now')) ON CONFLICT(slug) DO UPDATE SET title=excluded.title, body=excluded.body, updated_at=datetime('now')", req.params.slug, String(req.body.title || ''), String(req.body.body || '')); res.json({ ok: true }); });
 
 /* ----- configurações ----- */
-const SETTING_KEYS = ['store_name', 'slogan', 'whatsapp', 'instagram', 'whatsapp_link', 'youtube', 'email', 'company_name', 'cnpj', 'pix_pct', 'max_installments', 'min_installment_cents', 'personalization_cents', 'import_notice', 'free_shipping_over_cents', 'origin_cep', 'instagram_feedback_url', 'low_stock_threshold', 'supplier_share_phone', 'payments_notice', 'infinitepay_handle', 'abandoned_cart_enabled', 'marketing_enabled'];
+const SETTING_KEYS = ['store_name', 'slogan', 'whatsapp', 'instagram', 'whatsapp_link', 'youtube', 'email', 'company_name', 'cnpj', 'pix_pct', 'max_installments', 'min_installment_cents', 'personalization_cents', 'import_notice', 'free_shipping_over_cents', 'origin_cep', 'instagram_feedback_url', 'low_stock_threshold', 'supplier_share_phone', 'payments_notice', 'infinitepay_handle', 'pe_enabled', 'pe_price_torcedor', 'pe_price_jogador', 'pe_price_retro', 'pe_price_torcedor_ml', 'pe_price_jogador_ml', 'pe_price_retro_ml', 'pe_default_stock', 'superfrete_services', 'pe_pkg_height', 'pe_pkg_width', 'pe_pkg_length', 'pe_pkg_extra', 'abandoned_cart_enabled', 'marketing_enabled'];
 r.get('/settings', async (_req, res) => res.json(allSettings()));
 r.put('/settings', async (req, res) => { for (const k of SETTING_KEYS) if (k in (req.body || {})) await q.run('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value', k, String(req.body[k])); await refreshSettings(); await audit(req.user.id, 'settings', '', req.ip); res.json({ ok: true }); });
 
@@ -187,6 +187,7 @@ r.post('/orders/manual', wrap(async (req, res) => {
   if (onlyDigits(ad.cep).length !== 8 || !ad.street || !ad.number || !ad.district || !ad.city || !/^[A-Za-z]{2}$/.test(ad.state || '')) throw new HttpError(400, 'Endereço incompleto.');
   const cart = await priceCart({ items: b.items, cep: ad.cep, coupon: b.coupon, email: c.email, cpf: c.cpf });
   if (!cart.lines.length) throw new HttpError(400, 'Nenhum item válido.');
+  if (cart.shippingError) throw new HttpError(422, cart.shippingError);
   const customer = { name: String(c.name).trim(), cpf: onlyDigits(c.cpf), email: String(c.email || '').toLowerCase().trim(), phone: onlyDigits(c.phone), whatsapp: onlyDigits(c.whatsapp || c.phone) };
   const address = { cep: onlyDigits(ad.cep), street: ad.street, number: String(ad.number), complement: ad.complement || '', district: ad.district, city: ad.city, state: String(ad.state).toUpperCase() };
   const o = await orders.createOrder({ cart, customer, address, paymentMethod: 'pix', installments: 1, importAck: true });

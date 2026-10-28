@@ -26,7 +26,7 @@ export default async function checkout() {
   const val = {
     1: () => { if (d.name.trim().split(/\s+/).length < 2) return 'Informe seu nome completo.'; if (d.cpf.replace(/\D/g, '').length !== 11) return 'CPF inválido.'; if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email)) return 'E-mail inválido.'; if (d.phone.replace(/\D/g, '').length < 10) return 'Telefone inválido.'; },
     2: () => { if (d.cep.replace(/\D/g, '').length !== 8) return 'CEP inválido.'; if (!d.street || !d.number || !d.district || !d.city || !/^[A-Za-z]{2}$/.test(d.state)) return 'Preencha o endereço completo.'; },
-    3: () => { if (cart.needCep) return 'Não foi possível calcular o frete para este CEP.'; if (cart.hasImport && !d.ack) return 'Confirme que está ciente das condições de envio dos produtos importados.'; },
+    3: () => { if (cart.shippingError) return cart.shippingError; if (cart.needCep) return 'Não foi possível calcular o frete para este CEP.'; if (cart.hasImport && !d.ack) return 'Confirme que está ciente das condições de envio dos produtos importados.'; },
   };
 
   async function paint(err) {

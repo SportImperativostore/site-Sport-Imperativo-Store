@@ -106,7 +106,7 @@ export default async function product({ params }) {
   $('#add').addEventListener('click', onAdd); $('#add-m').addEventListener('click', onAdd);
   $('#buy-wa') && $('#buy-wa').addEventListener('click', () => {
     if (p.variants.length && !sel.size) { $('#size-err').hidden = false; $('#sizes').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
-    const s = state.config.settings, num = String(s.whatsapp || '5511917765409').replace(/D/g, ''); const c = custom();
+    const s = state.config.settings, num = String(s.whatsapp || '5511917765409').replace(/\D/g, ''); const c = custom();
     const msg = ['Olá! Quero comprar:', p.name, sel.size ? 'Tamanho: ' + sel.size : '', 'Quantidade: ' + sel.qty, c && (c.name || c.number) ? 'Personalização: ' + (c.name || '') + ' ' + (c.number || '') : '', c && c.patch ? 'Patch: ' + c.patch : '', c && c.sponsor ? 'Patrocinador: ' + c.sponsor : '', location.origin + '/produto/' + p.slug].filter(Boolean).join('\n');
     track('whatsapp_buy'); window.open('https://wa.me/' + (num.startsWith('55') ? num : '55' + num) + '?text=' + encodeURIComponent(msg), '_blank', 'noopener');
   });

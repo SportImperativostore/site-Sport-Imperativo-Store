@@ -60,6 +60,11 @@ CREATE TABLE IF NOT EXISTS testimonials(
   media_url TEXT, link TEXT, sort INTEGER DEFAULT 100, active INTEGER DEFAULT 1);
 CREATE TABLE IF NOT EXISTS pages(slug TEXT PRIMARY KEY, title TEXT NOT NULL, body TEXT, updated_at TEXT DEFAULT (datetime('now')));
 CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT);
+-- Pronta Entrega: um registro por foto/arquivo encontrado nas pastas do Google Drive dos fornecedores (sincronizado por scripts/pe-sync.js)
+CREATE TABLE IF NOT EXISTS pe_sync(
+  file_id TEXT PRIMARY KEY, source TEXT, path TEXT, name TEXT, sizes TEXT, category TEXT, hash TEXT, color TEXT,
+  product_id INTEGER REFERENCES products(id) ON DELETE SET NULL, state TEXT DEFAULT 'active', note TEXT,
+  first_seen TEXT DEFAULT (datetime('now')), last_seen TEXT);
 
 CREATE TABLE IF NOT EXISTS orders(
   id INTEGER PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE SET NULL, access_token TEXT,

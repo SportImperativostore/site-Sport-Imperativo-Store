@@ -127,6 +127,7 @@ r.post('/checkout', rateLimit('checkout', 30, 10 * 60 * 1000), wrap(async (req, 
   if (!['pix', 'card'].includes(b.paymentMethod)) throw new HttpError(400, 'Escolha a forma de pagamento.');
   const cart = await priceCart({ items: b.items, cep: a.cep, method: b.method, coupon: b.coupon, userId: req.user && req.user.id, email: c.email, cpf: c.cpf });
   if (cart.needCep) throw new HttpError(400, 'Não foi possível calcular o frete.');
+  if (cart.shippingError) throw new HttpError(422, cart.shippingError);
   if (cart.hasImport && !b.importAck) throw new HttpError(400, 'Confirme que está ciente das condições de envio de produtos importados.');
   const customer = { name: String(c.name).trim().slice(0, 100), cpf: onlyDigits(c.cpf), email: String(c.email).toLowerCase().trim(), phone: onlyDigits(c.phone), whatsapp: onlyDigits(c.whatsapp || c.phone) };
   const address = { cep: onlyDigits(a.cep), street: String(a.street).slice(0, 120), number: String(a.number).slice(0, 12), complement: String(a.complement || '').slice(0, 60), district: String(a.district).slice(0, 80), city: String(a.city).slice(0, 80), state: String(a.state).toUpperCase() };
