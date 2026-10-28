@@ -38,6 +38,7 @@ async function quote({ originCep, destCep, pieces, weightG, insuranceCents = 0 }
     text = await res.text();
   } catch (e) { throw new FreightError('SuperFrete indisponível: ' + e.message); }
   let j; try { j = JSON.parse(text); } catch { j = null; }
+  if (res.status === 400 && /destination_postcode/.test(text)) { const e = new FreightError('CEP de destino inválido.'); e.badCep = true; throw e; }
   if (!res.ok || !j) throw new FreightError('SuperFrete respondeu ' + res.status + ': ' + String(text).slice(0, 160));
   const list = Array.isArray(j) ? j : (j.services || j.data || []);
   const opts = list.filter((s) => s && !s.error && Number(s.price) > 0).map((s) => {
