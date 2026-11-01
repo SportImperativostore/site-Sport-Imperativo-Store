@@ -1,0 +1,630 @@
+{
+ "defs": [
+  {
+   "slug": "joma",
+   "type": "brand",
+   "name": "JOMA",
+   "parents": [
+    "marcas-chuteiras"
+   ],
+   "sort": 2,
+   "menu": 1
+  },
+  {
+   "slug": "modelo-joma-top-flex",
+   "type": "model",
+   "name": "Joma Top Flex (futsal)",
+   "parents": [
+    "modelos-chuteiras"
+   ],
+   "sort": 500,
+   "menu": 1
+  }
+ ],
+ "products": [
+  {
+   "id": "200420263",
+   "name": "Chuteira Futsal Joma Branca e Laranja",
+   "price": 55000,
+   "sizes": [
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45"
+   ],
+   "tags": "chuteira futsal joma sala indoor branca e laranja",
+   "ents": [
+    "chuteiras",
+    "joma",
+    "futsal"
+   ],
+   "guide": "Chuteiras",
+   "shape": "boot",
+   "weight": 900,
+   "desc": "Chuteira de futsal Joma na cor branca e laranja. Solado para quadra (indoor). Escolha o tamanho e consulte a tabela de medidas."
+  },
+  {
+   "id": "209787395",
+   "name": "Chuteira Futsal Joma Branca e Amarela",
+   "price": 55000,
+   "sizes": [
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45"
+   ],
+   "tags": "chuteira futsal joma sala indoor branca e amarela",
+   "ents": [
+    "chuteiras",
+    "joma",
+    "futsal"
+   ],
+   "guide": "Chuteiras",
+   "shape": "boot",
+   "weight": 900,
+   "desc": "Chuteira de futsal Joma na cor branca e amarela. Solado para quadra (indoor). Escolha o tamanho e consulte a tabela de medidas."
+  },
+  {
+   "id": "213358323",
+   "name": "Chuteira Futsal Joma Top Flex Branca Estampada",
+   "price": 55000,
+   "sizes": [
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45"
+   ],
+   "tags": "chuteira futsal joma top flex sala indoor branca estampada",
+   "ents": [
+    "chuteiras",
+    "joma",
+    "futsal",
+    "modelo-joma-top-flex"
+   ],
+   "guide": "Chuteiras",
+   "shape": "boot",
+   "weight": 900,
+   "desc": "Chuteira de futsal Joma Top Flex na cor branca estampada. Solado para quadra (indoor). Escolha o tamanho e consulte a tabela de medidas."
+  },
+  {
+   "id": "216577777",
+   "name": "Chuteira Futsal Joma Top Flex Amarela Neon",
+   "price": 55000,
+   "sizes": [
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45"
+   ],
+   "tags": "chuteira futsal joma top flex sala indoor amarela neon",
+   "ents": [
+    "chuteiras",
+    "joma",
+    "futsal",
+    "modelo-joma-top-flex"
+   ],
+   "guide": "Chuteiras",
+   "shape": "boot",
+   "weight": 900,
+   "desc": "Chuteira de futsal Joma Top Flex na cor amarela neon. Solado para quadra (indoor). Escolha o tamanho e consulte a tabela de medidas."
+  },
+  {
+   "id": "217551595",
+   "name": "Chuteira Futsal Joma Top Flex Branca e Rosa",
+   "price": 55000,
+   "sizes": [
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45"
+   ],
+   "tags": "chuteira futsal joma top flex sala indoor branca e rosa",
+   "ents": [
+    "chuteiras",
+    "joma",
+    "futsal",
+    "modelo-joma-top-flex"
+   ],
+   "guide": "Chuteiras",
+   "shape": "boot",
+   "weight": 900,
+   "desc": "Chuteira de futsal Joma Top Flex na cor branca e rosa. Solado para quadra (indoor). Escolha o tamanho e consulte a tabela de medidas."
+  },
+  {
+   "id": "217551780",
+   "name": "Chuteira Futsal Joma Branca e Vermelha",
+   "price": 55000,
+   "sizes": [
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45"
+   ],
+   "tags": "chuteira futsal joma sala indoor branca e vermelha",
+   "ents": [
+    "chuteiras",
+    "joma",
+    "futsal"
+   ],
+   "guide": "Chuteiras",
+   "shape": "boot",
+   "weight": 900,
+   "desc": "Chuteira de futsal Joma na cor branca e vermelha. Solado para quadra (indoor). Escolha o tamanho e consulte a tabela de medidas."
+  },
+  {
+   "id": "224169689",
+   "name": "Chuteira Futsal Joma Top Flex Azul Royal",
+   "price": 55000,
+   "sizes": [
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45"
+   ],
+   "tags": "chuteira futsal joma top flex sala indoor azul royal",
+   "ents": [
+    "chuteiras",
+    "joma",
+    "futsal",
+    "modelo-joma-top-flex"
+   ],
+   "guide": "Chuteiras",
+   "shape": "boot",
+   "weight": 900,
+   "desc": "Chuteira de futsal Joma Top Flex na cor azul royal. Solado para quadra (indoor). Escolha o tamanho e consulte a tabela de medidas."
+  },
+  {
+   "id": "224170118",
+   "name": "Chuteira Futsal Joma Top Flex Preta e Verde",
+   "price": 55000,
+   "sizes": [
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45"
+   ],
+   "tags": "chuteira futsal joma top flex sala indoor preta e verde",
+   "ents": [
+    "chuteiras",
+    "joma",
+    "futsal",
+    "modelo-joma-top-flex"
+   ],
+   "guide": "Chuteiras",
+   "shape": "boot",
+   "weight": 900,
+   "desc": "Chuteira de futsal Joma Top Flex na cor preta e verde. Solado para quadra (indoor). Escolha o tamanho e consulte a tabela de medidas."
+  },
+  {
+   "id": "224170955",
+   "name": "Chuteira Futsal Joma Top Flex Branca Colorida",
+   "price": 55000,
+   "sizes": [
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45"
+   ],
+   "tags": "chuteira futsal joma top flex sala indoor branca colorida",
+   "ents": [
+    "chuteiras",
+    "joma",
+    "futsal",
+    "modelo-joma-top-flex"
+   ],
+   "guide": "Chuteiras",
+   "shape": "boot",
+   "weight": 900,
+   "desc": "Chuteira de futsal Joma Top Flex na cor branca colorida. Solado para quadra (indoor). Escolha o tamanho e consulte a tabela de medidas."
+  },
+  {
+   "id": "224267823",
+   "name": "Chuteira Futsal Joma Top Flex Branca e Rosa",
+   "price": 55000,
+   "sizes": [
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45"
+   ],
+   "tags": "chuteira futsal joma top flex sala indoor branca e rosa",
+   "ents": [
+    "chuteiras",
+    "joma",
+    "futsal",
+    "modelo-joma-top-flex"
+   ],
+   "guide": "Chuteiras",
+   "shape": "boot",
+   "weight": 900,
+   "desc": "Chuteira de futsal Joma Top Flex na cor branca e rosa. Solado para quadra (indoor). Escolha o tamanho e consulte a tabela de medidas."
+  },
+  {
+   "id": "224267850",
+   "name": "Chuteira Futsal Joma Top Flex Amarela e Preta",
+   "price": 55000,
+   "sizes": [
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45"
+   ],
+   "tags": "chuteira futsal joma top flex sala indoor amarela e preta",
+   "ents": [
+    "chuteiras",
+    "joma",
+    "futsal",
+    "modelo-joma-top-flex"
+   ],
+   "guide": "Chuteiras",
+   "shape": "boot",
+   "weight": 900,
+   "desc": "Chuteira de futsal Joma Top Flex na cor amarela e preta. Solado para quadra (indoor). Escolha o tamanho e consulte a tabela de medidas."
+  },
+  {
+   "id": "227309613",
+   "name": "Chuteira Futsal Joma Top Flex Branca Listrada",
+   "price": 55000,
+   "sizes": [
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45"
+   ],
+   "tags": "chuteira futsal joma top flex sala indoor branca listrada",
+   "ents": [
+    "chuteiras",
+    "joma",
+    "futsal",
+    "modelo-joma-top-flex"
+   ],
+   "guide": "Chuteiras",
+   "shape": "boot",
+   "weight": 900,
+   "desc": "Chuteira de futsal Joma Top Flex na cor branca listrada. Solado para quadra (indoor). Escolha o tamanho e consulte a tabela de medidas."
+  },
+  {
+   "id": "229947100",
+   "name": "Chuteira Futsal Joma Top Flex Preta e Rosa",
+   "price": 55000,
+   "sizes": [
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45"
+   ],
+   "tags": "chuteira futsal joma top flex sala indoor preta e rosa",
+   "ents": [
+    "chuteiras",
+    "joma",
+    "futsal",
+    "modelo-joma-top-flex"
+   ],
+   "guide": "Chuteiras",
+   "shape": "boot",
+   "weight": 900,
+   "desc": "Chuteira de futsal Joma Top Flex na cor preta e rosa. Solado para quadra (indoor). Escolha o tamanho e consulte a tabela de medidas."
+  },
+  {
+   "id": "238478392",
+   "name": "Chuteira Futsal Joma Top Flex Branca Colorida",
+   "price": 55000,
+   "sizes": [
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45"
+   ],
+   "tags": "chuteira futsal joma top flex sala indoor branca colorida",
+   "ents": [
+    "chuteiras",
+    "joma",
+    "futsal",
+    "modelo-joma-top-flex"
+   ],
+   "guide": "Chuteiras",
+   "shape": "boot",
+   "weight": 900,
+   "desc": "Chuteira de futsal Joma Top Flex na cor branca colorida. Solado para quadra (indoor). Escolha o tamanho e consulte a tabela de medidas."
+  },
+  {
+   "id": "248200637",
+   "name": "Chuteira Futsal Joma Top Flex Branca e Vermelha",
+   "price": 55000,
+   "sizes": [
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45"
+   ],
+   "tags": "chuteira futsal joma top flex sala indoor branca e vermelha",
+   "ents": [
+    "chuteiras",
+    "joma",
+    "futsal",
+    "modelo-joma-top-flex"
+   ],
+   "guide": "Chuteiras",
+   "shape": "boot",
+   "weight": 900,
+   "desc": "Chuteira de futsal Joma Top Flex na cor branca e vermelha. Solado para quadra (indoor). Escolha o tamanho e consulte a tabela de medidas."
+  },
+  {
+   "id": "251707875",
+   "name": "Chuteira Futsal Joma Top Flex Branca e Verde",
+   "price": 55000,
+   "sizes": [
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45"
+   ],
+   "tags": "chuteira futsal joma top flex sala indoor branca e verde",
+   "ents": [
+    "chuteiras",
+    "joma",
+    "futsal",
+    "modelo-joma-top-flex"
+   ],
+   "guide": "Chuteiras",
+   "shape": "boot",
+   "weight": 900,
+   "desc": "Chuteira de futsal Joma Top Flex na cor branca e verde. Solado para quadra (indoor). Escolha o tamanho e consulte a tabela de medidas."
+  },
+  {
+   "id": "251708188",
+   "name": "Chuteira Futsal Joma Top Flex Amarela e Laranja",
+   "price": 55000,
+   "sizes": [
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45"
+   ],
+   "tags": "chuteira futsal joma top flex sala indoor amarela e laranja",
+   "ents": [
+    "chuteiras",
+    "joma",
+    "futsal",
+    "modelo-joma-top-flex"
+   ],
+   "guide": "Chuteiras",
+   "shape": "boot",
+   "weight": 900,
+   "desc": "Chuteira de futsal Joma Top Flex na cor amarela e laranja. Solado para quadra (indoor). Escolha o tamanho e consulte a tabela de medidas."
+  },
+  {
+   "id": "251708668",
+   "name": "Chuteira Futsal Joma Top Flex Branca Colorida",
+   "price": 55000,
+   "sizes": [
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45"
+   ],
+   "tags": "chuteira futsal joma top flex sala indoor branca colorida",
+   "ents": [
+    "chuteiras",
+    "joma",
+    "futsal",
+    "modelo-joma-top-flex"
+   ],
+   "guide": "Chuteiras",
+   "shape": "boot",
+   "weight": 900,
+   "desc": "Chuteira de futsal Joma Top Flex na cor branca colorida. Solado para quadra (indoor). Escolha o tamanho e consulte a tabela de medidas."
+  },
+  {
+   "id": "252512698",
+   "name": "Chuteira Futsal Joma Top Flex Branca e Turquesa",
+   "price": 55000,
+   "sizes": [
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45"
+   ],
+   "tags": "chuteira futsal joma top flex sala indoor branca e turquesa",
+   "ents": [
+    "chuteiras",
+    "joma",
+    "futsal",
+    "modelo-joma-top-flex"
+   ],
+   "guide": "Chuteiras",
+   "shape": "boot",
+   "weight": 900,
+   "desc": "Chuteira de futsal Joma Top Flex na cor branca e turquesa. Solado para quadra (indoor). Escolha o tamanho e consulte a tabela de medidas."
+  },
+  {
+   "id": "252512749",
+   "name": "Chuteira Futsal Joma Top Flex Azul Royal e Rosa",
+   "price": 55000,
+   "sizes": [
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45"
+   ],
+   "tags": "chuteira futsal joma top flex sala indoor azul royal e rosa",
+   "ents": [
+    "chuteiras",
+    "joma",
+    "futsal",
+    "modelo-joma-top-flex"
+   ],
+   "guide": "Chuteiras",
+   "shape": "boot",
+   "weight": 900,
+   "desc": "Chuteira de futsal Joma Top Flex na cor azul royal e rosa. Solado para quadra (indoor). Escolha o tamanho e consulte a tabela de medidas."
+  },
+  {
+   "id": "252512835",
+   "name": "Chuteira Futsal Joma Top Flex Preta e Azul",
+   "price": 55000,
+   "sizes": [
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45"
+   ],
+   "tags": "chuteira futsal joma top flex sala indoor preta e azul",
+   "ents": [
+    "chuteiras",
+    "joma",
+    "futsal",
+    "modelo-joma-top-flex"
+   ],
+   "guide": "Chuteiras",
+   "shape": "boot",
+   "weight": 900,
+   "desc": "Chuteira de futsal Joma Top Flex na cor preta e azul. Solado para quadra (indoor). Escolha o tamanho e consulte a tabela de medidas."
+  },
+  {
+   "id": "252513952",
+   "name": "Chuteira Futsal Joma Top Flex Roxa e Verde Limão",
+   "price": 55000,
+   "sizes": [
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45"
+   ],
+   "tags": "chuteira futsal joma top flex sala indoor roxa e verde limão",
+   "ents": [
+    "chuteiras",
+    "joma",
+    "futsal",
+    "modelo-joma-top-flex"
+   ],
+   "guide": "Chuteiras",
+   "shape": "boot",
+   "weight": 900,
+   "desc": "Chuteira de futsal Joma Top Flex na cor roxa e verde limão. Solado para quadra (indoor). Escolha o tamanho e consulte a tabela de medidas."
+  },
+  {
+   "id": "252514009",
+   "name": "Chuteira Futsal Joma Top Flex Verde e Rosa",
+   "price": 55000,
+   "sizes": [
+    "36",
+    "37",
+    "38",
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45"
+   ],
+   "tags": "chuteira futsal joma top flex sala indoor verde e rosa",
+   "ents": [
+    "chuteiras",
+    "joma",
+    "futsal",
+    "modelo-joma-top-flex"
+   ],
+   "guide": "Chuteiras",
+   "shape": "boot",
+   "weight": 900,
+   "desc": "Chuteira de futsal Joma Top Flex na cor verde e rosa. Solado para quadra (indoor). Escolha o tamanho e consulte a tabela de medidas."
+  },
+  {
+   "id": "260096444",
+   "name": "Chuteira Futsal Joma Top Flex Branca Colorida",
+   "price": 55000,
+   "sizes": [
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45"
+   ],
+   "tags": "chuteira futsal joma top flex sala indoor branca colorida",
+   "ents": [
+    "chuteiras",
+    "joma",
+    "futsal",
+    "modelo-joma-top-flex"
+   ],
+   "guide": "Chuteiras",
+   "shape": "boot",
+   "weight": 900,
+   "desc": "Chuteira de futsal Joma Top Flex na cor branca colorida. Solado para quadra (indoor). Escolha o tamanho e consulte a tabela de medidas."
+  }
+ ],
+ "cdn": {
+  "dir": "cdn/img/p",
+  "url": "https://raw.githubusercontent.com/SportImperativostore/site-Sport-Imperativo-Store/e41f0cece6efd8f196d91886f12ce5c7ac72fb51/cdn/img/p"
+ }
+}
