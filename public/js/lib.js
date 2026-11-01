@@ -90,7 +90,7 @@ export function productCard(p) {
   const fav = state.favorites.has(p.id);
   const badge = p.badge ? `<span class="badge b-${p.badge.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, '-')}">${e(p.badge)}</span>` : '';
   return `<article class="card">
-    <a href="/produto/${e(p.slug)}" class="img ${p.image2 ? 'two' : 'one'}" aria-label="${e(p.name)}">${badge}<span class="pair"><img class="i1" src="${e(p.image)}" alt="${e(p.name)}" loading="lazy" decoding="async" width="600" height="600">${p.image2 ? `<img class="i2" src="${e(p.image2)}" alt="" loading="lazy" decoding="async" width="600" height="600">` : ''}</span>${p.image2 ? '<span class="ind" aria-hidden="true"><i class="on"></i><i></i></span>' : ''}</a>
+    <a href="/produto/${e(p.slug)}" class="img ${p.image2 ? 'two' : 'one'}" aria-label="${e(p.name)}">${badge}<span class="pair"><img class="i1" src="${e(p.image)}" alt="${e(p.name)}" loading="lazy" decoding="async" width="600" height="600">${p.image2 ? `<img class="i2" src="${e(p.image2)}" alt="" loading="lazy" fetchpriority="low" decoding="async" width="600" height="600">` : ''}</span>${p.image2 ? '<span class="ind" aria-hidden="true"><i class="on"></i><i></i></span>' : ''}</a>
     <button class="fav ${fav ? 'on' : ''}" data-action="fav" data-id="${p.id}" aria-label="Favoritar" aria-pressed="${fav}">${icon.heart}</button>
     <div class="body">
       <div class="meta">${e(p.category)}${p.club ? ' • ' + e(p.club) : ''}</div>
