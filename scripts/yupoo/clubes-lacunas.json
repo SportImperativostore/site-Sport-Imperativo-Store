@@ -1,0 +1,386 @@
+{
+ "defs": [],
+ "products": [
+  {
+   "id": "258446391",
+   "name": "Camisa Paris Saint-Germain 2026/27 Third Manga Longa Player Version",
+   "price": 20999,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG"
+   ],
+   "tags": "camisa camiseta jersey camisa paris saint-germain 2026/27 third manga longa player version",
+   "ents": [
+    "futebol",
+    "ligue-1",
+    "paris-saint-germain",
+    "camisas-de-futebol",
+    "clubes",
+    "manga-longa",
+    "jogadores"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Jogador",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "258445219",
+   "name": "Camisa Chelsea 2026/27 Away Manga Longa",
+   "price": 20999,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey camisa chelsea 2026/27 away manga longa",
+   "ents": [
+    "futebol",
+    "premier-league",
+    "chelsea",
+    "camisas-de-futebol",
+    "clubes",
+    "manga-longa"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "259415299",
+   "name": "Camisa Santos 2026/27 Third Player Version",
+   "price": 22900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG"
+   ],
+   "tags": "camisa camiseta jersey camisa santos 2026/27 third player version",
+   "ents": [
+    "futebol",
+    "brasileirao",
+    "santos",
+    "camisas-de-futebol",
+    "clubes",
+    "jogadores"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Jogador",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "258450071",
+   "name": "Camisa Corinthians 2026/27 Third Player Version",
+   "price": 22900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG"
+   ],
+   "tags": "camisa camiseta jersey camisa corinthians 2026/27 third player version",
+   "ents": [
+    "futebol",
+    "brasileirao",
+    "corinthians",
+    "camisas-de-futebol",
+    "clubes",
+    "jogadores"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Jogador",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "258143635",
+   "name": "Camisa Gremio 2026/27 Third Player Version",
+   "price": 22900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG"
+   ],
+   "tags": "camisa camiseta jersey camisa gremio 2026/27 third player version",
+   "ents": [
+    "futebol",
+    "brasileirao",
+    "gremio",
+    "camisas-de-futebol",
+    "clubes",
+    "jogadores"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Jogador",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "258581751",
+   "name": "Camisa Barcelona Edição Especial 100 Anos Retro",
+   "price": 22900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG"
+   ],
+   "tags": "camisa camiseta jersey camisa barcelona edição especial 100 anos retro",
+   "ents": [
+    "futebol",
+    "la-liga",
+    "barcelona",
+    "camisas-de-futebol",
+    "clubes",
+    "retro"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "260750426",
+   "name": "Camisa Barcelona x Golf Wang Edição Especial 2026/27",
+   "price": 19999,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey camisa barcelona x golf wang edição especial 2026/27",
+   "ents": [
+    "futebol",
+    "la-liga",
+    "barcelona",
+    "camisas-de-futebol",
+    "clubes",
+    "torcedor"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "259922833",
+   "name": "Camisa Barcelona Edição Especial Ciano 2026/27",
+   "price": 19999,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey camisa barcelona edição especial ciano 2026/27",
+   "ents": [
+    "futebol",
+    "la-liga",
+    "barcelona",
+    "camisas-de-futebol",
+    "clubes",
+    "torcedor"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "259415120",
+   "name": "Camisa Flamengo Eqt 2026/27 Vermelha Retro",
+   "price": 22900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG"
+   ],
+   "tags": "camisa camiseta jersey camisa flamengo eqt 2026/27 vermelha retro",
+   "ents": [
+    "futebol",
+    "brasileirao",
+    "flamengo",
+    "camisas-de-futebol",
+    "clubes",
+    "retro"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "259414941",
+   "name": "Camisa Flamengo Eqt 2026/27 Branca Retro",
+   "price": 22900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG"
+   ],
+   "tags": "camisa camiseta jersey camisa flamengo eqt 2026/27 branca retro",
+   "ents": [
+    "futebol",
+    "brasileirao",
+    "flamengo",
+    "camisas-de-futebol",
+    "clubes",
+    "retro"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "258582418",
+   "name": "Camisa Flamengo Eqt 2026/27 Branca Retro Player Version",
+   "price": 22900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG"
+   ],
+   "tags": "camisa camiseta jersey camisa flamengo eqt 2026/27 branca retro player version",
+   "ents": [
+    "futebol",
+    "brasileirao",
+    "flamengo",
+    "camisas-de-futebol",
+    "clubes",
+    "retro"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Jogador",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "258420825",
+   "name": "Camisa Flamengo Edição Campeão 2026/27 Branca e Marrom Player Version",
+   "price": 22900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG"
+   ],
+   "tags": "camisa camiseta jersey camisa flamengo edição campeão 2026/27 branca e marrom player version",
+   "ents": [
+    "futebol",
+    "brasileirao",
+    "flamengo",
+    "camisas-de-futebol",
+    "clubes",
+    "jogadores"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Jogador",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "258420752",
+   "name": "Camisa Flamengo Edição Campeão 2026/27 Preta Player Version",
+   "price": 22900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG"
+   ],
+   "tags": "camisa camiseta jersey camisa flamengo edição campeão 2026/27 preta player version",
+   "ents": [
+    "futebol",
+    "brasileirao",
+    "flamengo",
+    "camisas-de-futebol",
+    "clubes",
+    "jogadores"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Jogador",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "259116318",
+   "name": "Camisa Bayern de Munique 2016/17 Home Retro",
+   "price": 22900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG"
+   ],
+   "tags": "camisa camiseta jersey camisa bayern de munique 2016/17 home retro",
+   "ents": [
+    "futebol",
+    "bundesliga",
+    "bayern-de-munique",
+    "camisas-de-futebol",
+    "clubes",
+    "retro"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  }
+ ],
+ "cdn": {
+  "dir": "cdn/img/p",
+  "url": "https://raw.githubusercontent.com/SportImperativostore/site-Sport-Imperativo-Store/6b4d04a6e341b3bb0ab02e1a57f347ce1c818731/cdn/img/p"
+ }
+}
