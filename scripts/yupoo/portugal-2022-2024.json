@@ -1,0 +1,10 @@
+{
+ "defs": [],
+ "cdn": { "dir": "cdn/img/p", "url": "https://raw.githubusercontent.com/SportImperativostore/site-Sport-Imperativo-Store/8fa75640eb043e40efe6ce624af46c7e6499e659/cdn/img/p" },
+ "products": [
+  { "id": "117033810", "name": "Camisa Portugal 2022 Home", "price": 18900, "sizes": ["P","M","G","GG","2XG","3XG"], "tags": "camisa camiseta jersey torcedor selecao Portugal copa do mundo 2022", "ents": ["futebol","torcedor","camisas-de-futebol","selecoes","selecao-portugal"], "customizable": 1, "custom_price": 6000, "guide": "Torcedor", "shape": "jersey", "weight": 400 },
+  { "id": "116693663", "name": "Camisa Portugal 2022 Away", "price": 18900, "sizes": ["P","M","G","GG","2XG","3XG","4XG"], "tags": "camisa camiseta jersey torcedor selecao Portugal copa do mundo 2022", "ents": ["futebol","torcedor","camisas-de-futebol","selecoes","selecao-portugal"], "customizable": 1, "custom_price": 6000, "guide": "Torcedor", "shape": "jersey", "weight": 400 },
+  { "id": "154153030", "name": "Camisa Portugal 2024 Home", "price": 18900, "sizes": ["P","M","G","GG","2XG","3XG","4XG"], "tags": "camisa camiseta jersey torcedor selecao Portugal eurocopa 2024", "ents": ["futebol","torcedor","camisas-de-futebol","selecoes","selecao-portugal"], "customizable": 1, "custom_price": 6000, "guide": "Torcedor", "shape": "jersey", "weight": 400 },
+  { "id": "155599658", "name": "Camisa Portugal 2024 Away", "price": 18900, "sizes": ["P","M","G","GG","2XG","3XG","4XG"], "tags": "camisa camiseta jersey torcedor selecao Portugal eurocopa 2024", "ents": ["futebol","torcedor","camisas-de-futebol","selecoes","selecao-portugal"], "customizable": 1, "custom_price": 6000, "guide": "Torcedor", "shape": "jersey", "weight": 400 }
+ ]
+}
