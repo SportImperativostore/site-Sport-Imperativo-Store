@@ -1,0 +1,7 @@
+{
+ "defs": [],
+ "cdn": { "dir": "cdn/img/p", "url": "https://raw.githubusercontent.com/SportImperativostore/site-Sport-Imperativo-Store/b71d3b9a79d57226f13067e4967446b9707ff543/cdn/img/p" },
+ "products": [
+  { "id": "135065219", "name": "Camisa Portugal 2023 Away", "price": 18900, "sizes": ["P","M","G","GG","2XG"], "tags": "camisa camiseta jersey torcedor selecao Portugal copa do mundo 2023", "ents": ["futebol","torcedor","camisas-de-futebol","selecoes","selecao-portugal"], "customizable": 1, "custom_price": 6000, "guide": "Torcedor", "shape": "jersey", "weight": 400 }
+ ]
+}
