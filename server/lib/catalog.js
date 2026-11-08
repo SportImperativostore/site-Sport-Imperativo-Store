@@ -117,6 +117,9 @@ const SORTS = {
   relevance: 'p.sold DESC, p.id DESC', price_asc: 'COALESCE(p.sale_price_cents,p.price_cents) ASC', price_desc: 'COALESCE(p.sale_price_cents,p.price_cents) DESC',
   newest: 'p.id DESC', rating: 'p.rating_avg DESC, p.rating_count DESC', discount: '(1.0*COALESCE(p.sale_price_cents,p.price_cents)/p.price_cents) ASC',
 };
+// clubes campeões da Champions League / Copa dos Campeões (slugs do site)
+const CL_WINNERS = ['real-madrid', 'milan', 'liverpool', 'bayern-de-munique', 'barcelona', 'internazionale', 'manchester-united', 'chelsea', 'juventus', 'ajax', 'porto', 'manchester-city', 'paris-saint-germain', 'borussia-dortmund', 'benfica', 'nottingham-forest', 'celtic', 'feyenoord', 'aston-villa', 'psv-eindhoven', 'estrela-vermelha', 'hamburgo'];
+const BIG_TEAMS = ['selecao-brasil', 'selecao-argentina', 'selecao-portugal', 'selecao-franca', 'selecao-inglaterra', 'selecao-espanha', 'selecao-alemanha', 'flamengo', 'corinthians', 'palmeiras', 'sao-paulo', 'santos', 'gremio', 'vasco-da-gama', 'cruzeiro', 'atletico-mineiro', 'botafogo', 'fluminense', 'internacional', 'boca-juniors', 'river-plate', 'arsenal', 'napoli', 'roma', 'lazio', 'al-nassr', 'inter-miami'];
 async function listProducts(f, page = 1, per = 24) {
   if (f.q && !f.qc) f = { ...f, qc: await search.parse(f.q) };
   const { where, args } = buildFilters(f);
@@ -126,6 +129,19 @@ async function listProducts(f, page = 1, per = 24) {
   const pref = (wantsOther ? '' : "CASE WHEN p.name LIKE 'Camisa%' THEN 0 ELSE 1 END, ") + (wantsRetro ? '' : "CASE WHEN p.name LIKE '%Retro%' THEN 1 ELSE 0 END, ");
   const order = first && (f.sort || 'relevance') === 'relevance' ? pref + 'CASE WHEN instr(p.search_text, ?) = 0 THEN 9999 ELSE instr(p.search_text, ?) END, p.sold DESC, p.id DESC' : (SORTS[f.sort] || SORTS.relevance);
   const oargs = order.includes('?') ? [first, first] : [];
+  // Ofertas (ordem padrão): alterna torcedor/jogador e retrô em cada página; retrôs dos campeões da Champions League primeiro, depois as mais vendidas
+  if (f.sale && !f.q && (f.sort || 'relevance') === 'relevance') {
+    const slugs = CL_WINNERS.map(() => '?').join(','), slugs2 = BIG_TEAMS.map(() => '?').join(',');
+    const [tot, rows] = await Promise.all([
+      q.get(`SELECT COUNT(*) c FROM products p WHERE ${where}`, ...args),
+      q.all(`SELECT * FROM (SELECT x.*, ROW_NUMBER() OVER (PARTITION BY x.isr ORDER BY CASE WHEN x.name LIKE '%Goleiro%' OR x.name LIKE '%Treino%' OR x.name LIKE '%Baseball%' OR x.name LIKE '%Pré-Jogo%' OR x.name LIKE '%Pre-Jogo%' THEN 1 ELSE 0 END, CASE WHEN x.cl=1 OR (x.isr=0 AND x.bg=1) THEN 0 ELSE 1 END, x.sold DESC, x.rating_count DESC, (((x.id + ?) * 2654435761) % 1000003)) rk
+        FROM (SELECT p.*, CASE WHEN p.name LIKE '%Retro%' THEN 1 ELSE 0 END isr,
+          CASE WHEN EXISTS(SELECT 1 FROM product_entities pe JOIN entities e ON e.id=pe.entity_id WHERE pe.product_id=p.id AND e.slug IN (${slugs})) THEN 1 ELSE 0 END cl,
+          CASE WHEN EXISTS(SELECT 1 FROM product_entities pe JOIN entities e ON e.id=pe.entity_id WHERE pe.product_id=p.id AND e.slug IN (${slugs2})) THEN 1 ELSE 0 END bg
+          FROM products p WHERE ${where}) x) ORDER BY rk, isr LIMIT ? OFFSET ?`, Math.floor(Date.now() / 86400000) % 997, ...CL_WINNERS, ...BIG_TEAMS, ...args, per, (page - 1) * per),
+    ]);
+    return { total: tot.c, page, per, items: await cards(rows) };
+  }
   const [tot, rows] = await Promise.all([
     q.get(`SELECT COUNT(*) c FROM products p WHERE ${where}`, ...args),
     q.all(`SELECT p.* FROM products p WHERE ${where} ORDER BY ${order} LIMIT ? OFFSET ?`, ...args, ...oargs, per, (page - 1) * per),
