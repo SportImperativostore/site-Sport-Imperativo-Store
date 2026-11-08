@@ -36,7 +36,18 @@ function rotateBanners(list) {
     return { ...b, image_desktop: `/img/banners/${m[1]}-v${k}.webp`, image_mobile: `/img/banners/${m[1]}-v${k}-m.webp` };
   });
 }
+let homeMemo = { t: 0, v: null, p: null };
 r.get('/home', wrap(async (_req, res) => {
+  // resultado em memória por 2 min (o servidor reaproveita entre visitas); o sorteio de banners é refeito a cada resposta
+  if (!homeMemo.v || Date.now() - homeMemo.t > 120000) {
+    homeMemo.p = homeMemo.p || buildHome().then((v) => { homeMemo = { t: Date.now(), v, p: null }; return v; }, (e) => { homeMemo.p = null; throw e; });
+    if (!homeMemo.v) await homeMemo.p; else homeMemo.p.catch(() => {});
+  }
+  const v = homeMemo.v;
+  cacheHdr(res, 60);
+  res.json({ ...v, banners: rotateBanners(v.banners) });
+}));
+async function buildHome() {
   const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
   const [banners, best, offers, news, sports, testimonials] = await Promise.all([
     q.all(`SELECT id,title,subtitle,cta_text,link,image_desktop,image_mobile FROM banners WHERE active=1 AND (starts_at IS NULL OR starts_at='' OR starts_at<=?) AND (ends_at IS NULL OR ends_at='' OR ends_at>=?) ORDER BY sort,id`, now, now),
@@ -53,9 +64,8 @@ r.get('/home', wrap(async (_req, res) => {
     const n = (await q.get('SELECT COUNT(*) n FROM product_entities pe JOIN entities e ON e.id=pe.entity_id JOIN products p ON p.id=pe.product_id WHERE e.slug=? AND p.active=1', slug)).n;
     return { key: slug === 'camisas-de-futebol' ? 'futebol' : slug, title, tagline, path, image: r && r.image, count: n };
   }));
-  cacheHdr(res, 30);
-  res.json({ banners: rotateBanners(banners), best, offers, news, sports, testimonials, showcase });
-}));
+  return { banners, best, offers, news, sports, testimonials, showcase };
+}
 
 /** Feed infinito da home: camisas de futebol (clubes, seleções, retrôs) das 700 mais procuradas, embaralhadas de forma estável por dia (páginas consistentes e cacheáveis). */
 r.get('/home/feed', wrap(async (req, res) => {
