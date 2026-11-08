@@ -59,7 +59,7 @@ r.get('/home', wrap(async (_req, res) => {
 
 /** Feed infinito da home: camisas de futebol (clubes, seleções, retrôs) das 700 mais procuradas, embaralhadas de forma estável por dia (páginas consistentes e cacheáveis). */
 r.get('/home/feed', wrap(async (req, res) => {
-  const page = Math.min(12, Math.max(1, parseInt(req.query.page, 10) || 1)), per = 24;
+  const page = Math.min(5, Math.max(1, parseInt(req.query.page, 10) || 1)), per = 24;
   const seed = Math.floor(Date.now() / 86400000) % 997;
   const rows = await q.all(`SELECT p.* FROM products p WHERE p.active=1
     AND EXISTS (SELECT 1 FROM product_entities pe JOIN entities e ON e.id=pe.entity_id WHERE pe.product_id=p.id AND e.slug='camisas-de-futebol')
@@ -67,7 +67,7 @@ r.get('/home/feed', wrap(async (req, res) => {
     AND p.id IN (SELECT p2.id FROM products p2 WHERE p2.active=1 AND EXISTS (SELECT 1 FROM product_entities pe2 JOIN entities e2 ON e2.id=pe2.entity_id WHERE pe2.product_id=p2.id AND e2.slug='camisas-de-futebol') ORDER BY p2.sold DESC, p2.rating_count DESC, p2.id DESC LIMIT 700)
     ORDER BY (((p.id + ?) * 2654435761) % 1000003) LIMIT ? OFFSET ?`, seed, per, (page - 1) * per);
   cacheHdr(res, 300);
-  res.json({ page, hasMore: rows.length === per && page < 12, items: await cat.cards(rows) });
+  res.json({ page, hasMore: rows.length === per && page < 5, items: await cat.cards(rows) });
 }));
 
 function parseFilters(qs) {
