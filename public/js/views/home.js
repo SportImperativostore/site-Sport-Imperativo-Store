@@ -33,7 +33,16 @@ export default async function home() {
   <section class="block"><div class="sec-h"><h2>Lançamentos</h2><a href="/futebol">Ver mais →</a></div><div class="grid">${h.news.slice(0, 4).map(productCard).join('')}</div></section></div>
   <section class="proof"><div class="wrap"><div class="sec-h"><h2>❤️ Quem compra, <span>recomenda.</span></h2><a href="${e(state.config.settings.instagram_feedback_url || state.config.settings.instagram)}" target="_blank" rel="noopener">VER MAIS FEEDBACKS →</a></div>
     ${storiesStrip('home', h.testimonials)}<div class="proof-grid">${h.testimonials.slice(0, 8).map((t) => `<div class="tcard">${t.kind === 'photo' && t.media_url ? `<img src="${e(t.media_url)}" alt="Foto de ${e(t.name)}" loading="lazy">` : t.kind === 'video' && t.media_url ? `<video src="${e(t.media_url)}#t=0.5" controls preload="metadata" playsinline></video>` : t.kind === 'instagram' && t.link ? `<a class="btn ghost sm" href="${e(t.link)}" target="_blank" rel="noopener">Ver no Instagram</a>` : ''}${starsHtml(t.stars)}<p>“${e(t.body || '')}”</p><small><b>${e(t.name)}</b>${t.product_name ? ' • ' + e(t.product_name) : ''}</small></div>`).join('')}</div>
-    <p style="text-align:center;margin-top:20px"><a class="btn" href="${e(state.config.settings.instagram_feedback_url || state.config.settings.instagram)}" target="_blank" rel="noopener">VER MAIS FEEDBACKS</a></p></div></section>`;
+    <p style="text-align:center;margin-top:20px"><a class="btn" href="${e(state.config.settings.instagram_feedback_url || state.config.settings.instagram)}" target="_blank" rel="noopener">VER MAIS FEEDBACKS</a></p></div></section>
+  <div class="wrap"><section class="block" id="feed"><div class="sec-h"><h2>Mais camisas <span>para você</span></h2><a href="/futebol">Ver catálogo completo →</a></div><div class="grid" id="feedGrid"></div><div id="feedEnd" style="text-align:center;padding:24px 0;min-height:60px"></div></section></div>`;
+  // Feed infinito: carrega mais camisas conforme a pessoa rola
+  { const grid = $('#feedGrid'), end = $('#feedEnd'); let page = 0, busy = false, done = false;
+    const more = async () => { if (busy || done || $('#feedGrid') !== grid) return; busy = true;
+      try { const r = await api('/home/feed?page=' + (page + 1)); page++; grid.insertAdjacentHTML('beforeend', r.items.map(productCard).join('')); if (!r.hasMore) { done = true; io.disconnect(); end.innerHTML = '<a class="btn" href="/futebol">VER O CATÁLOGO COMPLETO</a>'; } }
+      catch { done = true; io.disconnect(); end.innerHTML = '<a class="btn" href="/futebol">VER O CATÁLOGO COMPLETO</a>'; }
+      busy = false; if (!done) { io.unobserve(end); io.observe(end); } };
+    const io = new IntersectionObserver((en) => { if (en.some((x) => x.isIntersecting)) more(); }, { rootMargin: '900px 0px' });
+    io.observe(end); }
   // Carrossel simples
   const slides = $('#slides'), dots = [...document.querySelectorAll('.dots button')];
   if (dots.length) {
