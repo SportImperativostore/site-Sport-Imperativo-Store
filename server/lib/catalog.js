@@ -107,7 +107,7 @@ function buildFilters(f) {
   if (f.max) { where.push('COALESCE(CASE WHEN p.sale_price_cents IS NOT NULL THEN p.sale_price_cents END,p.price_cents)<=?'); args.push(Math.round(f.max * 100)); }
   if (f.ship === 'stock' || f.ship === 'import') { where.push('p.fulfillment=?'); args.push(f.ship); }
   if (f.custom) where.push('p.customizable=1');
-  if (f.sale) where.push('p.sale_price_cents IS NOT NULL AND p.sale_price_cents<p.price_cents');
+  if (f.sale) where.push("p.sale_price_cents IS NOT NULL AND p.sale_price_cents<p.price_cents AND (p.sale_ends IS NULL OR p.sale_ends='' OR p.sale_ends>=datetime('now'))");
   if (f.rating) { where.push('p.rating_avg>=?'); args.push(f.rating); }
   if (f.size) { where.push("(p.fulfillment='import' OR EXISTS(SELECT 1 FROM variants v WHERE v.product_id=p.id AND v.size=? AND v.stock>0))"); args.push(f.size); }
   if (f.avail) where.push("(p.fulfillment='import' OR p.stock>0 OR EXISTS(SELECT 1 FROM variants v WHERE v.product_id=p.id AND v.stock>0))");
