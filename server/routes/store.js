@@ -51,7 +51,7 @@ async function buildHome() {
   const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
   const [banners, best, offers, news, sports, testimonials] = await Promise.all([
     q.all(`SELECT id,title,subtitle,cta_text,link,image_desktop,image_mobile FROM banners WHERE active=1 AND (starts_at IS NULL OR starts_at='' OR starts_at<=?) AND (ends_at IS NULL OR ends_at='' OR ends_at>=?) ORDER BY sort,id`, now, now),
-    mix(['clubes', 'jerseys-nba', 'chuteiras', 'selecoes', 'retro', 'jerseys-nfl', 'infantil-futebol', 'f1'], 'p.sold DESC, p.rating_count DESC, p.id DESC').then(cat.cards),
+    mix(['clubes', 'jerseys-nba', 'chuteiras', 'selecoes', 'torcedor', 'jerseys-nfl', 'infantil-futebol', 'f1'], 'p.sold DESC, p.rating_count DESC, p.id DESC').then(cat.cards),
     cat.listProducts({ sale: true, sort: 'discount' }, 1, 8).then((x) => x.items),
     mix(['clubes', 'chuteiras', 'jerseys-nba', 'selecoes', 'f1', 'retro', 'agasalhos', 'calcoes'], 'p.id DESC').then(cat.cards),
     q.all("SELECT name,slug,logo,banner,description FROM entities WHERE type='sport' AND active=1 ORDER BY sort,name"),
@@ -67,14 +67,14 @@ async function buildHome() {
   return { banners, best, offers, news, sports, testimonials, showcase };
 }
 
-/** Feed infinito da home: camisas de futebol (clubes, seleções, retrôs) das 700 mais procuradas, embaralhadas de forma estável por dia (páginas consistentes e cacheáveis). */
+/** Feed infinito da home: camisas de futebol (clubes, seleções, retrôs) das mais procuradas (520 não retrô + só as 180 retrôs mais vendidas), embaralhadas de forma estável por dia (páginas consistentes e cacheáveis). */
 r.get('/home/feed', wrap(async (req, res) => {
   const page = Math.min(5, Math.max(1, parseInt(req.query.page, 10) || 1)), per = 24;
   const seed = Math.floor(Date.now() / 86400000) % 997;
   const rows = await q.all(`SELECT p.* FROM products p WHERE p.active=1
     AND EXISTS (SELECT 1 FROM product_entities pe JOIN entities e ON e.id=pe.entity_id WHERE pe.product_id=p.id AND e.slug='camisas-de-futebol')
     AND EXISTS (SELECT 1 FROM product_images i WHERE i.product_id=p.id)
-    AND p.id IN (SELECT p2.id FROM products p2 WHERE p2.active=1 AND EXISTS (SELECT 1 FROM product_entities pe2 JOIN entities e2 ON e2.id=pe2.entity_id WHERE pe2.product_id=p2.id AND e2.slug='camisas-de-futebol') ORDER BY p2.sold DESC, p2.rating_count DESC, p2.id DESC LIMIT 700)
+    AND p.id IN (SELECT id FROM (SELECT p2.id id FROM products p2 WHERE p2.active=1 AND EXISTS (SELECT 1 FROM product_entities pe2 JOIN entities e2 ON e2.id=pe2.entity_id WHERE pe2.product_id=p2.id AND e2.slug='camisas-de-futebol') AND NOT EXISTS (SELECT 1 FROM product_entities pe3 JOIN entities e3 ON e3.id=pe3.entity_id WHERE pe3.product_id=p2.id AND e3.slug='retro') ORDER BY p2.sold DESC, p2.rating_count DESC, p2.id DESC LIMIT 520) UNION SELECT id FROM (SELECT p2.id id FROM products p2 WHERE p2.active=1 AND EXISTS (SELECT 1 FROM product_entities pe2 JOIN entities e2 ON e2.id=pe2.entity_id WHERE pe2.product_id=p2.id AND e2.slug='camisas-de-futebol') AND EXISTS (SELECT 1 FROM product_entities pe3 JOIN entities e3 ON e3.id=pe3.entity_id WHERE pe3.product_id=p2.id AND e3.slug='retro') ORDER BY p2.sold DESC, p2.rating_count DESC, p2.id DESC LIMIT 180))
     ORDER BY (((p.id + ?) * 2654435761) % 1000003) LIMIT ? OFFSET ?`, seed, per, (page - 1) * per);
   cacheHdr(res, 300);
   res.json({ page, hasMore: rows.length === per && page < 5, items: await cat.cards(rows) });
