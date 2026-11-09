@@ -90,6 +90,7 @@ async function seo(req) {
       title = row.meta_title || `${row.name} | ${name}`;
       desc = row.meta_description || `${row.name}. ${(row.description || '').slice(0, 120)} Pix R$ ${(pr.pix / 100).toFixed(2)} ou em até ${pr.installments.n}x no cartão.`;
       image = /^https?:/.test(fp.images[0].url) ? fp.images[0].url : b + fp.images[0].url;
+      req.seoBody = `<h1>${esc(row.name)}</h1><p>${esc((row.description || row.name).slice(0, 400))}</p><p>Preço: R$ ${(pr.final / 100).toFixed(2).replace('.', ',')} — Pix R$ ${(pr.pix / 100).toFixed(2).replace('.', ',')} ou em até ${pr.installments.n}x no cartão. Enviamos para todo o Brasil.</p>${fp.variants && fp.variants.length ? `<p>Tamanhos: ${fp.variants.map((z) => esc(z.size)).join(', ')}</p>` : ''}<img src="${esc(image)}" alt="${esc(row.name)}" width="400" height="400">`;
       ld = [{ '@context': 'https://schema.org', '@type': 'Product', name: row.name, image: fp.images.map((i) => (/^https?:/.test(i.url) ? i.url : b + i.url)), description: row.description || row.name, sku: row.sku || String(row.id), brand: { '@type': 'Brand', name: (fp.entities.find((e) => e.type === 'brand') || {}).name || name },
         ...(row.rating_count ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: row.rating_avg, reviewCount: row.rating_count } } : {}),
         offers: { '@type': 'Offer', url: `${b}/produto/${row.slug}`, priceCurrency: 'BRL', price: (pr.final / 100).toFixed(2), availability: fp.availability.code === 'out' ? 'https://schema.org/OutOfStock' : fp.availability.code === 'on_demand' ? 'https://schema.org/PreOrder' : 'https://schema.org/InStock', itemCondition: 'https://schema.org/NewCondition' } },
@@ -105,6 +106,7 @@ async function seo(req) {
       const names = ents.map((e) => e.name);
       title = `${names.slice().reverse().join(' ')} | ${name}`;
       desc = ents[ents.length - 1].description || `Compre ${names.slice().reverse().join(' ')} na ${name}. Pix, parcelamento e enviamos para o mundo todo.`;
+      try { const lp = await cat.listProducts({ entities: p.slice(1).split('/') }, 1, 24); req.seoBody = `<h1>${esc(names.slice().reverse().join(' '))}</h1><p>${esc(desc)}</p><ul>${lp.items.map((it) => `<li><a href="/produto/${esc(it.slug)}">${esc(it.name)}</a></li>`).join('')}</ul>`; } catch { /* sem corpo extra */ }
       ld = [{ '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: ents.map((e, i) => ({ '@type': 'ListItem', position: i + 1, name: e.name, item: `${b}/${p.slice(1).split('/').slice(0, i + 1).join('/')}` })) }];
     } else req.notFound = true;
   }
@@ -120,7 +122,7 @@ app.use(async (req, res, next) => {
   res.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=300');
   const head = await seo(req);
   if (req.notFound) res.status(404).set('Cache-Control', 'public, s-maxage=30');
-  res.type('html').send(template().replace('<!--SEO-->', head));
+  res.type('html').send(template().replace('<!--SEO-->', head).replace('<!--SEOBODY-->', req.seoBody ? `<div class="seo-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap">${req.seoBody}</div>` : ''));
 });
 app.use((err, req, res, _next) => {
   const status = err.config ? 503 : err.status || (err.type === 'entity.too.large' ? 413 : 500);
