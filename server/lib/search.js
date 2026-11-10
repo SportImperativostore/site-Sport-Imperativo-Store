@@ -49,6 +49,9 @@ A(['gigante da colina', 'vasco da gama'], 'vasco');
 A(['leao', 'sport recife'], 'sport');
 A(['nautico', 'timbu'], 'nautico');
 A(['selecao', 'selecao brasileira', 'canarinho', 'cbf', 'brazil'], 'brasil');
+A(['penta', 'pentacampeao', 'pentacampea'], 'brasil 2002');
+A(['tetra', 'tetracampeao', 'tetracampea'], 'brasil 1994');
+A(['tricampeao', 'tricampea'], 'brasil 1970');
 A(['albiceleste', 'argentina'], 'argentina');
 A(['lusitano', 'portugal'], 'portugal');
 A(['franca', 'france', 'bleus'], 'franca', 'france');
@@ -126,6 +129,22 @@ A(['society', 'grama sintetica', 'tf'], 'society', 'tf');
 A(['futsal', 'quadra', 'salao', 'ic'], 'futsal', 'ic');
 A(['campo', 'grama', 'fg'], 'campo', 'fg');
 
+
+// palavras de ligação que não ajudam na busca ("camisa DO Brasil", "QUE o Milan FOI campeão")
+const STOP = new Set(['o', 'a', 'os', 'as', 'um', 'uma', 'do', 'da', 'dos', 'das', 'de', 'no', 'na', 'nos', 'nas', 'em', 'que', 'foi', 'era', 'com', 'para', 'pra', 'pelo', 'pela', 'quero', 'queria', 'procuro', 'procurando', 'tem', 'tinha', 'e', 'ou', 'meu', 'minha', 'seu', 'sua', 'qual', 'quais', 'the', 'of']);
+const CHAMP = new Set(['campeao', 'campea', 'campeoes', 'campeas', 'champions', 'champion', 'league', 'liga', 'ucl', 'titulo', 'campeonato']);
+// campeões da Champions League / Copa dos Campeões: [temporada, palavras do clube (como aparecem nos produtos), palavras que a pessoa digita]
+const WINNERS = [['1988/89', 'milan', ['milan']], ['1989/90', 'milan', ['milan']], ['1990/91', 'estrela vermelha', ['estrela']], ['1991/92', 'barcelona', ['barcelona']], ['1992/93', 'marseille', ['marselha', 'marseille', 'olympique']], ['1993/94', 'milan', ['milan']], ['1994/95', 'ajax', ['ajax']], ['1995/96', 'juventus', ['juventus']],
+  ['1996/97', 'dortmund', ['dortmund', 'borussia']], ['1997/98', 'real madrid', ['madrid', 'real']], ['1998/99', 'manchester united', ['united', 'manchester']], ['1999/00', 'real madrid', ['madrid', 'real']], ['2000/01', 'bayern', ['bayern']], ['2001/02', 'real madrid', ['madrid', 'real']], ['2002/03', 'milan', ['milan']],
+  ['2003/04', 'porto', ['porto']], ['2004/05', 'liverpool', ['liverpool']], ['2005/06', 'barcelona', ['barcelona']], ['2006/07', 'milan', ['milan']], ['2007/08', 'manchester united', ['united', 'manchester']], ['2008/09', 'barcelona', ['barcelona']], ['2009/10', 'inter de milao', ['inter', 'internazionale']], ['2010/11', 'barcelona', ['barcelona']],
+  ['2011/12', 'chelsea', ['chelsea']], ['2012/13', 'bayern', ['bayern']], ['2013/14', 'real madrid', ['madrid', 'real']], ['2014/15', 'barcelona', ['barcelona']], ['2015/16', 'real madrid', ['madrid', 'real']], ['2016/17', 'real madrid', ['madrid', 'real']], ['2017/18', 'real madrid', ['madrid', 'real']], ['2018/19', 'liverpool', ['liverpool']],
+  ['2019/20', 'bayern', ['bayern']], ['2020/21', 'chelsea', ['chelsea']], ['2021/22', 'real madrid', ['madrid', 'real']], ['2022/23', 'manchester city', ['city', 'manchester']], ['2023/24', 'real madrid', ['madrid', 'real']], ['2024/25', 'paris saint', ['psg', 'paris']]];
+const endYear = (se) => { const [a, b] = se.split('/'); return b === '00' ? 2000 : +(a.slice(0, 2) + b) < +a ? +('20' + b) : +(a.slice(0, 2) + b); };
+function titleSql(pairs) {
+  const cond = pairs.map(([se, club]) => { const ey = endYear(se); return "(p.search_text LIKE '%" + club + "%' AND (p.search_text LIKE '%" + se + "%' OR p.search_text LIKE '%" + se.replace('/', ' ') + "%' OR p.search_text LIKE '% " + ey + " %' OR p.search_text LIKE '% " + ey + "'))"; });
+  return '(' + cond.join(' OR ') + ')';
+}
+
 let vocab = null, vocabAt = 0, vocabP = null;
 async function loadVocab() {
   if (vocab && Date.now() - vocabAt < 5 * 60 * 1000) return vocab;
@@ -164,8 +183,24 @@ function correct(t, words) {
 
 /** → [{ alts: [[palavra,...], ...] }, ...]  (cada item = uma palavra da busca; alts = alternativas, cada uma uma lista de palavras exigidas) */
 async function parse(raw) {
-  const toks = norm(String(raw || '')).split(/[^a-z0-9]+/).filter(Boolean);
-  if (!toks.length) return [];
+  let toks = norm(String(raw || '')).split(/[^a-z0-9]+/).filter(Boolean);
+  const noStop = toks.filter((t) => !STOP.has(t)); if (noStop.length) toks = noStop;
+  // intenção "campeão da Champions": usa a lista de títulos (clube + temporada); com ano, só a temporada do título
+  let titleItem = null;
+  if (toks.some((t) => CHAMP.has(t))) {
+    const rest = toks.filter((t) => !CHAMP.has(t));
+    const year = rest.find((t) => /^(19|20)[0-9]{2}$/.test(t));
+    const clubToks = new Set(rest);
+    const named = WINNERS.filter((w) => w[2].some((k) => clubToks.has(k)));
+    let pairs = named.length ? named : WINNERS;
+    if (year) { const byY = pairs.filter((w) => endYear(w[0]) === +year); if (byY.length) pairs = byY; else if (named.length) pairs = named; }
+    if (true) {
+      const used = new Set([...(year ? [year] : []), ...named.flatMap((w) => w[2])]);
+      toks = rest.filter((t) => !used.has(t));
+      titleItem = { alts: [['retro']], sql: titleSql(pairs) };
+    }
+  }
+  if (!toks.length && !titleItem) return [];
   const words = await loadVocab();
   const out = [];
   for (let i = 0; i < toks.length; i++) {
@@ -177,13 +212,15 @@ async function parse(raw) {
     for (const c of correct(t, words)) alts.push([c]);
     out.push({ alts });
   }
+  if (titleItem) out.push(titleItem);
   return out;
 }
 const likeEsc = (s) => s.replace(/[%_]/g, '');
 /** Gera o trecho SQL (E de OU) sobre p.search_text. */
 function toSql(parsed) {
   const where = [], args = [];
-  for (const { alts } of parsed) {
+  for (const { alts, sql } of parsed) {
+    if (sql) { where.push(sql); continue; }
     const parts = alts.map((words) => { words.forEach((w) => args.push('%' + likeEsc(w) + '%')); return '(' + words.map(() => 'p.search_text LIKE ?').join(' AND ') + ')'; });
     where.push('(' + parts.join(' OR ') + ')');
   }
