@@ -85,7 +85,7 @@ async function priceCart({ items, cep, method, coupon, userId, email, cpf }) {
     } else if (p.fulfillment === 'stock' && p.stock < qty) throw new HttpError(400, `"${p.name}": apenas ${p.stock} em estoque.`);
     let custom = null, customCents = 0, persLine = 0;
     const txt = (v) => String(v || '').replace(/[<>"]/g, '').trim().slice(0, 40);
-    const isNba = /NBA/.test(p.name);   // NBA: só nome e número (sem patch nem patrocinador)
+    const isNba = !!(await q.get("SELECT 1 x FROM product_entities pe JOIN entities e ON e.id=pe.entity_id WHERE pe.product_id=? AND e.slug='nba' LIMIT 1", p.id));   // NBA: só nome e número (sem patch nem patrocinador)
     const patch = isNba ? '' : txt(it.custom && it.custom.patch), sponsor = isNba ? '' : txt(it.custom && it.custom.sponsor);
     if (it.custom && (it.custom.name || it.custom.number || patch || sponsor)) {
       if (!p.customizable) throw new HttpError(400, `"${p.name}" não aceita personalização.`);
