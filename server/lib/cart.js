@@ -85,7 +85,8 @@ async function priceCart({ items, cep, method, coupon, userId, email, cpf }) {
     } else if (p.fulfillment === 'stock' && p.stock < qty) throw new HttpError(400, `"${p.name}": apenas ${p.stock} em estoque.`);
     let custom = null, customCents = 0, persLine = 0;
     const txt = (v) => String(v || '').replace(/[<>"]/g, '').trim().slice(0, 40);
-    const patch = txt(it.custom && it.custom.patch), sponsor = txt(it.custom && it.custom.sponsor);
+    const isNba = /NBA/.test(p.name);   // NBA: só nome e número (sem patch nem patrocinador)
+    const patch = isNba ? '' : txt(it.custom && it.custom.patch), sponsor = isNba ? '' : txt(it.custom && it.custom.sponsor);
     if (it.custom && (it.custom.name || it.custom.number || patch || sponsor)) {
       if (!p.customizable) throw new HttpError(400, `"${p.name}" não aceita personalização.`);
       const name = String(it.custom.name || '').toUpperCase().replace(/[^A-Z0-9 .'\-ÁÀÂÃÉÊÍÓÔÕÚÇ]/gi, '').slice(0, 14);
