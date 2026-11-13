@@ -1,0 +1,19 @@
+{
+ "defs": [{ "slug": "opcoes-vice-city-night", "type": "group", "name": "Opções Vice City Night", "parents": [], "sort": 901, "menu": 0 }],
+ "cdn": { "dir": "cdn/img/p", "url": "https://raw.githubusercontent.com/SportImperativostore/site-Sport-Imperativo-Store/6be12a2727fc7f53610dc71bb79f3f38ba0d79d3/cdn/img/p" },
+ "products": [
+  {
+   "id": "mhvc13",
+   "name": "Regata NBA Miami Heat Edição Especial GTA 6 HEAT #13 Preta",
+   "price": 30000,
+   "sizes": ["P", "M", "G", "GG", "2XG"],
+   "tags": "regata camisa nba basquete Miami Heat edição especial gta 6 gta vi vice city night heat 13 cactus jack rosa preta",
+   "ents": ["nba", "jerseys-nba", "edicoes-especiais-nba", "nba-miami-heat", "vice-city-night", "opcoes-vice-city-night"],
+   "customizable": 0,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400,
+   "desc": "Regata preta do Miami Heat, Edição Especial inspirada no universo de GTA VI (Vice City Night). Modelo HEAT #13: a palavra HEAT delineada em rosa neon, o número 13 correspondente e um gráfico no peito inspirado em Robin Hood. Detalhes inspirados no Cactus Jack, acabamento contrastante em rosa e branco e silhueta preta de bola de basquete. Criada em torno do evento \"A Night in Vice City\" do Miami Heat, em 18 de novembro de 2026, no Kaseya Center, em Miami. Imagens ilustrativas: a peça real pode ter pequenas diferenças. Importado, qualidade premium. Escolha o tamanho e consulte a tabela de medidas."
+  }
+ ]
+}

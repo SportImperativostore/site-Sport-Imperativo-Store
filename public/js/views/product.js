@@ -7,7 +7,7 @@ const ytEmbed = (u) => { const m = String(u).match(/(?:youtu\.be\/|v=|embed\/)([
 
 export default async function product({ params }) {
   $('#app').innerHTML = '<div class="wrap"><div class="skeleton" style="height:520px;margin-top:24px"></div></div>';
-  const { product: p, feedbacks, reviews, related, ratingDist, crumbPath } = await api('/products/' + params[0]);
+  const { product: p, feedbacks, reviews, related, ratingDist, crumbPath, options } = await api('/products/' + params[0]);
   setMeta(p.meta.title || `${p.name} | Sport Imperativo Store`, p.meta.description || p.description);
   track('view_product');
   const pr = p.pricing, imp = p.fulfillment === 'import', BIG = 1500;   // acréscimo p/ tamanhos acima de 2XG (igual ao servidor)
@@ -36,6 +36,7 @@ export default async function product({ params }) {
       <div class="pbox">${pr.onSale ? `<div class="price-old">${brl(pr.original)}</div>` : ''}<div><span class="price">${brl(pr.final)}</span>${pr.discountPct ? `<span class="pct">-${pr.discountPct}%</span>` : ''}</div>
         <div class="pix"><b>${brl(pr.pix)}</b> no Pix (${pr.pixPct}% de desconto)</div><div class="inst">ou em <b>até ${pr.installments.n}x</b> no cartão <small>(juros conforme o meio de pagamento)</small></div>
         <div id="custom-total" class="inst" style="margin-top:6px" hidden></div></div>
+      ${options && options.length > 1 ? `<div class="optlabel"><span>Modelo</span></div><div class="model-opts" style="display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 12px">${options.map((o) => `<a href="/produto/${e(o.slug)}" class="model-opt${o.current ? ' on' : ''}" aria-current="${o.current ? 'true' : 'false'}" style="display:flex;align-items:center;gap:8px;padding:6px 14px 6px 6px;border:2px solid ${o.current ? 'var(--blue)' : 'var(--line)'};border-radius:12px;font-weight:800;font-size:14px;${o.current ? 'background:rgba(11,92,255,.07);' : ''}"><img src="${e(o.image)}" alt="" width="44" height="44" style="object-fit:cover;border-radius:8px;background:#eee">${e(o.label)}</a>`).join('')}</div>` : ''}
       ${imp ? `<div class="info-box import">${icon.globe}<div><b>Produto importado / sob encomenda</b><br>Enviado do exterior (${e(p.shipping.origin)}). Prazo estimado: <b>${p.shipping.leadMin || 15}–${p.shipping.leadMax || 30} dias úteis</b>. ${p.shipping.rule === 'free' ? '<b>Frete grátis/promocional.</b> ' : ''}<br><small>${e(p.shipping.importNotice || '')}</small></div></div>`
         : `<div class="info-box stock">${icon.truck}<div><b>Pronta entrega</b> — enviado do Brasil. Frete calculado pelo CEP.${p.shipping.rule === 'free' ? ' <b>Frete grátis.</b>' : ''}</div></div>`}
       ${p.variants.some((v) => /^[3-9]XG$/i.test(v.size)) ? `<div class="inst" style="margin:10px 0 0;font-size:13px">Tamanhos acima de 2XG (3XG ou maiores): <b>+ ${brl(BIG)}</b> por peça.</div>` : ''}

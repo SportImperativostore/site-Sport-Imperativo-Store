@@ -145,8 +145,16 @@ r.get('/products/:slug', wrap(async (req, res) => {
   const reviews = reviewsRaw.map((x) => ({ ...x, photos: JSON.parse(x.photos || '[]') }));
   const club = ents.find((e) => e.type === 'club' || e.type === 'national_team');
   const sport = ents.find((e) => e.type === 'sport');
+  // opções do mesmo produto (ex.: dois modelos): grupo de entidade "opcoes-*"; rótulos curtos em settings.option_labels
+  let options = [];
+  const optEnt = ents.find((e) => String(e.slug).startsWith('opcoes-'));
+  if (optEnt) {
+    const rows = await q.all("SELECT p2.id,p2.slug,p2.name,(SELECT url FROM product_images i WHERE i.product_id=p2.id AND i.kind='image' ORDER BY i.sort,i.id LIMIT 1) image FROM products p2 JOIN product_entities pe2 ON pe2.product_id=p2.id JOIN entities e2 ON e2.id=pe2.entity_id WHERE e2.slug=? AND p2.active=1 ORDER BY p2.id", optEnt.slug);
+    let labels = {}; try { labels = JSON.parse(setting('option_labels', '{}')); } catch { /* sem rótulos */ }
+    options = rows.map((r) => ({ slug: r.slug, label: labels[r.id] || r.name, image: r.image, current: r.id === p.id }));
+  }
   cacheHdr(res, 20);
-  res.json({ product, feedbacks, reviews, related: await cat.cards(relatedRows), ratingDist: dist, crumbPath: sport ? '/' + sport.slug + (club ? '/' + club.slug : '') : '/' });
+  res.json({ product, feedbacks, reviews, related: await cat.cards(relatedRows), ratingDist: dist, options, crumbPath: sport ? '/' + sport.slug + (club ? '/' + club.slug : '') : '/' });
 }));
 
 r.get('/search/suggest', wrap(async (req, res) => {
