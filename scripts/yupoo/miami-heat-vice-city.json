@@ -1,0 +1,19 @@
+{
+ "defs": [],
+ "cdn": { "dir": "cdn/img/p", "url": "https://raw.githubusercontent.com/SportImperativostore/site-Sport-Imperativo-Store/02220c8137cf90a635dde0c549b37e491c77a2ec/cdn/img/p" },
+ "products": [
+  {
+   "id": "mhvc7",
+   "name": "Camisa NBA Miami Heat Vice City Night #7 Preta",
+   "price": 26500,
+   "sizes": ["P", "M", "G", "GG", "2XG"],
+   "tags": "nba basquete Miami Heat vice city night gta 6 gta vi vice city cactus jack rosa preta #7",
+   "ents": ["nba", "jerseys-nba", "edicoes-especiais-nba", "nba-miami-heat"],
+   "customizable": 0,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400,
+   "desc": "Camisa preta do Miami Heat Vice City Night, com o estilo de Vice City (inspirada no universo de GTA VI). Criada em torno do evento \"A Night in Vice City\" do Miami Heat, em 18 de novembro de 2026, no Kaseya Center, em Miami. Modelo Vice City #7: inscrição \"Vice City\" em rosa neon e branco, número 7 branco em negrito com contorno rosa e emblema no peito inspirado em GTA VI. Detalhes inspirados no Cactus Jack, acabamento contrastante em rosa e branco e silhueta preta de bola de basquete. Importado, qualidade premium. Escolha o tamanho e consulte a tabela de medidas."
+  }
+ ]
+}
