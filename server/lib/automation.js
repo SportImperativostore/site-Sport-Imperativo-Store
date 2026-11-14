@@ -31,8 +31,10 @@ const storeNumber = () => wa.digits(setting('whatsapp', '5511917765409'));
 
 /* ---------- mensagem ao fornecedor (somente o necessário) ---------- */
 const addressLines = (a) => [a.street + ', ' + a.number + (a.complement ? ' - ' + a.complement : ''), a.district, `${a.city} - ${a.state}`, 'CEP: ' + String(a.cep).replace(/^(\d{5})(\d{3})$/, '$1-$2'), 'Brasil'];
+/** Link da foto do produto, para o fornecedor identificar a peça (relativo → domínio da loja). */
+const photoLine = (u) => { if (!u) return null; const site = (process.env.PUBLIC_URL || 'https://sportimperativostore.com.br').replace(/[/]$/, ''); return 'Foto do produto: ' + (/^https?:/.test(u) ? u : site + (u.startsWith('/') ? u : '/' + u)); };
 function itemsBlock(items) {
-  return items.map((it) => [`Camisa/Produto: ${it.name}`, it.supplier_sku ? `Ref. fornecedor (álbum): ${it.supplier_sku}` : null, `Tamanho: ${it.size || '-'}`, `Quantidade: ${it.qty}`,
+  return items.map((it) => [`Camisa/Produto: ${it.name}`, it.supplier_sku ? `Ref. fornecedor (álbum): ${it.supplier_sku}` : null, photoLine(it.image), `Tamanho: ${it.size || '-'}`, `Quantidade: ${it.qty}`,
     (it.custom_name || it.custom_number) ? `Personalização: Nome ${it.custom_name || '-'} / Número ${it.custom_number || '-'}` : null, it.custom_extra || null].filter(Boolean).join('\n')).join('\n\n');
 }
 /** CPF do destinatário: obrigatório na importação (Correios/Receita exigem na declaração de remessa). */
