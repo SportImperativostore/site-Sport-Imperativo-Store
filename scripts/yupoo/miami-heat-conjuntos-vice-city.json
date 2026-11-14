@@ -1,0 +1,14 @@
+{
+ "defs": [{ "slug": "opcoes-conjunto-vice-city", "type": "group", "name": "Opções Conjunto Vice City", "parents": [], "sort": 902, "menu": 0 }],
+ "cdn": { "dir": "cdn/img/p", "url": "https://raw.githubusercontent.com/SportImperativostore/site-Sport-Imperativo-Store/a673fb42a3dd72d2f6c633d57b137e4c192b26da/cdn/img/p" },
+ "products": [
+  { "id": "mhvccj7", "name": "Conjunto Miami Heat Edição Especial do GTA 6 Vice City (Regata + Calção)", "price": 49900,
+    "sizes": ["P","M","G","GG","2XG"], "tags": "conjunto kit regata calcao nba basquete Miami Heat edição especial gta 6 gta vi vice city night cactus jack rosa preto",
+    "ents": ["nba","nba-miami-heat","vice-city-night","opcoes-conjunto-vice-city"], "customizable": 1, "custom_price": 6000, "guide": "Torcedor", "shape": "jersey", "weight": 700,
+    "desc": "Conjunto preto do Miami Heat, Edição Especial inspirada no universo de GTA VI (Vice City Night): regata Vice City #7 + calção. Regata com letreiro \"Vice City\" em rosa neon e branco, número 7 e emblema \"VI\" no peito; calção com emblema \"VI\" na cintura e logo do Heat em rosa. Detalhes inspirados no Cactus Jack. Você pode personalizar a regata com nome e número. Imagem ilustrativa: as peças reais podem ter pequenas diferenças. Importado, qualidade premium. Escolha o tamanho e consulte a tabela de medidas." },
+  { "id": "mhvccj13", "name": "Conjunto Miami Heat Edição Especial do GTA 6 Heat (Regata + Calção)", "price": 49900,
+    "sizes": ["P","M","G","GG","2XG"], "tags": "conjunto kit regata calcao nba basquete Miami Heat edição especial gta 6 gta vi vice city night heat 13 cactus jack rosa preto",
+    "ents": ["nba","nba-miami-heat","vice-city-night","opcoes-conjunto-vice-city"], "customizable": 1, "custom_price": 6000, "guide": "Torcedor", "shape": "jersey", "weight": 700,
+    "desc": "Conjunto preto do Miami Heat, Edição Especial inspirada no universo de GTA VI (Vice City Night): regata HEAT #13 + calção. Regata com a palavra HEAT delineada em rosa neon, número 13 e gráfico no peito; calção com emblema \"VI\" na cintura e logo do Heat em rosa. Detalhes inspirados no Cactus Jack. Você pode personalizar a regata com nome e número. Imagem ilustrativa: as peças reais podem ter pequenas diferenças. Importado, qualidade premium. Escolha o tamanho e consulte a tabela de medidas." }
+ ]
+}
