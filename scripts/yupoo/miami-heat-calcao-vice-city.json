@@ -1,0 +1,12 @@
+{
+ "defs": [],
+ "cdn": { "dir": "cdn/img/p", "url": "https://raw.githubusercontent.com/SportImperativostore/site-Sport-Imperativo-Store/7c56883f143fd1ee12cda695b0b2f520d639cbd5/cdn/img/p" },
+ "products": [
+  { "id": "mhvcshort", "name": "Calção Miami Heat Edição Especial do GTA 6 Vice City", "price": 19900,
+    "sizes": ["P","M","G","GG","2XG"],
+    "tags": "calcao short bermuda nba basquete Miami Heat edição especial gta 6 gta vi vice city night cactus jack rosa preto",
+    "ents": ["nba","calcoes-nba","nba-miami-heat","vice-city-night"],
+    "customizable": 0, "guide": "Torcedor", "shape": "shorts", "weight": 400,
+    "desc": "Calção preto do Miami Heat, Edição Especial inspirada no universo de GTA VI (Vice City Night). Emblema \"VI\" com palmeiras na cintura, logo do Heat em rosa, acabamento em rosa e branco nas laterais e detalhes inspirados no Cactus Jack. Combina com as regatas Vice City e Heat. Imagem ilustrativa: a peça real pode ter pequenas diferenças. Importado, qualidade premium. Escolha o tamanho e consulte a tabela de medidas." }
+ ]
+}
