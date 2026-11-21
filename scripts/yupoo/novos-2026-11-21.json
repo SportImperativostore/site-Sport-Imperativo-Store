@@ -1,0 +1,1263 @@
+{
+ "defs": [
+  {
+   "slug": "torreense",
+   "type": "club",
+   "name": "Torreense",
+   "parents": [
+    "outros-clubes"
+   ],
+   "sort": 900
+  },
+  {
+   "slug": "castellon",
+   "type": "club",
+   "name": "CD Castellón",
+   "parents": [
+    "outros-clubes"
+   ],
+   "sort": 900
+  },
+  {
+   "slug": "selecao-indonesia",
+   "type": "national_team",
+   "name": "Seleção Indonésia",
+   "parents": [
+    "selecoes"
+   ],
+   "sort": 900
+  },
+  {
+   "slug": "selecao-eslovaquia",
+   "type": "national_team",
+   "name": "Seleção Eslováquia",
+   "parents": [
+    "selecoes"
+   ],
+   "sort": 900
+  },
+  {
+   "slug": "selecao-malasia",
+   "type": "national_team",
+   "name": "Seleção Malásia",
+   "parents": [
+    "selecoes"
+   ],
+   "sort": 900
+  }
+ ],
+ "cdn": {
+  "dir": "cdn/img/p",
+  "url": "SHA"
+ },
+ "products": [
+  {
+   "id": "262345934",
+   "name": "Camisa Stade Rennais 1996/97 Home Retro",
+   "price": 22900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG"
+   ],
+   "tags": "camisa camiseta jersey retro Rennes",
+   "ents": [
+    "futebol",
+    "retro",
+    "camisas-de-futebol",
+    "clubes",
+    "rennes",
+    "ligue-1"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "262345924",
+   "name": "Camisa Sporting 2026/27 120 Anos",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Sporting Lisboa",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "clubes",
+    "sporting",
+    "primeira-liga"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "262345889",
+   "name": "Camisa Sevilla 1941/42 Home Manga Longa Retro",
+   "price": 22900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG"
+   ],
+   "tags": "camisa camiseta jersey retro Sevilla",
+   "ents": [
+    "futebol",
+    "retro",
+    "camisas-de-futebol",
+    "clubes",
+    "sevilla",
+    "la-liga"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "262345897",
+   "name": "Camisa Sport Recife 2026/27 Third",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Sport Recife",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "clubes",
+    "sport-club-do-recife",
+    "brasileirao"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "262345747",
+   "name": "Camisa PSG 2026/27 Third Manga Longa",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor PSG Paris Saint Germain manga longa",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "clubes",
+    "paris-saint-germain",
+    "ligue-1"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "262345827",
+   "name": "Camisa Real Madrid x Y-3 2026/27 Preta Edição Especial",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Real Madrid Y-3 edicao especial",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "clubes",
+    "real-madrid",
+    "la-liga"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "262345729",
+   "name": "Camisa PSG 2026/27 Roxa Edição Especial",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor PSG Paris Saint Germain roxa edicao especial",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "clubes",
+    "paris-saint-germain",
+    "ligue-1"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "262345838",
+   "name": "Camisa Sevilla 2006/07 Home Retro",
+   "price": 22900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG"
+   ],
+   "tags": "camisa camiseta jersey retro Sevilla",
+   "ents": [
+    "futebol",
+    "retro",
+    "camisas-de-futebol",
+    "clubes",
+    "sevilla",
+    "la-liga"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "262345620",
+   "name": "Camisa Peñarol 1994/95 Home Manga Longa Retro",
+   "price": 22900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG"
+   ],
+   "tags": "camisa camiseta jersey retro Penarol",
+   "ents": [
+    "futebol",
+    "retro",
+    "camisas-de-futebol",
+    "clubes",
+    "penarol",
+    "outras-ligas-da-america"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "262345672",
+   "name": "Camisa Peñarol 1996/97 Home Retro",
+   "price": 22900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG"
+   ],
+   "tags": "camisa camiseta jersey retro Penarol",
+   "ents": [
+    "futebol",
+    "retro",
+    "camisas-de-futebol",
+    "clubes",
+    "penarol",
+    "outras-ligas-da-america"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "262345686",
+   "name": "Camisa Peñarol 1998/99 Home Manga Longa Retro",
+   "price": 22900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG"
+   ],
+   "tags": "camisa camiseta jersey retro Penarol",
+   "ents": [
+    "futebol",
+    "retro",
+    "camisas-de-futebol",
+    "clubes",
+    "penarol",
+    "outras-ligas-da-america"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "262345464",
+   "name": "Camisa Inter de Milão 2026/27 Third Manga Longa",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Inter de Milao",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "clubes",
+    "internazionale",
+    "serie-a"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "262345407",
+   "name": "Camisa França 2002 Away Retro",
+   "price": 22900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG"
+   ],
+   "tags": "camisa camiseta jersey retro Franca",
+   "ents": [
+    "futebol",
+    "retro",
+    "camisas-de-futebol",
+    "selecoes",
+    "selecao-franca"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "262345351",
+   "name": "Camisa Cruzeiro 2003 Home Retro",
+   "price": 22900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG"
+   ],
+   "tags": "camisa camiseta jersey retro Cruzeiro",
+   "ents": [
+    "futebol",
+    "retro",
+    "camisas-de-futebol",
+    "clubes",
+    "cruzeiro",
+    "brasileirao"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "262345272",
+   "name": "Camisa Chivas Guadalajara 2026/27 Vermelha 30 Anos Player Version",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Chivas Guadalajara player version",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "clubes",
+    "chivas",
+    "liga-mx",
+    "outros-clubes"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "262345186",
+   "name": "Camisa Barcelona x Golf Wang 2026/27 Ciano",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Barcelona Golf Wang colaboracao",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "clubes",
+    "barcelona",
+    "la-liga"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "262345387",
+   "name": "Camisa Flamengo 2027/28 Home",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Flamengo",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "clubes",
+    "flamengo",
+    "brasileirao"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "262345946",
+   "name": "Camisa Torreense 2026/27 Home",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Torreense",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "clubes",
+    "torreense"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "258680759",
+   "name": "Camisa Real Zaragoza 1986/87 Home Retro",
+   "price": 22900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG"
+   ],
+   "tags": "camisa camiseta jersey retro Zaragoza",
+   "ents": [
+    "futebol",
+    "retro",
+    "camisas-de-futebol",
+    "clubes",
+    "zaragoza",
+    "la-liga",
+    "outros-clubes"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "263619661",
+   "name": "Camisa Real Madrid 2026/27 Treino Verde",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Real Madrid treino",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "clubes",
+    "real-madrid",
+    "la-liga"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "259451486",
+   "name": "Camisa Celta de Vigo 1998/99 Home Champions League Retro",
+   "price": 22900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG"
+   ],
+   "tags": "camisa camiseta jersey retro Celta Vigo",
+   "ents": [
+    "futebol",
+    "retro",
+    "camisas-de-futebol",
+    "clubes",
+    "celta",
+    "la-liga"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "263619639",
+   "name": "Camisa Escócia 2027 Away",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Escocia",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "selecoes",
+    "selecao-escocia"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "263619612",
+   "name": "Camisa PSG 1977/78 Home Retro",
+   "price": 22900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG"
+   ],
+   "tags": "camisa camiseta jersey retro PSG Paris Saint Germain",
+   "ents": [
+    "futebol",
+    "retro",
+    "camisas-de-futebol",
+    "clubes",
+    "paris-saint-germain",
+    "ligue-1"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "263619595",
+   "name": "Camisa Portugal 2026 Branca Edição Especial",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Portugal copa 2026 edicao especial",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "selecoes",
+    "selecao-portugal"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "263619550",
+   "name": "Camisa CF Montréal 2026/27 Third",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Montreal MLS",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "clubes",
+    "montreal-cf",
+    "mls"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "263619532",
+   "name": "Camisa México 2026/27 Rosa Edição Especial",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Mexico edicao especial",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "selecoes",
+    "selecao-mexico"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "263619522",
+   "name": "Camisa Manchester City 2026/27 Ano da Ovelha Comemorativa",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Man City ano da ovelha",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "clubes",
+    "manchester-city",
+    "premier-league"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "263619499",
+   "name": "Camisa Indonésia 2026/27 Third",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Indonesia",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "selecoes",
+    "selecao-indonesia"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "263619476",
+   "name": "Camisa El Salvador 2026/27 Azul Estampa Cobra",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor El Salvador",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "selecoes",
+    "selecao-el-salvador"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "263619468",
+   "name": "Camisa El Salvador 2026/27 Home",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor El Salvador",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "selecoes",
+    "selecao-el-salvador"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "263619456",
+   "name": "Camisa El Salvador 2026/27 Away",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor El Salvador",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "selecoes",
+    "selecao-el-salvador"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "263619442",
+   "name": "Camisa Colômbia 1998 Home Retro",
+   "price": 22900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG"
+   ],
+   "tags": "camisa camiseta jersey retro Colombia",
+   "ents": [
+    "futebol",
+    "retro",
+    "camisas-de-futebol",
+    "selecoes",
+    "selecao-colombia"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "263619419",
+   "name": "Camisa CD Castellón 2026/27 Third",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Castellon",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "clubes",
+    "castellon"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "263619395",
+   "name": "Camisa Barcelona 2026/27 Amarela Edição Especial",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Barcelona edicao especial",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "clubes",
+    "barcelona",
+    "la-liga"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "263619408",
+   "name": "Camisa Brasil 2026/27 Verde Floresta Amazônica Edição Especial",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Brasil amazonia edicao especial",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "selecoes",
+    "selecao-brasil"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "263619370",
+   "name": "Camisa Atlético de Madrid 2001/02 Home Retro",
+   "price": 22900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG"
+   ],
+   "tags": "camisa camiseta jersey retro Atletico de Madrid",
+   "ents": [
+    "futebol",
+    "retro",
+    "camisas-de-futebol",
+    "clubes",
+    "atletico-madrid",
+    "la-liga"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "259923734",
+   "name": "Camisa Portugal 2026 Preta Edição Especial",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Portugal copa 2026 edicao especial",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "selecoes",
+    "selecao-portugal"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "259923786",
+   "name": "Camisa Eslováquia 2026/27 Away",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Eslovaquia",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "selecoes",
+    "selecao-eslovaquia"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "259923603",
+   "name": "Camisa México 2026 x Willy Chavarria Verde",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Mexico Willy Chavarria",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "selecoes",
+    "selecao-mexico"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "259923571",
+   "name": "Camisa México 2026 Vermelha 100 Anos Comemorativa",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Mexico 100 anos",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "selecoes",
+    "selecao-mexico"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "259923534",
+   "name": "Camisa Mali 2026/27 Third",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Mali",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "selecoes",
+    "selecao-mali"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "259923456",
+   "name": "Camisa Malásia 2026 Away",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Malasia",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "selecoes",
+    "selecao-malasia"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "259923849",
+   "name": "Camisa Espanha 2026 x Homem-Aranha Preta Edição Especial",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Espanha homem aranha spiderman edicao especial",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "selecoes",
+    "selecao-espanha"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "259923702",
+   "name": "Camisa Palermo 2026/27 Third",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG",
+    "4XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Palermo",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "clubes",
+    "palermo",
+    "serie-a"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  },
+  {
+   "id": "259923190",
+   "name": "Camisa Croácia 2026/27 Home Branca Player Version",
+   "price": 18900,
+   "sizes": [
+    "P",
+    "M",
+    "G",
+    "GG",
+    "2XG",
+    "3XG"
+   ],
+   "tags": "camisa camiseta jersey torcedor Croacia player version",
+   "ents": [
+    "futebol",
+    "torcedor",
+    "camisas-de-futebol",
+    "selecoes",
+    "selecao-croacia"
+   ],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400
+  }
+ ]
+}
