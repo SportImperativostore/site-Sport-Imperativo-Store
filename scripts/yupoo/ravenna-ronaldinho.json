@@ -1,0 +1,22 @@
+{
+ "defs": [
+  { "slug": "ravenna", "type": "club", "name": "Ravenna", "parents": ["outros-clubes"], "sort": 900 }
+ ],
+ "cdn": { "dir": "cdn/img/p", "url": "SHA" },
+ "products": [
+  {
+   "id": "263225431",
+   "name": "Camisa Ravenna Edição Especial Ronaldinho Gaúcho FC 2026/27",
+   "price": 19900,
+   "sizes": ["P", "M", "G", "GG", "2XG"],
+   "tags": "camisa camiseta jersey torcedor Ravenna Ronaldinho Gaucho Ronaldinho FC edicao especial branca dourada 10 2026 2027",
+   "ents": ["futebol", "torcedor", "camisas-de-futebol", "clubes", "ravenna", "edicoes-especiais"],
+   "customizable": 1,
+   "custom_price": 6000,
+   "guide": "Torcedor",
+   "shape": "jersey",
+   "weight": 400,
+   "desc": "Camisa branca do Ravenna, edição especial Ronaldinho Gaúcho FC 2026/27, com detalhes dourados bordados (emblema 10 e logo no peito) e estampa tonal exclusiva. Importada, qualidade premium. Observação: a camisa é personalizável. Sem personalização, ela NÃO vem com o nome \"Ronaldinho\" nem o número 10 nas costas (a foto das costas mostra a versão personalizada). Escolha o tamanho e consulte a tabela de medidas."
+  }
+ ]
+}
