@@ -2,7 +2,7 @@
  "defs": [
   { "slug": "ravenna", "type": "club", "name": "Ravenna", "parents": ["outros-clubes"], "sort": 900 }
  ],
- "cdn": { "dir": "cdn/img/p", "url": "SHA" },
+ "cdn": { "dir": "cdn/img/p", "url": "https://raw.githubusercontent.com/SportImperativostore/site-Sport-Imperativo-Store/3fe99b013698aeea304447724bf57fdf16d98c4c/cdn/img/p" },
  "products": [
   {
    "id": "263225431",
