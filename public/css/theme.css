@@ -267,3 +267,12 @@ a.story-dot{text-decoration:none;color:inherit}
 /* carrossel no celular: texto em cima, fotos dos produtos embaixo */
 @media(max-width:860px){.slide.img{min-height:560px;align-items:flex-start}.slide.img .wrap{padding-top:34px}.slide.img picture img{object-position:center bottom}.slide.img::before{background:linear-gradient(180deg,rgba(6,19,46,.78),rgba(6,19,46,.05) 60%)}}
 @media(max-width:860px){.slide.img>span[style]{background:linear-gradient(180deg,rgba(6,19,46,.8),rgba(6,19,46,.0) 62%)!important}}
+
+/* 🔔 Me avise (Black Friday) */
+.tb-bell{margin-left:8px;background:#ffcc00;color:#000;border:0;border-radius:999px;padding:3px 10px;font:inherit;font-weight:800;cursor:pointer}
+.notify-fab{position:fixed;left:16px;bottom:16px;z-index:60;background:#000;color:#fff;border:2px solid #ffcc00;border-radius:999px;padding:11px 16px;font:700 14px/1 Outfit,system-ui,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.25);cursor:pointer;animation:bellpulse 2.4s ease-in-out infinite}
+.notify-fab:hover{background:#111}
+@keyframes bellpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+@media(max-width:560px){.notify-fab span{display:none}.notify-fab{padding:12px 14px;font-size:18px;bottom:84px}}
+.notify-form{display:grid;gap:10px}.notify-form label{display:grid;gap:4px;font-size:14px;font-weight:600}.notify-form input:not([type=checkbox]){height:42px;border:1px solid #d5dbe5;border-radius:10px;padding:0 12px;font:inherit}
+.notify-form .chk{display:flex;gap:8px;align-items:flex-start;font-weight:400;font-size:13px}.notify-form .chk input{margin-top:3px}

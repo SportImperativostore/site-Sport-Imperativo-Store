@@ -10,6 +10,16 @@ pub.post('/marketing/optin', rateLimit('mkt-optin', 20, 10 * 60 * 1000), wrap(as
   if (!validEmail(String(b.email || '').toLowerCase().trim())) throw new HttpError(400, 'E-mail inválido.');
   res.json(await mkt.optIn({ email: b.email, name: b.name, source: ['cadastro', 'checkout', 'rodape'].includes(b.source) ? b.source : 'site' }));
 }));
+/* 🔔 "Me avise": pede o aviso de um lançamento (ex.: Black Friday). Guarda o pedido e o aceite de e-mail (LGPD). */
+pub.post('/marketing/avise', rateLimit('mkt-avise', 20, 10 * 60 * 1000), wrap(async (req, res) => {
+  const b = req.body || {}; const email = String(b.email || '').toLowerCase().trim();
+  if (!validEmail(email)) throw new HttpError(400, 'E-mail inválido.');
+  if (!b.consent) throw new HttpError(400, 'Marque a opção para receber o aviso por e-mail.');
+  const list = /^[a-z0-9-]{2,40}$/.test(String(b.list || '')) ? b.list : 'black-friday';
+  await mkt.optIn({ email, name: b.name, source: 'aviso-' + list });
+  await q.run('INSERT OR IGNORE INTO notify_signups(email,list) VALUES(?,?)', email, list);
+  res.json({ ok: true });
+}));
 const page = (msg) => `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sport Imperativo Store</title><body style="font-family:system-ui,Arial;max-width:520px;margin:12vh auto;padding:0 20px;color:#0d1b33"><h2>${msg}</h2><p><a href="/" style="color:#0b5cff">Voltar para a loja</a></p></body>`;
 pub.get('/marketing/confirm', wrap(async (req, res) => {
   const ok = await mkt.confirmByToken(req.query.t);

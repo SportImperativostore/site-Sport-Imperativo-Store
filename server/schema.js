@@ -109,6 +109,8 @@ CREATE INDEX IF NOT EXISTS ix_events_name ON events(name, created_at);
 CREATE TABLE IF NOT EXISTS email_optout(email TEXT PRIMARY KEY, created_at TEXT DEFAULT (datetime('now')));
 CREATE TABLE IF NOT EXISTS marketing_contacts(
   email TEXT PRIMARY KEY, name TEXT, source TEXT, token TEXT, opted_in_at TEXT, invited_at TEXT, unsub_at TEXT, created_at TEXT DEFAULT (datetime('now')));
+CREATE TABLE IF NOT EXISTS notify_signups(
+  email TEXT, list TEXT, created_at TEXT DEFAULT (datetime('now')), PRIMARY KEY(email, list));
 CREATE TABLE IF NOT EXISTS mkt_campaigns(
   id INTEGER PRIMARY KEY, name TEXT, subject TEXT, params TEXT, audience TEXT DEFAULT 'opted', status TEXT DEFAULT 'draft',
   total INTEGER DEFAULT 0, sent INTEGER DEFAULT 0, failed INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')), started_at TEXT, finished_at TEXT);

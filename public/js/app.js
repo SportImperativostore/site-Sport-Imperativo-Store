@@ -57,6 +57,12 @@ addEventListener('popstate', render);
 export const actions = {
   'menu-open': () => openDrawer('menu-drawer'), 'cart-open': () => { openCartDrawer(); },
   'drawer-close': closeOverlays, 'modal-close': closeModal,
+  'notify-open': () => modal(`<h3>🔔 Me avise quando a Black começar <button class="x" data-action="modal-close" aria-label="Fechar">${icon.x}</button></h3>
+    <form id="notify-form" class="notify-form"><p>Deixe seu e-mail e seja o primeiro a saber quando a <b>Black Friday</b> estiver liberada.</p>
+    <label>Nome<input name="name" autocomplete="name" maxlength="80"></label>
+    <label>E-mail<input name="email" type="email" required autocomplete="email" maxlength="120"></label>
+    <label class="chk"><input type="checkbox" name="consent" required> Aceito receber o aviso e ofertas da Sport Imperativo por e-mail (posso cancelar quando quiser).</label>
+    <button class="btn" type="submit">Quero ser avisado</button></form>`),
   fav: (el) => toggleFav(+el.dataset.id, el),
   'quick-add': (el) => quickAdd(el.dataset.slug, el),
   'acc-toggle': (el) => { const s = el.nextElementSibling; s.hidden = !s.hidden; el.querySelector('i').textContent = s.hidden ? '+' : '−'; },
@@ -181,6 +187,20 @@ function buildMobileMenu() {
   <div class="acc-item"><a href="/feedbacks">❤️ FEEDBACKS</a></div><div class="acc-item"><a href="/conta">Minha conta</a></div><div class="acc-item"><a href="/favoritos">Favoritos</a></div></div>`;
 }
 /* Aviso temporário (ex.: pagamento online em manutenção): troca a faixa do topo quando o admin preenche "payments_notice". */
+/* 🔔 Botão flutuante "Me avise" até o início da Black Friday (00:00 de 27/11, horário de Brasília). */
+const NOTIFY_UNTIL = Date.parse('2026-11-27T03:00:00Z');
+function notifyFab() {
+  if (Date.now() >= NOTIFY_UNTIL) { const b = document.querySelector('.tb-bell'); if (b) b.remove(); return; }
+  const f = document.createElement('button'); f.type = 'button'; f.className = 'notify-fab'; f.dataset.action = 'notify-open'; f.setAttribute('aria-label', 'Me avise quando a Black Friday começar'); f.innerHTML = '🔔 <span>Me avise da Black</span>';
+  document.body.appendChild(f);
+  document.addEventListener('submit', async (ev) => {
+    if (ev.target.id !== 'notify-form') return; ev.preventDefault();
+    const fd = new FormData(ev.target), btn = ev.target.querySelector('button[type=submit]'); btn.disabled = true;
+    try { await api('/marketing/avise', { method: 'POST', body: { name: fd.get('name'), email: fd.get('email'), consent: !!fd.get('consent'), list: 'black-friday' } }); closeModal(); toast('Pronto! Você será avisado assim que a Black Friday começar 🔔'); try { localStorage.setItem('si_notify', '1'); } catch { /* ok */ } f.remove(); }
+    catch (err) { toast(err.message || 'Não foi possível salvar. Tente de novo.', { err: true }); btn.disabled = false; }
+  });
+  try { if (localStorage.getItem('si_notify')) f.remove(); } catch { /* ok */ }
+}
 function applyNotice() {
   const n = (state.config.settings.payments_notice || '').trim(), m = $('#topbar-msg');
   if (n && m) { m.textContent = '⚠️ ' + n; m.parentNode.parentNode.style.background = '#b45309'; m.parentNode.parentNode.style.color = '#fff'; }
@@ -283,6 +303,6 @@ document.addEventListener('scroll', (ev) => {
     const [cfg, menu, me] = await Promise.all([api('/config'), api('/menu'), api('/auth/me')]);
     state.config = cfg; state.sizes = cfg.sizes; state.menu = menu; state.user = me.user; state.favorites = new Set(me.favorites);
   } catch (err) { $('#app').innerHTML = `<div class="wrap empty"><h3>Loja temporariamente indisponível</h3><p>${e(err.message)}</p></div>`; return; }
-  applyNotice(); buildNav(); buildMobileMenu(); buildFooter(); renderAccountLink(); initSearch(); cookieBanner(); renderCartCount(); initFx();
+  applyNotice(); notifyFab(); buildNav(); buildMobileMenu(); buildFooter(); renderAccountLink(); initSearch(); cookieBanner(); renderCartCount(); initFx();
   render();
 })();

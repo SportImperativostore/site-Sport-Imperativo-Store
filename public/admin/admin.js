@@ -327,7 +327,7 @@ async function whatsappPage() {
   $$('[data-act]').forEach((b) => b.onclick = async () => { const id = b.dataset.id; try { await api(`/admin/whatsapp/inbox/${id}/assign`, { method: 'POST', body: { action: b.dataset.act, order: ($(`[data-o="${id}"]`) || {}).value, tracking: ($(`[data-t="${id}"]`) || {}).value } }); toast('Feito.'); whatsappPage(); } catch (err) { toast(err.message, true); } });
 }
 
-const AUD = { opted: 'Todos que aceitaram receber ofertas', buyers: 'Quem aceitou e já comprou', nonbuyers: 'Quem aceitou e ainda não comprou', invite: 'CONVITE único: clientes já cadastrados/compradores que ainda não aceitaram' };
+const AUD = { opted: 'Todos que aceitaram receber ofertas', buyers: 'Quem aceitou e já comprou', nonbuyers: 'Quem aceitou e ainda não comprou', aviso: '🔔 Quem pediu aviso no botão "Me avise" (Black Friday)', invite: 'CONVITE único: clientes já cadastrados/compradores que ainda não aceitaram' };
 async function marketingPage() {
   const [ov, camps] = await Promise.all([api('/admin/marketing/overview'), api('/admin/marketing/campaigns')]);
   const stat = (n, l) => `<div class="card" style="text-align:center"><div style="font-size:26px;font-weight:800">${n}</div><small>${l}</small></div>`;

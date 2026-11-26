@@ -36,6 +36,7 @@ async function audienceRows(audience) {
   if (audience === 'buyers') return q.all(`SELECT c.email,c.name,c.token FROM marketing_contacts c WHERE ${OK_WHERE} AND ${BUYER}`);
   if (audience === 'nonbuyers') return q.all(`SELECT c.email,c.name,c.token FROM marketing_contacts c WHERE ${OK_WHERE} AND NOT ${BUYER}`);
   if (audience === 'invite') return inviteCandidates();
+  if (audience === 'aviso') return q.all(`SELECT c.email,c.name,c.token FROM marketing_contacts c WHERE ${OK_WHERE} AND EXISTS (SELECT 1 FROM notify_signups n WHERE n.email=c.email)`);
   return q.all(`SELECT c.email,c.name,c.token FROM marketing_contacts c WHERE ${OK_WHERE}`);
 }
 /** Clientes já cadastrados/compradores que ainda não estão na lista: recebem UM convite para aceitar ofertas. */
