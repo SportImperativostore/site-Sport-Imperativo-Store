@@ -4,6 +4,10 @@ const { norm } = require('./util');
 
 const nowSql = () => new Date().toISOString().slice(0, 19).replace('T', ' ');
 
+/* Promoção valendo agora (respeita início e fim) — usado em filtros e ordenação. */
+const SALE_ACTIVE = "(p.sale_price_cents IS NOT NULL AND (p.sale_starts IS NULL OR p.sale_starts='' OR p.sale_starts<=datetime('now')) AND (p.sale_ends IS NULL OR p.sale_ends='' OR p.sale_ends>=datetime('now')))";
+const EFF_PRICE = "(CASE WHEN (p.sale_price_cents IS NOT NULL AND (p.sale_starts IS NULL OR p.sale_starts='' OR p.sale_starts<=datetime('now')) AND (p.sale_ends IS NULL OR p.sale_ends='' OR p.sale_ends>=datetime('now'))) THEN p.sale_price_cents ELSE p.price_cents END)";
+
 function salePrice(p) {
   if (!p.sale_price_cents) return null;
   const n = nowSql();
@@ -103,19 +107,19 @@ function buildFilters(f) {
   for (const s of f.entities || []) { where.push('EXISTS(SELECT 1 FROM product_entities pe JOIN entities e ON e.id=pe.entity_id WHERE pe.product_id=p.id AND e.slug=?)'); args.push(s); }
   if (f.qc) { const s = search.toSql(f.qc); where.push(...s.where); args.push(...s.args); }
   else if (f.q) for (const t of tokens(f.q)) { where.push('p.search_text LIKE ?'); args.push('%' + t + '%'); }
-  if (f.min) { where.push('COALESCE(CASE WHEN p.sale_price_cents IS NOT NULL THEN p.sale_price_cents END,p.price_cents)>=?'); args.push(Math.round(f.min * 100)); }
-  if (f.max) { where.push('COALESCE(CASE WHEN p.sale_price_cents IS NOT NULL THEN p.sale_price_cents END,p.price_cents)<=?'); args.push(Math.round(f.max * 100)); }
+  if (f.min) { where.push(EFF_PRICE + '>=?'); args.push(Math.round(f.min * 100)); }
+  if (f.max) { where.push(EFF_PRICE + '<=?'); args.push(Math.round(f.max * 100)); }
   if (f.ship === 'stock' || f.ship === 'import') { where.push('p.fulfillment=?'); args.push(f.ship); }
   if (f.custom) where.push('p.customizable=1');
-  if (f.sale) where.push("p.sale_price_cents IS NOT NULL AND p.sale_price_cents<p.price_cents AND (p.sale_ends IS NULL OR p.sale_ends='' OR p.sale_ends>=datetime('now'))");
+  if (f.sale) where.push('p.sale_price_cents<p.price_cents AND ' + SALE_ACTIVE);
   if (f.rating) { where.push('p.rating_avg>=?'); args.push(f.rating); }
   if (f.size) { where.push("(p.fulfillment='import' OR EXISTS(SELECT 1 FROM variants v WHERE v.product_id=p.id AND v.size=? AND v.stock>0))"); args.push(f.size); }
   if (f.avail) where.push("(p.fulfillment='import' OR p.stock>0 OR EXISTS(SELECT 1 FROM variants v WHERE v.product_id=p.id AND v.stock>0))");
   return { where: where.join(' AND '), args };
 }
 const SORTS = {
-  relevance: 'p.sold DESC, p.id DESC', price_asc: 'COALESCE(p.sale_price_cents,p.price_cents) ASC', price_desc: 'COALESCE(p.sale_price_cents,p.price_cents) DESC',
-  newest: 'p.id DESC', rating: 'p.rating_avg DESC, p.rating_count DESC', discount: '(1.0*COALESCE(p.sale_price_cents,p.price_cents)/p.price_cents) ASC',
+  relevance: 'p.sold DESC, p.id DESC', price_asc: EFF_PRICE + ' ASC', price_desc: EFF_PRICE + ' DESC',
+  newest: 'p.id DESC', rating: 'p.rating_avg DESC, p.rating_count DESC', discount: '(1.0*' + EFF_PRICE + '/p.price_cents) ASC',
 };
 // clubes campeões da Champions League / Copa dos Campeões (slugs do site)
 const CL_WINNERS = ['real-madrid', 'milan', 'liverpool', 'bayern-de-munique', 'barcelona', 'internazionale', 'manchester-united', 'chelsea', 'juventus', 'ajax', 'porto', 'manchester-city', 'paris-saint-germain', 'borussia-dortmund', 'benfica', 'nottingham-forest', 'celtic', 'feyenoord', 'aston-villa', 'psv-eindhoven', 'estrela-vermelha', 'hamburgo'];

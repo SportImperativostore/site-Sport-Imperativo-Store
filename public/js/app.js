@@ -190,7 +190,11 @@ function buildMobileMenu() {
 /* 🔔 Botão flutuante "Me avise" até o início da Black Friday (00:00 de 27/11, horário de Brasília). */
 const NOTIFY_UNTIL = Date.parse('2026-11-27T03:00:00Z');
 function notifyFab() {
-  if (Date.now() >= NOTIFY_UNTIL) { const b = document.querySelector('.tb-bell'); if (b) b.remove(); return; }
+  if (Date.now() >= NOTIFY_UNTIL) {
+    const m = $('#topbar-msg'); const BF_END = Date.parse('2026-12-01T03:00:00Z');
+    if (m && !(state.config.settings.payments_notice || '').trim()) m.textContent = Date.now() < BF_END ? '🖤 BLACK FRIDAY LIBERADA: torcedor R$ 149 • jogador e retrô R$ 189 • Frete grátis nos importados • Pix com 5% OFF • até 12x' : '🛒 Frete grátis nos importados • Pix com 5% OFF • até 12x no cartão';
+    return;
+  }
   const f = document.createElement('button'); f.type = 'button'; f.className = 'notify-fab'; f.dataset.action = 'notify-open'; f.setAttribute('aria-label', 'Me avise quando a Black Friday começar'); f.innerHTML = '🔔 <span>Me avise da Black</span>';
   document.body.appendChild(f);
   document.addEventListener('submit', async (ev) => {
