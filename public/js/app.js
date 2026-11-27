@@ -192,7 +192,7 @@ const NOTIFY_UNTIL = Date.parse('2026-11-27T03:00:00Z');
 function notifyFab() {
   if (Date.now() >= NOTIFY_UNTIL) {
     const m = $('#topbar-msg'); const BF_END = Date.parse('2026-12-01T03:00:00Z');
-    if (m && !(state.config.settings.payments_notice || '').trim()) m.textContent = Date.now() < BF_END ? '🖤 BLACK FRIDAY LIBERADA: torcedor R$ 149 • jogador e retrô R$ 189 • Frete grátis nos importados • Pix com 5% OFF • até 12x' : '🛒 Frete grátis nos importados • Pix com 5% OFF • até 12x no cartão';
+    if (m && !(state.config.settings.payments_notice || '').trim()) m.textContent = Date.now() < BF_END ? '🖤 BLACK FRIDAY: R$ 40 OFF em todos os produtos • torcedor R$ 149 • retrô R$ 189 • Frete grátis nos importados • Pix 5% OFF' : '🛒 Frete grátis nos importados • Pix com 5% OFF • até 12x no cartão';
     return;
   }
   const f = document.createElement('button'); f.type = 'button'; f.className = 'notify-fab'; f.dataset.action = 'notify-open'; f.setAttribute('aria-label', 'Me avise quando a Black Friday começar'); f.innerHTML = '🔔 <span>Me avise da Black</span>';
